@@ -42,6 +42,8 @@
 
 #### 보류: 장소·장비 사유
 
+- [ ] `0-ENV-15` (보류, 우선순위 낮음) 사내 GitLab(`211.239.11.79:8443`) 접속의 `http.sslVerify=false`를 서버 인증서 신뢰 등록(`http.<url>.sslCAInfo`)으로 대체 검토. 인증서 SAN에 IP가 있는지 확인 필요. 현재는 두 GitLab 호스트에만 URL 단위로 검증을 끈 상태(2026-11-01 설정). 프로젝트 파일과 무관한 개발 PC 환경 항목
+
 - [ ] `0-ENV-01` Samsung PC에서 `Get-CimInstance Win32_VideoController` 조회, GPU 구성 확인 후 `systeminfo_Samsung_960XFG.md`와 개발계획서 수정 (Samsung 노트북이 현재 다른 장소에 있어 2026-11-02에 수행 예정. 이후 측정 대상 장치가 확정됨)
 
 ### 0단계: 입력·전사 기준선

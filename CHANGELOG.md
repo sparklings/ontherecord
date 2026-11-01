@@ -10,9 +10,11 @@
 - `0-ENV-05`: 이름 `On the Record`, 플러그인 id `on-the-record`, 부제 `Local minutes for Obsidian`, 저장소명 `ontherecord`(주소 `https://github.com/sparklings/ontherecord`, 접근성 우선. 네이밍 보고서의 기존 `obsidian-on-the-record`에서 변경). 근거는 `docs\STT_사업보고서_OnTheRecord_네이밍.md`. 상표 검색과 도메인 확보는 미확인
 
 ### 추가
+- `TODO.md`에 `0-ENV-15`(사내 GitLab 인증서 신뢰 등록 검토) 보류 항목 추가
 - `0-ENV-02` 완료: private 저장소 `sparklings/ontherecord` 생성, 첫 커밋(`12881ff`) push. 공개 범위는 라이선스·회사 규정 확인 후 재결정
 
 ### 변경
+- Git 전역 설정 `http.sslVerify=false`를 제거하고 사내 GitLab 호스트(`211.239.11.79:8443`, `10.20.2.79:8443`)에만 URL 단위로 적용. GitHub는 기본값(검증 사용)으로 복귀. 개발 PC 환경 설정이며 프로젝트 파일 변경 없음(이 PC만 적용, 다른 PC는 별도 설정 필요)
 - `SETTINGS_DESIGN.md`의 `<plugin-id>`를 `on-the-record`로 확정
 - README 제목에 제품명 반영
 
