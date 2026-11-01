@@ -4,7 +4,7 @@ Local minutes for Obsidian. Obsidian 데스크톱용 커뮤니티 플러그인 �
 
 ## 현재 상태
 
-개발계획 단계이다. 구현된 코드는 없다. 기능은 아래 단계별로 개발하며, 각 단계의 결과는 [CHANGELOG.md](./CHANGELOG.md)에 기록한다.
+개발계획 단계이다. 플러그인 프로젝트 골격(빈 `Plugin` 클래스, 빌드 설정)만 있고 기능 코드는 없다. 기능은 아래 단계별로 개발하며, 각 단계의 결과는 [CHANGELOG.md](./CHANGELOG.md)에 기록한다.
 
 ## 개요
 

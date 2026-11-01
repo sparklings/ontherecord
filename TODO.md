@@ -32,7 +32,7 @@
 
 라이선스 정책이 정해져야 시작할 수 있는 항목이다. 결정 시점은 미정이다.
 
-- [ ] `0-ENV-11` 플러그인 프로젝트 초기화(AssistantEmily 구조 참조) (`0-ENV-05` 이후)
+- [x] `0-ENV-11` 플러그인 프로젝트 초기화(AssistantEmily 구조 참조) → 완료(2026-11-01). 저장소 루트에 `manifest.json`(id `on-the-record`, `isDesktopOnly: true`), `versions.json`, `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `eslint.config.mjs`, `src/main.ts`(빈 `Plugin` 클래스) 생성. `npm install` 후 `npm run check`, `npm run lint`, `npm run build` 통과, `main.js` 생성 확인. AssistantEmily와 다른 점: PlugVaults 자동 배포와 `.env` 로드는 넣지 않음(배포는 `0-ENV-12`), 라이선스 미정이라 `package.json`은 `private: true`, `license: UNLICENSED`. 잠정값: `minAppVersion` 1.7.2(AssistantEmily 값, 이 플러그인 요구 API로 검증하지 않음 → `0-OBS` 검증 후 확정), 버전 0.0.0. `npm install`에서 `npm audit` 경고가 출력됨(내용 미확인)
 - [ ] `0-ENV-12` PlugVaults 배포 절차 작성(빌드 결과를 `.obsidian\plugins\<id>\`에 복사) (`0-ENV-05`, `0-ENV-11` 이후)
 - [ ] `0-ENV-06` 라이선스 정책 확정: 회사 구성원 대상 무료 제공, 대상 그룹사·계열사·관계사 회사명 목록 작성
 - [ ] `0-ENV-07` 회사의 소프트웨어 배포·소유권 관련 규정 확인(공개 GitHub 저장소 게시 가능 여부 포함)
