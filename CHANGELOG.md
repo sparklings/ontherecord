@@ -7,6 +7,7 @@
 ## 2026-11-01
 
 ### 결정
+- `0-ENV-06`: 공개 코드는 MIT, 소속 회사 구성원 혜택은 라이선스 제한이 아닌 사내 혜택으로 제공. 근거는 `docs\STT_라이선스정책_에스넷그룹_명세_및_체계검토.md` V1.1.0. 이전 계획(구성원 한정 무료 라이선스)에서 변경. `LICENSE` 파일과 `package.json` 라이선스 값 변경은 `0-ENV-09`에서 수행. 저작권자 표기는 `0-ENV-07` 결과 필요
 - `0-ENV-05`: 이름 `On the Record`, 플러그인 id `on-the-record`, 부제 `Local minutes for Obsidian`, 저장소명 `ontherecord`(주소 `https://github.com/sparklings/ontherecord`, 접근성 우선. 네이밍 보고서의 기존 `obsidian-on-the-record`에서 변경). 근거는 `docs\STT_사업보고서_OnTheRecord_네이밍.md`. 상표 검색과 도메인 확보는 미확인
 
 ### 추가
