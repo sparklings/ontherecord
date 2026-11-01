@@ -12,6 +12,7 @@
 - `0-ENV-05`: 이름 `On the Record`, 플러그인 id `on-the-record`, 부제 `Local minutes for Obsidian`, 저장소명 `ontherecord`(주소 `https://github.com/sparklings/ontherecord`, 접근성 우선. 네이밍 보고서의 기존 `obsidian-on-the-record`에서 변경). 근거는 `docs\STT_사업보고서_OnTheRecord_네이밍.md`. 상표 검색과 도메인 확보는 미확인
 
 ### 추가
+- `docs\Obsidian_디렉터리정책_상충검토.md` 작성(`0-ENV-08`): Obsidian 공식 문서 5건 원문과 프로젝트 결정 대조, 상충·확인 필요 11건 정리. 주요 사항: 런타임·모델 다운로드와 "Install or update themselves or their dependencies" 금지의 충돌 가능성, 등재 후 저장소 이전은 관리자 절차, README에 네트워크 사용·vault 밖 접근 고지 필요
 - `0-ENV-12` 완료: `scripts/deploy.mjs`, `npm run deploy` 추가. PlugVaults 시험 vault의 `.obsidian\plugins\on-the-record\`에 복사 확인. `ObsidianVaults` 경로 거부와 비 vault 폴더 거부 동작 확인
 - `0-ENV-11` 완료: 플러그인 프로젝트 골격 생성(`manifest.json`, `versions.json`, `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `eslint.config.mjs`, `src/main.ts`). `check`·`lint`·`build` 통과. `minAppVersion` 1.7.2는 잠정값
 - `TODO.md`에 `0-ENV-15`(사내 GitLab 인증서 신뢰 등록 검토) 보류 항목 추가
