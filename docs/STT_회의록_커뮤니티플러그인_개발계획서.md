@@ -154,7 +154,7 @@ Obsidian Settings / File Picker / Review UI
                  |
        Transcript Search (segment-level timestamps)
                  |
-       Future Optional Analysis Providers
+       향후 선택 분석 프로바이더
        |-- Word alignment / precise word timestamps
        |-- Proper-name candidate extraction
        |-- Speaker diarization

@@ -1,4 +1,4 @@
-# benchmarks
+# 성능 측정 기록
 
 하드웨어 프로필과 측정 기록을 보관하는 폴더이다. 형식은 [HARDWARE_PROFILE.md](../HARDWARE_PROFILE.md)를 따른다.
 

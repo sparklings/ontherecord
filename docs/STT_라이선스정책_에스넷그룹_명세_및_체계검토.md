@@ -236,11 +236,11 @@ aliases:
 
 | 요건 | 원문 요지 | 출처 |
 |---|---|---|
-| 라이선스 파일 필수 | "Include a LICENSE file and clearly indicate the license of your plugin or theme." | Developer policies |
+| 라이선스 파일 필수 | "Include a LICENSE file and clearly indicate the license of your plugin or theme." (LICENSE 파일을 포함하고 플러그인 또는 테마의 라이선스를 명확히 표시할 것) | Developer policies |
 | 원 라이선스 준수 | 사용한 코드의 원 라이선스를 준수하고 필요 시 README에 출처 표기 | Developer policies |
 | 상표 | "Obsidian" 상표를 1차 제작물로 오인하게 쓰지 말 것 | Developer policies |
-| 결제 고지 | "Payment is required for full access"는 README에 명시하면 허용 | Developer policies |
-| 비공개 소스 | "Close sourced code. This will be handled on a case by case basis." (사안별 심사) | Developer policies |
+| 결제 고지 | "Payment is required for full access" (전체 기능을 이용하려면 결제가 필요함)를 README에 명시하면 허용 | Developer policies |
+| 비공개 소스 | "Close sourced code. This will be handled on a case by case basis." (비공개 소스 코드는 사안별로 심사) | Developer policies |
 | 라벨 구분 | Free / Optional payment / Paid 중 선택, 결제 없이 못 쓰면 Paid | Frequently asked questions |
 | 커스텀 라이선스 경고 | GitHub이 `Custom license`로 인식하면 "recognized license" 경고 발생 | Frequently asked questions |
 | 제출 시 LICENSE 필요 | 저장소 루트에 LICENSE 포함 필요 | Submit your plugin |
@@ -264,7 +264,7 @@ aliases:
 
 | 검증 축 | 확인 내용 | 판정 |
 |---|---|---|
-| 오픈소스의 정의 | Open Source Definition 제5조 "No Discrimination Against Persons or Groups"(어떤 사람·집단도 차별하지 말 것), 제6조 "No Discrimination Against Fields of Endeavor", 제7조 "권리는 재배포받는 모든 이에게 추가 라이선스 없이 적용" | **특정 회사를 지목해 허용/제한하는 라이선스는 정의상 오픈소스가 될 수 없다** |
+| 오픈소스의 정의 | Open Source Definition 제5조 "No Discrimination Against Persons or Groups"(어떤 사람·집단도 차별하지 말 것), 제6조 "No Discrimination Against Fields of Endeavor"(활동 분야를 차별하지 말 것), 제7조 "권리는 재배포받는 모든 이에게 추가 라이선스 없이 적용" | **특정 회사를 지목해 허용/제한하는 라이선스는 정의상 오픈소스가 될 수 없다** |
 | 업계 제한형 관행 | Elastic License 2.0은 관리형 서비스 제공·라이선스 키 우회를, FSL은 경쟁 제품 사용을, n8n Sustainable Use License는 재판매를 제한 | 제한의 기준은 **사람이 아니라 행위**다 |
 | 회사 기준의 유일한 예외 | PolyForm Small Business 1.0.0 — 직원·계약자 100명 미만 **그리고** 전년 매출 100만 USD 미만 | 지목이 아니라 **객관적 수치 기준**이라 명단형 특혜가 아니다 |
 | 플랫폼 집행 가능성 | 옵시디언 디렉터리 라벨은 Free / Optional payment / Paid 세 가지이고 설치·배포는 사용자 신원을 확인하지 않는다 | **신원 기반 제한을 집행할 기술적 장치가 없다** |
@@ -333,24 +333,22 @@ package.json       : "license": "MIT", "private": false
 4. **우선순위를 두는 이유:** 1순위는 지배력이 명확한 종속 계열(지분 66~100%), 2순위는 관계사 계열, 3순위는 지주 법인이다. 지원 인력이 한정되어 있으므로 문의 우선순위를 이 순서로 둔다.
 5. **재확인 조건:** 하이케어넷은 2026년 상반기 불균등 유상증자로 인성정보 지분율이 48.22% → 29.89%로 낮아져 종속기업에서 관계기업으로 변경됐다(§2.4). 사업보고서 공시 주기(연 1회)로 명단을 갱신할 때 이 회사의 포함 여부를 다시 확인한다.
 
-### 6.2 그랜트 문구 (영문 원안 · README/SUPPORT.md용)
+### 6.2 임직원 혜택 안내 문구 (한국어 원안 · README/SUPPORT.md용)
 
-> **Employee benefit for S-NET Group**
-> On the Record is released under the MIT License and is free for everyone.
-> In addition, employees of the following organizations, **while employed**, receive:
-> - free priority support and internal deployment assistance,
-> - access to internal training material and preset configurations,
-> - inclusion in the internal distribution channel.
-> Covered organizations (§6.1 기준, 2026-11-01):
-> - Priority 1 — S-NET Systems, Inc. · Goodus Co., Ltd. · Goodus Data Co., Ltd. · Goodus Smart Solution Co., Ltd. · PT. Snet Indonesia · SNET IT (Beijing) Co., Ltd. · SNET VINA Co., Ltd. · SNET Systems America Inc.
-> - Priority 2 — Insung Information Co., Ltd. and its group companies (Insung Digital · Inetbank · Hicare.net (KR) · IH&N · Insung Information Hungary Kft · Insung Systems Inc. · PT. Insung Information Indonesia · Hicare.net Inc. (US))
-> - Priority 3 — Blue Lotus Co., Ltd.
-> This benefit applies to company-issued and personally owned devices, is not a restriction on the MIT license, and ends when employment ends. Support continues under the ordinary community process afterwards.
-
-한국어 요지: "On the Record는 MIT로 모두에게 무료입니다. 위 회사 임직원에게는 재직 중 우선 지원·사내 배포·교육 자료를 추가 제공합니다. 이 혜택은 업무용·개인용 PC 모두에 적용되며, MIT 라이선스를 제한하지 않습니다."
+> **에스넷그룹 임직원 혜택**
+> On the Record는 MIT 라이선스로 누구나 무료로 사용할 수 있습니다.
+> 아래 대상 조직의 임직원에게는 재직 중 다음 혜택을 추가로 제공합니다.
+> - 우선 지원 및 사내 배포 지원
+> - 사내 교육 자료와 설정 프리셋 이용
+> - 사내 배포 채널 이용
+> 대상 조직(§6.1 기준, 2026-11-01):
+> - 1순위 — 에스넷시스템㈜·굿어스㈜·굿어스데이터㈜·굿어스스마트솔루션㈜·PT. Snet Indonesia·SNET IT (Beijing) Co., Ltd.·SNET VINA Co., Ltd.·SNET Systems America Inc.
+> - 2순위 — ㈜인성정보 및 계열사(인성디지탈·아이넷뱅크·하이케어넷(한국)·아이에이치앤·Insung Information Hungary Kft·Insung Systems Inc.·PT. Insung Information Indonesia·Hicare.net Inc. (미국))
+> - 3순위 — ㈜블루로터스
+> 이 혜택은 회사 지급 기기와 개인 소유 기기 모두에 적용되며 MIT 라이선스를 제한하지 않습니다. 퇴사하면 혜택 제공은 종료되지만 설치된 플러그인과 이미 배포된 자료는 회수하지 않습니다. 퇴사 후 지원은 일반 커뮤니티 절차를 따릅니다.
 
 - 핵심: **"라이선스 제한"이 아니라 "혜택"으로 쓴다.** MIT 하에서 임직원에게만 허용/금지할 수 있는 것이 없기 때문이다.
-- **Covered organizations는 §6.1을 정본으로 한다.** V1.1.0에서 3층 명단이 확정됐다. 명단이 바뀌면 §6.1을 먼저 고치고 이 문구를 따라 갱신한다(두 곳을 따로 고치지 않는다).
+- **대상 조직 목록은 §6.1을 정본으로 한다.** V1.1.0에서 3층 명단이 확정됐다. 명단이 바뀌면 §6.1을 먼저 고치고 이 문구를 따라 갱신한다(두 곳을 따로 고치지 않는다).
 - 사내 식별은 별도 계정 체계 없이 **회사 이메일 도메인(`@snetsystems.co.kr` 등) 자기 신고**로 처리하는 것이 유지보수 비용이 가장 낮다.
 - 해외 법인명은 사업보고서 표기를 그대로 쓰고, 국문 표기(굿어스 등)는 별칭으로 병기한다.
 - **역할 분리(V1.0.1):** 이 절은 *대상 조직과 사용 범위*만 규정한다. 혜택의 구체 내용은 §9에서 정의하며, 혜택을 변경할 때는 §9만 수정한다. 두 절에 같은 내용을 중복 서술하지 않는다.
@@ -372,10 +370,30 @@ package.json       : "license": "MIT", "private": false
 | 2 | 상표 | 중 | "On the Record"는 동명 미디어·프로그램이 다수 | KIPRIS·USPTO 9·42류 검색(미확인), 로고·디자인 차별화 |
 | 3 | Obsidian 상표 정책 | 중 | 저장소·문서에 "Obsidian"을 1차 제작물처럼 쓰면 정책 위반 소지 | 저장소명 `ontherecord`, 설명에 "community plugin" 명시 |
 | 4 | 디렉터리 라벨 불일치 | 중 | "Paid"로 인식되면 README 고지 필요, "Free"인데 유료 기능이 있으면 신고 대상 | Free로 등록, 유료 기능 없음. 향후 유료 기능 추가 시 README·라벨 동시 갱신 |
-| 5 | 의존 구성요소 | 중 | whisper.cpp·GGML 모델·오디오 디코더의 라이선스가 MIT 공개와 충돌할 수 있다 | `0-ENV-10`에서 개별 확인. ffmpeg 계열은 LGPL/GPL 여부와 배포 형태(동적 링크/번들)를 반드시 확인 |
+| 5 | 의존 구성요소 | 중 | whisper.cpp·GGML 모델·오디오 디코더의 라이선스가 MIT 공개와 충돌할 수 있다 | `0-ENV-10` 검토 결과(아래) 반영. 실제 릴리스 산출물 선택 시 버전·빌드 설정·고지를 확인하고 SBOM 갱신 |
 | 6 | 대상 회사 변동 | 낮음 | 계열·관계사 지분이 바뀌면 대상 목록이 낡는다(하이케어넷 사례) | 사업보고서 공시 주기(연 1회)로 목록 갱신, 정책 문서에 기준일 명시 |
 | 7 | 맞춤 라이선스 유혹 | 낮음 | "우리 회사만 무료"를 라이선스로 만들고 싶은 요구가 재발할 수 있다 | 본 보고서 §4.5를 근거로 정책 문서로 처리 |
 | 8 | 직원 검증 수단 부재 | 낮음 | 해외 법인·비상장 자회사 직원 확인이 어렵다 | 자기 신고 기반, 필요 시 그룹 인사 확인 |
+
+### 0-ENV-10 의존 구성요소 라이선스 검토 결과 (2026-11-01)
+
+**결론:** 확인한 upstream 라이선스에서 MIT 플러그인 코드와의 일괄적인 충돌은 발견하지 못했다. 다만 런타임·모델·오디오 변환기의 실제 배포 파일과 버전은 아직 선정되지 않았으므로, 아래 조건을 충족하기 전에는 최종 SBOM이나 반입 심의용 라이선스 명세로 간주하지 않는다.
+
+| 구성요소 | 확인한 라이선스·근거 | MIT 공개 및 배포 판단 |
+|---|---|---|
+| 현재 플러그인 런타임 | `package.json`에는 `dependencies`가 없고 개발 도구만 `devDependencies`로 선언되어 있다. `src/main.ts`는 Obsidian 플러그인 빈 골격이다. | 현재 코드에는 whisper.cpp, 모델, 오디오 변환기가 들어 있지 않다. 현재 개발 의존성과 추후 설치할 런타임을 혼합해 SBOM을 작성하지 않는다. |
+| `whisper.cpp` 및 `ggml` 코드 | 공식 upstream 저장소의 각 `LICENSE`는 MIT이다. whisper.cpp upstream README는 기본 CLI가 16-bit WAV만 입력으로 받으며 별도 변환 예로 FFmpeg를 안내한다. | MIT 공개와 양립 가능하다. 바이너리를 재배포하면 해당 코드의 저작권·라이선스 고지를 보존한다. 공식 릴리스 또는 자체 빌드의 선택적 backend와 포함 DLL은 별도 구성요소로 확인한다. |
+| whisper.cpp용 변환 모델 | Hugging Face `ggerganov/whisper.cpp` 모델 저장소는 카드에 `license: mit`를 표시하고 `base`, `base-q5_1`, `small`, `small-q5_1` 등을 제공한다. 반면 Hugging Face `openai/whisper-base` 모델 카드는 `license: apache-2.0`를 표시한다. | 모델 전체를 일괄적으로 MIT라고 표기하지 않는다. 실제 설치할 저장소·파일의 카드와 고지, revision, 파일 해시를 고정하고 그 모델에 적용되는 라이선스·고지를 함께 제공한다. |
+| FFmpeg 후보 | FFmpeg upstream `LICENSE.md`: 기본은 LGPL-2.1+이며, `--enable-gpl`을 켜면 GPL-2+, 외부 라이브러리·빌드 옵션에 따라 라이선스가 달라진다. `--enable-nonfree` 결과물은 재배포할 수 없다고 명시한다. | LGPL/GPL이 플러그인 자체의 MIT 표기를 자동으로 대체하지는 않지만, MIT가 FFmpeg 또는 결합된 구성요소의 조건을 대체하지도 않는다. 실제 실행 파일/DLL을 배포하기 전 빌드 설정, 외부 라이브러리, 고지 및 해당 라이선스의 소스 제공 등 의무를 확인한다. `--enable-nonfree` 빌드는 배포 후보에서 제외한다. |
+
+위 upstream 문서는 `main`/`master` 등 변경 가능한 브랜치를 기준으로 2026-11-01에 확인했다. 따라서 `0-BASE-03`에서 whisper.cpp 빌드·배포본을, `0-BASE-05`에서 오디오 변환기를 선택할 때 정확한 버전/revision과 산출물 목록을 다시 기록한다. 모델도 실제 catalog에 넣는 파일별 revision과 SHA-256을 고정한다. 이는 본 검토의 범위를 넘어선 미해결 라이선스 충돌이 아니라, 아직 선택되지 않은 배포물의 재현 가능한 SBOM 확정 조건이다.
+
+**주요 upstream 출처**
+- [whisper.cpp LICENSE](https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/LICENSE), [ggml LICENSE](https://raw.githubusercontent.com/ggml-org/ggml/master/LICENSE)
+- [whisper.cpp README](https://github.com/ggml-org/whisper.cpp)
+- [whisper.cpp 변환 모델 카드 및 파일 목록](https://huggingface.co/ggerganov/whisper.cpp)
+- [OpenAI Whisper base 모델 카드](https://huggingface.co/openai/whisper-base)
+- [FFmpeg LICENSE.md](https://raw.githubusercontent.com/FFmpeg/FFmpeg/master/LICENSE.md)
 
 ## 8. 작업 항목 매핑
 
@@ -383,8 +401,8 @@ package.json       : "license": "MIT", "private": false
 |---|---|---|
 | `0-ENV-06` 라이선스 정책 확정 + 대상 회사명 목록 | **해소 (V1.1.0)** | 라이선스 MIT 확정(§1·§5) + 회사명 3층 명단 확정(§2 명세 · §6.1) |
 | `0-ENV-08` 커뮤니티 등록 라이선스 조건 확인 | **본 문서 §4.4로 해소** | Obsidian 정책 원문 확인 완료 |
-| `0-ENV-09` LICENSE 파일 작성, README 갱신 | **착수 가능** | A안 확정(V1.0.1)으로 조건 충족. 단 `LICENSE` 저작권자 표기는 §7-1 권리 귀속 확인 후 |
-| `0-ENV-10` 의존 구성요소 라이선스 충돌 확인 | 미완 | §7-5. 완료 후 §9.3 제약 3(반입 심의 패키지) 확정 |
+| `0-ENV-09` LICENSE 파일 작성, README 갱신 | **구현 완료 (2026-11-01)** | `LICENSE`, `README.md`, `package.json`, `SUPPORT.md` 반영. 저작권자·공개 승인 및 사내 지원 운영 정보는 미정이며 `TODO.md`에 후속 확인사항 기록 |
+| `0-ENV-10` 의존 구성요소 라이선스 충돌 확인 | **해소 (2026-11-01, 현재 설계 수준)** | §7 검토 결과 참조. whisper.cpp/ggml은 MIT, 모델 라이선스는 실제 출처별 확인, FFmpeg는 빌드·배포 조건부. 최종 배포 파일 단위 SBOM은 `0-BASE-03`·`0-BASE-05`에서 고정 |
 | `0-ENV-11` 프로젝트 초기화 | 완료 | `package.json`이 `private: true`, `license: UNLICENSED` → **MIT 확정에 따라 `MIT`/`false`로 변경 필요** |
 
 ## 9. 사내 혜택 정책 (에스넷그룹 임직원 전용)
@@ -457,6 +475,8 @@ package.json       : "license": "MIT", "private": false
 | V1.0.0 | 2026-11-01 | 최초 작성 — DART 계열·관계사 명세(§2), 라이선스 체계 리뷰(§4), 윤리 검증(§4.6), 권고안 A/B/C(§5), 사내 사용 정책 초안(§6), 리스크 등록부(§7) |
 | V1.0.1 | 2026-11-01 | ①MIT 배포 확정 반영(§1·§5 A안) ②R5 기각과 근거 추가(§3.1·§3.2) ③디렉터리 정책 적용 범위 근거 추가(§4.4) ④**§9 사내 혜택 정책 신설** ⑤상충 검토 결과 반영(§11.1) |
 | V1.1.0 | 2026-11-01 | ①상태를 **확정(final)** 으로 전환 ②**§6.1 혜택 대상 조직 3층 명단 확정**(블루로터스㈜·인성정보 계열 8개사 포함) ③§6.2 그랜트 문구 명단·우선순위 갱신 ④§9.2에 대상·혜택 우선순위 조합 규칙 추가 ⑤`0-ENV-06` 해소 처리 |
+| V1.2.0 | 2026-11-01 | `0-ENV-09` 구현 결과 반영: MIT `LICENSE`·README·패키지 메타데이터·`SUPPORT.md` 작성. 저작권자와 공개 승인, 사내 지원 운영 세부사항은 미정으로 유지 |
+| V1.3.0 | 2026-11-01 | 혜택 안내 원안을 한국어로 정리하고, `0-ENV-09` 반영 후 상충 검토서의 라이선스 상태를 현행화 |
 
 ### 11.1 V1.0.1 상충 검토 (내용 논증)
 

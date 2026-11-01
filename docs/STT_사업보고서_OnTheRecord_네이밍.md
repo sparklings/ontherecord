@@ -98,7 +98,7 @@ aliases:
 ## 7. 다음 단계
 
 1. `manifest.json` 고정: `id on-the-record`, `name On the Record`, `author SUNGWON PARK`, `isDesktopOnly true`.
-2. README 첫 줄 확정: "Local minutes for Obsidian — 녹음이 끝나면 전사가 시작되고, 검토 후에만 기록됩니다."
+2. README 첫 줄 확정: "녹음이 끝나면 전사를 시작하고, 검토한 뒤에만 기록합니다." (제품 부제는 별도 표기)
 3. 상표·저장소 검증 후 커뮤니티 디렉터리 제출.
 4. 릴리스 후 이름 인지도보다 **부제·설명 문구의 검색 성과**를 먼저 측정한다.
 

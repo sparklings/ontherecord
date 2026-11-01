@@ -1,6 +1,6 @@
 # On the Record (STT 회의록 Obsidian 플러그인)
 
-Local minutes for Obsidian. Obsidian 데스크톱용 커뮤니티 플러그인 프로젝트이다. 플러그인 id는 `on-the-record`이다. 녹음 오디오를 로컬에서 전사하고, 전사 결과를 검토한 뒤 노트에 반영한다.
+Obsidian 데스크톱용 커뮤니티 플러그인 프로젝트이다. 플러그인 id는 `on-the-record`이다. 녹음 오디오를 로컬에서 전사하고, 전사 결과를 검토한 뒤 노트에 반영한다.
 
 ## 현재 상태
 
@@ -54,6 +54,7 @@ Local minutes for Obsidian. Obsidian 데스크톱용 커뮤니티 플러그인 �
 - [GLOSSARY.md](./GLOSSARY.md): 용어 정의
 - [SETTINGS_DESIGN.md](./SETTINGS_DESIGN.md): 설정 저장 구조
 - [HARDWARE_PROFILE.md](./HARDWARE_PROFILE.md): 하드웨어 프로필·측정 기록 형식
+- [SUPPORT.md](./SUPPORT.md): 에스넷그룹 임직원 추가 지원·사내 자료 안내
 
 ## 소유·관리
 
@@ -64,4 +65,6 @@ Local minutes for Obsidian. Obsidian 데스크톱용 커뮤니티 플러그인 �
 
 ## 라이선스
 
-MIT 라이선스로 공개할 계획이다. `LICENSE` 파일은 아직 없다. 저작권자 표기는 소속 회사의 규정 확인 후 확정한다. 소속 회사 구성원에게는 라이선스와 별도로 지원과 사내 자료를 제공할 계획이며, 대상 조직 목록은 [라이선스 정책 보고서](./docs/STT_라이선스정책_에스넷그룹_명세_및_체계검토.md)를 따른다.
+이 프로젝트의 코드는 [MIT 라이선스](./LICENSE)로 제공한다. 저작권자 표기는 회사 규정 및 권리 귀속 확인 전까지 **미정**이며, 현재 저장소는 비공개 상태이다. 공개 전 승인 여부를 확인한다.
+
+에스넷그룹 대상 조직의 임직원에게는 라이선스와 별도로 재직 중 우선 지원·사내 배포 지원·교육 자료 및 프리셋을 제공한다. 대상 조직은 [라이선스 정책 보고서](./docs/STT_라이선스정책_에스넷그룹_명세_및_체계검토.md)를, 혜택과 미확정 운영 정보를 포함한 안내는 [SUPPORT.md](./SUPPORT.md)를 참조한다. 이 혜택은 MIT 라이선스 조건을 제한하지 않는다.
