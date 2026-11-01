@@ -51,9 +51,9 @@ Obsidian 데스크톱용 커뮤니티 플러그인 프로젝트이다. 플러그
 - [개발계획서](./docs/STT_회의록_커뮤니티플러그인_개발계획서.md)
 - [CHANGELOG.md](./CHANGELOG.md): 작업 기록
 - [TODO.md](./TODO.md): 할 일 목록
-- [GLOSSARY.md](./GLOSSARY.md): 용어 정의
-- [SETTINGS_DESIGN.md](./SETTINGS_DESIGN.md): 설정 저장 구조
-- [HARDWARE_PROFILE.md](./HARDWARE_PROFILE.md): 하드웨어 프로필·측정 기록 형식
+- [GLOSSARY.md](./docs/GLOSSARY.md): 용어 정의
+- [SETTINGS_DESIGN.md](./docs/SETTINGS_DESIGN.md): 설정 저장 구조
+- [HARDWARE_PROFILE.md](./docs/HARDWARE_PROFILE.md): 하드웨어 프로필·측정 기록 형식
 - [SUPPORT.md](./SUPPORT.md): 에스넷그룹 임직원 추가 지원·사내 자료 안내
 
 ## 소유·관리

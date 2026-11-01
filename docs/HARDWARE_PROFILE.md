@@ -75,7 +75,7 @@ PC마다 같은 형식으로 장치 정보와 측정 결과를 남겨 PC 간 결
 
 ## 예시 (장치 프로필)
 
-실제 파일: [benchmarks\hardware\lenovo-ideapad-gaming3-15imh05.json](./benchmarks/hardware/lenovo-ideapad-gaming3-15imh05.json). 아래는 수집 전 초안 예시이며 메모리 값이 비어 있다.
+실제 파일: [benchmarks\hardware\lenovo-ideapad-gaming3-15imh05.json](../benchmarks/hardware/lenovo-ideapad-gaming3-15imh05.json). 아래는 수집 전 초안 예시이며 메모리 값이 비어 있다.
 
 값은 `systeminfo_Lenovo_IdeaPad_Gaming3.md`와 2026-11-01 조회 결과에 있는 것만 적었다.
 

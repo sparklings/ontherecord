@@ -19,6 +19,7 @@
 - `0-ENV-02` 완료: private 저장소 `sparklings/ontherecord` 생성, 첫 커밋(`12881ff`) push. 공개 범위는 라이선스·회사 규정 확인 후 재결정
 
 ### 변경
+- 설계·참조 문서 `GLOSSARY.md`, `SETTINGS_DESIGN.md`, `HARDWARE_PROFILE.md`를 루트에서 `docs\`로 이동하고 README, TODO, `benchmarks\README.md`, 개발계획서의 링크를 갱신. `README.md`, `LICENSE`, `CHANGELOG.md`, `TODO.md`, `SUPPORT.md`는 루트 유지(이하 이전 기록의 파일 위치는 이동 전 기준)
 - 프로젝트 문서의 일반 설명을 한국어로 정리하고 `SUPPORT.md`를 한국어로 작성. 제품명·기술 식별자·공식 문서의 원문 인용은 정확한 식별을 위해 원어 유지
 - 저자 표기를 `SUNGWON PARK`으로 변경(`manifest.json`, `package.json`, 네이밍 보고서, TODO). 기존 `Sungwon Park (SG)` 삭제
 - Git 전역 설정 `http.sslVerify=false`를 제거하고 사내 GitLab 호스트(`211.239.11.79:8443`, `10.20.2.79:8443`)에만 URL 단위로 적용. GitHub는 기본값(검증 사용)으로 복귀. 개발 PC 환경 설정이며 프로젝트 파일 변경 없음(이 PC만 적용, 다른 PC는 별도 설정 필요)
