@@ -31,7 +31,7 @@ aliases:
 | 제품명 | **On the Record** | 디렉터리 내 중복 없음(2026-11-01) |
 | 플러그인 id | `on-the-record` | 소문자·하이픈만, `obsidian` 미포함, `plugin` 미종료 |
 | 부제 | Local minutes for Obsidian | 화면 노출용 고정 문구 |
-| 저자 표기 | Sungwon Park (SG) | Assistant Emily와 동일 저자 |
+| 저자 표기 | SUNGWON PARK | Assistant Emily와 동일 표기(2026-11-01 변경, 기존 `Sungwon Park (SG)`) |
 | 저장소 | `ontherecord` (`github.com/sparklings/ontherecord`) | 사용자가 입력하기 쉬운 주소 우선(2026-11-01 변경, 기존 `obsidian-on-the-record`) |
 | 대상 | 정부기관·비영리·학교·개인 | 공공·교육 우선 |
 
@@ -97,7 +97,7 @@ aliases:
 
 ## 7. 다음 단계
 
-1. `manifest.json` 고정: `id on-the-record`, `name On the Record`, `author Sungwon Park (SG)`, `isDesktopOnly true`.
+1. `manifest.json` 고정: `id on-the-record`, `name On the Record`, `author SUNGWON PARK`, `isDesktopOnly true`.
 2. README 첫 줄 확정: "Local minutes for Obsidian — 녹음이 끝나면 전사가 시작되고, 검토 후에만 기록됩니다."
 3. 상표·저장소 검증 후 커뮤니티 디렉터리 제출.
 4. 릴리스 후 이름 인지도보다 **부제·설명 문구의 검색 성과**를 먼저 측정한다.
