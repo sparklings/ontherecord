@@ -1,0 +1,27 @@
+{
+  "deviceId": "lenovo-ideapad-gaming3-15imh05",
+  "profileRevision": 1,
+  "recordedAt": "2026-11-01T10:31:00+09:00",
+  "os": { "name": "Windows 11 Pro", "version": "10.0.26200", "build": "26200", "arch": "x64" },
+  "cpu": { "model": "Intel Core i7-10750H", "cores": 6, "threads": 12 },
+  "memoryBytes": 17041244160,
+  "gpus": [
+    {
+      "name": "Intel UHD Graphics",
+      "kind": "integrated",
+      "vendor": "Intel",
+      "driverVersion": "27.20.100.9664",
+      "dedicatedMemoryBytes": null,
+      "pnpDeviceId": "VEN_8086&DEV_9BC4"
+    },
+    {
+      "name": "NVIDIA GeForce GTX 1650 Ti",
+      "kind": "discrete",
+      "vendor": "NVIDIA",
+      "driverVersion": "580.88",
+      "dedicatedMemoryBytes": 4294967296,
+      "pnpDeviceId": "VEN_10DE&DEV_1F95"
+    }
+  ],
+  "notes": "Get-CimInstance(Win32_ComputerSystem, Win32_Processor, Win32_VideoController)와 nvidia-smi로 2026-11-01 수집. NVIDIA 드라이버는 nvidia-smi 표기(580.88)로 기록. Windows는 같은 드라이버를 32.0.15.8088로 표기. Intel UHD는 전용 메모리가 없어 null."
+}
