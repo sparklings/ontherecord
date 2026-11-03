@@ -11,7 +11,7 @@ source:
   - "https://docs.obsidian.md/Reference/Manifest"
   - "https://a16z.com/everything-is-recorded-now/"
 author:
-  - 박성원
+  - SUNGWON PARK
 tags:
   - 사업보고서
   - 네이밍
@@ -104,4 +104,4 @@ aliases:
 
 ---
 
-관련 문서: [STT_회의록_커뮤니티플러그인_개발계획서.md](./STT_회의록_커뮤니티플러그인_개발계획서.md)
+관련 문서: [STT_회의록_커뮤니티플러그인_개발계획서.md](../design/STT_회의록_커뮤니티플러그인_개발계획서.md)

@@ -384,9 +384,9 @@ package.json       : "license": "MIT", "private": false
 | 현재 플러그인 런타임 | `package.json`에는 `dependencies`가 없고 개발 도구만 `devDependencies`로 선언되어 있다. `src/main.ts`는 Obsidian 플러그인 빈 골격이다. | 현재 코드에는 whisper.cpp, 모델, 오디오 변환기가 들어 있지 않다. 현재 개발 의존성과 추후 설치할 런타임을 혼합해 SBOM을 작성하지 않는다. |
 | `whisper.cpp` 및 `ggml` 코드 | 공식 upstream 저장소의 각 `LICENSE`는 MIT이다. whisper.cpp upstream README는 기본 CLI가 16-bit WAV만 입력으로 받으며 별도 변환 예로 FFmpeg를 안내한다. | MIT 공개와 양립 가능하다. 바이너리를 재배포하면 해당 코드의 저작권·라이선스 고지를 보존한다. 공식 릴리스 또는 자체 빌드의 선택적 backend와 포함 DLL은 별도 구성요소로 확인한다. |
 | whisper.cpp용 변환 모델 | Hugging Face `ggerganov/whisper.cpp` 모델 저장소는 카드에 `license: mit`를 표시하고 `base`, `base-q5_1`, `small`, `small-q5_1` 등을 제공한다. 반면 Hugging Face `openai/whisper-base` 모델 카드는 `license: apache-2.0`를 표시한다. | 모델 전체를 일괄적으로 MIT라고 표기하지 않는다. 실제 설치할 저장소·파일의 카드와 고지, revision, 파일 해시를 고정하고 그 모델에 적용되는 라이선스·고지를 함께 제공한다. |
-| FFmpeg 후보 | FFmpeg upstream `LICENSE.md`: 기본은 LGPL-2.1+이며, `--enable-gpl`을 켜면 GPL-2+, 외부 라이브러리·빌드 옵션에 따라 라이선스가 달라진다. `--enable-nonfree` 결과물은 재배포할 수 없다고 명시한다. | LGPL/GPL이 플러그인 자체의 MIT 표기를 자동으로 대체하지는 않지만, MIT가 FFmpeg 또는 결합된 구성요소의 조건을 대체하지도 않는다. 실제 실행 파일/DLL을 배포하기 전 빌드 설정, 외부 라이브러리, 고지 및 해당 라이선스의 소스 제공 등 의무를 확인한다. `--enable-nonfree` 빌드는 배포 후보에서 제외한다. |
+| FFmpeg 후보 (`0-BASE-05`, 2026-11-02) | 공식 FFmpeg `n9.0.1` 소스의 [`LICENSE.md`](https://github.com/FFmpeg/FFmpeg/blob/n9.0.1/LICENSE.md)를 확인했다. 기본은 LGPL-2.1+이며, `--enable-gpl` 및 일부 외부 라이브러리·빌드 옵션에 따라 GPL 계열로 바뀔 수 있다. `--enable-nonfree` 결과물은 재배포할 수 없다. | 제품용 후보는 GPL·version3·nonfree 옵션 및 외부 라이브러리가 없는 LGPL 기본 빌드로 한정한다. Lenovo의 시험용 Gyan.dev 바이너리는 `--enable-gpl --enable-version3` 빌드(GPL v3)로 확인했으며 제품 배포 후보에서 제외했다. 정확한 제품 바이너리의 구성, 고지·소스 제공 의무 및 Obsidian 설치 정책은 배포 전에 별도 확인한다. 세부 시험과 해시는 [0-BASE-05 기록](../baselines/BASE-05_AUDIO_DECODER_2026-11-02.md)에 있다. |
 
-위 upstream 문서는 `main`/`master` 등 변경 가능한 브랜치를 기준으로 2026-11-01에 확인했다. 따라서 `0-BASE-03`에서 whisper.cpp 빌드·배포본을, `0-BASE-05`에서 오디오 변환기를 선택할 때 정확한 버전/revision과 산출물 목록을 다시 기록한다. 모델도 실제 catalog에 넣는 파일별 revision과 SHA-256을 고정한다. 이는 본 검토의 범위를 넘어선 미해결 라이선스 충돌이 아니라, 아직 선택되지 않은 배포물의 재현 가능한 SBOM 확정 조건이다.
+위 upstream 문서는 whisper.cpp·ggml 관련 변경 가능 브랜치를 기준으로 2026-11-01에 확인했으며, FFmpeg는 `n9.0.1` 태그로 고정해 2026-11-02에 재확인했다. `0-BASE-03`은 실행 파일을 선정했고, `0-BASE-05`는 FFmpeg 소스 및 LGPL 빌드 경로를 후보로 선택했다. 실제 배포할 빌드·산출물은 버전, 구성 요소, 고지·소스 제공 조건과 함께 별도 고정해야 한다. 모델도 실제 catalog에 넣는 파일별 revision과 SHA-256을 고정한다. 이는 본 검토 범위를 넘어선 미해결 라이선스 충돌이 아니라, 배포물의 재현 가능한 SBOM을 확정하기 위한 조건이다.
 
 **주요 upstream 출처**
 - [whisper.cpp LICENSE](https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/LICENSE), [ggml LICENSE](https://raw.githubusercontent.com/ggml-org/ggml/master/LICENSE)
@@ -419,7 +419,7 @@ package.json       : "license": "MIT", "private": false
 | # | 혜택 | 내용 | 왜 임직원 전용인가 | 우선순위 |
 |---|---|---|---|---|
 | 1 | **사내 반입 심의 패키지** | SBOM, 라이선스 명세(본 문서 §4·§5), "완전 로컬·데이터 반출 0" 동작 증명, 설치·제거 절차, 보안 검토 Q&A | 사내 SW 반입 심의 요구는 회사마다 달라 외부인에게는 무의미하다 | 1 |
-| 2 | **검증된 하드웨어 프로파일** | 사내 표준 PC별 권장 모델·실행 장치·설정 조합(`HARDWARE_PROFILE.md`·`benchmarks/` 활용) | 사내 조달 기기 목록에 맞춘 검증 결과다 | 2 |
+| 2 | **검증된 하드웨어 프로파일** | 사내 표준 PC별 권장 모델·실행 장치·설정 조합([`docs/design/HARDWARE_PROFILE.md`](../design/HARDWARE_PROFILE.md)·`benchmarks/` 활용) | 사내 조달 기기 목록에 맞춘 검증 결과다 | 2 |
 | 3 | **사내 프리셋 번들** | 회의록 템플릿, 사내 용어집(제품명·인명·약어)을 전사 초기 프롬프트에 주입, 승인 후 기록 기본값 | 사내 고유명사는 공개 배포물에 넣을 수 없다 | 3 |
 | 4 | **교육·온보딩** | 설치 가이드, 워크숍, 녹음 동의 문구·개인정보 안내 템플릿(법무 검토본) | 법무·보안 검토 결과는 그룹 내부 자산이다 | 4 |
 | 5 | **우선 지원 채널** | 사내 게시판, 이슈 우선 처리, 버전 업 대응, 도입 컨설팅 | 지원은 라이선스가 아니라 관계로 제공한다 | 5 |
@@ -507,4 +507,4 @@ package.json       : "license": "MIT", "private": false
 
 ---
 
-관련 문서: [STT_사업보고서_OnTheRecord_네이밍.md](./STT_사업보고서_OnTheRecord_네이밍.md) · [STT_회의록_커뮤니티플러그인_개발계획서.md](./STT_회의록_커뮤니티플러그인_개발계획서.md)
+관련 문서: [STT_사업보고서_OnTheRecord_네이밍.md](./STT_사업보고서_OnTheRecord_네이밍.md) · [STT_회의록_커뮤니티플러그인_개발계획서.md](../design/STT_회의록_커뮤니티플러그인_개발계획서.md)

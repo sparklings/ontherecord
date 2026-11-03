@@ -14,7 +14,7 @@
 | Submit your plugin | https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin |
 | Manage your plugin or theme | https://docs.obsidian.md/Community+directory/Manage+your+plugin+or+theme |
 
-대조 대상은 현재까지의 결정이다: MIT 공개, 구성원 모두 소유·오감지능연구소 관리, 이관 계획, 런타임·모델 설치 기능, vault 밖 저장, 사내 혜택.
+대조 대상은 현재까지의 결정이다: MIT 공개, 구성원 모두 소유·소속 회사 담당 조직 관리, 이관 계획, 런타임·모델 설치 기능, vault 밖 저장, 사내 혜택.
 
 적용 범위: 이 정책은 **공식 디렉터리에 등재하는 플러그인에만** 적용된다(원문: "do not apply to plugins installed outside of the Obsidian directory", 즉 Obsidian 디렉터리 밖에서 설치한 플러그인에는 적용되지 않음). 아래 상충은 디렉터리 등재를 목표로 할 때만 해당한다.
 
@@ -27,7 +27,7 @@
 | 1 | 높음 | 개발계획서 §2·§7·§9: 플러그인이 whisper.cpp 런타임과 모델을 내려받아 설치하고, 업데이트·제거까지 관리(Runtime Manager) | 금지 항목: "Install or update themselves or their dependencies." (플러그인 스스로 또는 그 의존성을 설치·업데이트하는 행위) | **정책 문구와 충돌할 가능성이 있다.** "dependencies"가 런타임 실행 파일·모델을 포함하는지는 원문에 정의가 없고, 이 세션에서 심사 사례를 확인하지 못했다. 사용자 동의를 받아도 금지 항목이라는 점은 같다. 아래 §3 참고 |
 | 2 | 높음 | 저장소를 `sparklings/ontherecord`에 두고 회사 공식 저장소 확정 시 이관 | FAQ: 등재 후 GitHub 위치 이전은 **관리자만** 할 수 있고, Discord `#community-directory`에 새·이전 위치와 원저자 허가 여부를 올려 요청. 항목 식별자(id)는 게시 후 변경 불가이며 변경 시 다운로드 수가 초기화되고 모든 사용자가 재설치해야 함 | 이관을 하려면 관리자 절차가 필요하다. 등재 **전에** 최종 저장소를 정하면 절차를 피한다. 이 판단은 `0-ENV-02`의 "공개 범위 재결정"과 연결된다 |
 | 3 | 중간 | README에 현재 네트워크 사용 안내가 없음 | Disclosures: 네트워크 사용은 어떤 원격 서비스를 왜 쓰는지 README에 명시해야 허용 | 모델·런타임 다운로드를 한다면 출처와 이유를 README에 적어야 한다. 개발계획서 §11도 "설치 다운로드 외 요청 없음"을 명시하므로 내용은 일치한다. 문서화만 필요 |
-| 4 | 중간 | 설정·런타임·모델을 `%LOCALAPPDATA%\on-the-record\`에 저장(`SETTINGS_DESIGN.md`), Obsidian 코어 녹음 파일을 읽음 | 공개 항목: "Accessing files outside of Obsidian vaults. Clearly explain why this is needed." (Obsidian vault 밖 파일에 접근하는 경우 그 이유를 명확히 설명) | vault 밖 접근에 해당한다. README에 이유와 함께 적어야 한다. 문서화만 필요 |
+| 4 | 중간 | 설정·런타임·모델을 `%LOCALAPPDATA%\on-the-record\`에 저장(`docs/design/SETTINGS_DESIGN.md`), Obsidian 코어 녹음 파일을 읽음 | 공개 항목: "Accessing files outside of Obsidian vaults. Clearly explain why this is needed." (Obsidian vault 밖 파일에 접근하는 경우 그 이유를 명확히 설명) | vault 밖 접근에 해당한다. README에 이유와 함께 적어야 한다. 문서화만 필요 |
 | 5 | 중간 | `LICENSE` 파일과 MIT 표기는 반영됨. `package.json`도 `license: MIT`, `private: false`로 변경됨. 저작권자와 공개 승인은 미정 | "Include a LICENSE file and clearly indicate the license." (LICENSE 파일을 포함하고 라이선스를 명확히 표시) 제출 요건에도 `LICENSE` 포함 | 라이선스 파일과 메타데이터 요건은 `0-ENV-09`에서 반영했다. 저작권자 표기와 공개 승인은 `0-ENV-07`에서 확인해야 하며, 승인 전까지 저장소는 비공개로 유지 |
 | 6 | 중간 | `LICENSE` 저작권자 표기 미정("구성원 모두" 소유) | 원문에 저작권자 형식 규정은 없음. 스캐너는 GitHub이 인식한 라이선스 유형을 확인 | 형식 제약은 없다. 다만 MIT 전문 형식(`Copyright (c) 연도 이름`)을 유지해야 GitHub이 MIT로 인식할 가능성이 높다. 이 인식은 이번에 시험하지 않았다 |
 | 7 | 낮음 | `manifest.json`의 author `SUNGWON PARK`, `authorUrl` 개인 GitHub | FAQ: 항목의 Owner를 개인 또는 소속 **조직(organization)** 으로 지정 가능. attribution은 공개 표시일 뿐 소유권이 아님 | 회사 소유 방침과 Owner 설정이 조직으로 가능하다는 점은 서로 맞는다. 단, Obsidian 디렉터리의 조직 계정을 따로 만들어야 한다. 회사 규정(`0-ENV-07`) 확정 후 결정 |

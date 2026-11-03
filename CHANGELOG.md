@@ -4,36 +4,67 @@
 
 분류: 추가 / 변경 / 삭제 / 결정 / 이슈
 
+## 2026-11-03
+
+### 추가
+- `0-BASE-06`~`0-BASE-09`: 큰 모델(medium, large-v3-turbo, large-v3) 기준선, 장비별 측정 기록 구조와 요약 스크립트, 1시간 회의 소요 시간 집계표. `0-OBS-02`: 녹음 파일 안정화 감지 구현과 코어 녹음기 시험
+- 샘플 폴더 구조(`samples\`)를 `.gitkeep`으로만 제공
+
+### 변경
+- `.gitignore`: `samples\` 내용 전체와 오디오·자막 확장자(`*.m4a`, `*.wav`, `*.srt` 등)를 제외. `.gitkeep`만 추적
+- 회사명·부서명·실명·계열사 명단·사내 서버 주소를 README, SUPPORT, CHANGELOG, TODO, 보고서 일부에서 일반 표현으로 바꿈. 라이선스 정책 검토 보고서는 검토 이력 보존을 위해 유지
+
+## 2026-11-02
+
+### 추가
+- `0-ENV-01`: Samsung 960XFG의 GPU를 재확인해 Intel Iris Xe Graphics, 드라이버 32.0.101.7088, `VEN_8086&DEV_A7A0`를 기록. Lenovo IdeaPad Gaming 3도 재확인해 하드웨어 프로필 revision 2에 Windows 11 build 26300과 최신 GPU 정보를 반영
+- `0-BASE-01`: 합성 오디오 5종과 실제 녹음 3개의 원본·변환본 12종을 확보하고 컨테이너·코덱·길이·SHA-256 및 FFmpeg 디코딩 결과 기록
+- `0-BASE-02`: 한국어 회의 샘플 3개의 출처·기술 메타데이터·SHA-256 기록. 음성 내용은 열람·전사하지 않았으며, 기준 전사본과 CER 평가는 동의 및 조직 정책 확인 후 진행
+- `0-BASE-03`: whisper.cpp v1.9.5 CPU 배포본(b5454)과 MIT 라이선스, 실행 파일·배포본 해시 및 `base`·`small` q5_1 모델 해시 기록
+- `0-BASE-04`: Samsung과 Lenovo에서 `base`·`small` 모델을 각 2개 샘플로 2회씩 측정해 장치별 JSON 8건 추가. 처리율·최대 메모리 결과는 `docs\baselines\BASE-04_THROUGHPUT_MEASUREMENT_2026-11-02.md`에 정리
+- `0-BASE-05`: FFmpeg 9.0.1을 디코더 후보로 선정. 합성 표본 5종과 실제 Opus/M4A 3종을 Lenovo에서 정규화 디코딩 확인하고, LGPL 기본 빌드와 현재 GPLv3 개발용 빌드의 구분 및 배포 조건을 기록
+- Samsung GPU 확인 기록 `docs\baselines\HARDWARE_CHECK_SAMSUNG_960XFG_2026-11-02.md` 및 하드웨어 프로필 `benchmarks\hardware\samsung-960xfg.json` 추가
+- `0-OBS-01`: Obsidian 1.14.4의 `PlugVaults`에서 공개 `app.vault` 이벤트로 코어 Audio recorder `.m4a` 생성 1건 감지. `modify` 이벤트는 미관찰. [시험 기록](./docs/baselines/OBS-01_AUDIO_RECORDER_EVENT_PROBE_2026-11-02.md)
+
+### 변경
+- `0-BASE-04` Lenovo 기준선 반영: 긴 샘플 기준 `base` 14.543~14.735초/오디오 1분, `small` 25.508~26.415초/오디오 1분. TODO 항목을 완료로 변경. 전사 품질(CER)은 미평가
+- `.gitignore`에서 `samples\` 전체를 제외해 오디오뿐 아니라 전사문·라벨·메타데이터도 Git 추적 대상에서 제외
+- 측정 스크립트의 전사문 저장 위치를 동기화 폴더 밖 `%LOCALAPPDATA%\on-the-record-dev\transcripts\`로 변경하고, 측정 기록에는 사용자 경로 대신 환경 변수 토큰을 기록
+- `docs\design\HARDWARE_PROFILE.md`의 전사문 경로 규칙 및 Lenovo 프로필 예시를 실제 확인값에 맞게 갱신. Lenovo 시스템 정보 문서에 OS 빌드·GPU 메모리·드라이버·저장 공간 재확인 결과 반영
+- 문서 폴더를 `docs\design\`(설계), `docs\baselines\`(시험·기준선), `docs\research\`(정책·조사)로 분류하고 [문서 안내](./docs/README.md)에 목록화. 내부 링크도 새 위치로 갱신
+- 루트 README에 저장소 디렉터리 용도를 명시하고, 새 문서는 문서 안내와 CHANGELOG에 등록하도록 규칙 추가
+- 사용자가 삭제를 요청한 OneDrive 충돌 사본 `SUPPORT-G2300227.md`와 이후 발견된 `src/main-G2300227.ts`를 삭제하고 `SUPPORT.md` 및 `src/main.ts`는 보존. 저장소의 Markdown 로컬 링크를 점검해 깨진 링크가 없음을 확인
+
 ## 2026-11-01
 
 ### 결정
-- `0-ENV-07`: 회사 규정은 확인되지 않음. 방침으로 기록: 소유는 에스넷그룹 구성원 모두, 관리는 에스넷시스템 오감지능연구소, 현재 저장소는 오감지능연구소 소속 박성원이 관리하고 회사 공식 GitHub 저장소 확정 시 이관. 규정 확인 전까지 저장소는 private 유지. `LICENSE` 저작권자 표기 형식은 미정
-- `0-ENV-06`: 공개 코드는 MIT, 소속 회사 구성원 혜택은 라이선스 제한이 아닌 사내 혜택으로 제공. 근거는 `docs\STT_라이선스정책_에스넷그룹_명세_및_체계검토.md` V1.1.0. 이전 계획(구성원 한정 무료 라이선스)에서 변경. `LICENSE` 파일과 `package.json` 라이선스 값 변경은 `0-ENV-09`에서 수행. 저작권자 표기는 `0-ENV-07` 결과 필요
-- `0-ENV-05`: 이름 `On the Record`, 플러그인 id `on-the-record`, 부제 `Local minutes for Obsidian`, 저장소명 `ontherecord`(주소 `https://github.com/sparklings/ontherecord`, 접근성 우선. 네이밍 보고서의 기존 `obsidian-on-the-record`에서 변경). 근거는 `docs\STT_사업보고서_OnTheRecord_네이밍.md`. 상표 검색과 도메인 확보는 미확인
+- `0-ENV-07`: 회사 규정은 확인되지 않음. 방침으로 기록: 소유는 소속 회사 구성원 모두, 관리는 소속 회사 담당 조직, 현재 저장소는 개발자 개인 계정이 관리하고 회사 공식 GitHub 저장소 확정 시 이관. 규정 확인 전까지 저장소는 private 유지. `LICENSE` 저작권자 표기 형식은 미정
+- `0-ENV-06`: 공개 코드는 MIT, 소속 회사 구성원 혜택은 라이선스 제한이 아닌 사내 혜택으로 제공. 근거는 `docs\research\STT_라이선스정책_에스넷그룹_명세_및_체계검토.md` V1.1.0. 이전 계획(구성원 한정 무료 라이선스)에서 변경. `LICENSE` 파일과 `package.json` 라이선스 값 변경은 `0-ENV-09`에서 수행. 저작권자 표기는 `0-ENV-07` 결과 필요
+- `0-ENV-05`: 이름 `On the Record`, 플러그인 id `on-the-record`, 부제 `Local minutes for Obsidian`, 저장소명 `ontherecord`(주소 `https://github.com/sparklings/ontherecord`, 접근성 우선. 네이밍 보고서의 기존 `obsidian-on-the-record`에서 변경). 근거는 `docs\research\STT_사업보고서_OnTheRecord_네이밍.md`. 상표 검색과 도메인 확보는 미확인
 
 ### 추가
-- `docs\Obsidian_디렉터리정책_상충검토.md` 작성(`0-ENV-08`): Obsidian 공식 문서 5건 원문과 프로젝트 결정 대조, 상충·확인 필요 11건 정리. 주요 사항: 런타임·모델 다운로드와 "Install or update themselves or their dependencies" 금지의 충돌 가능성, 등재 후 저장소 이전은 관리자 절차, README에 네트워크 사용·vault 밖 접근 고지 필요
+- `docs\research\Obsidian_디렉터리정책_상충검토.md` 작성(`0-ENV-08`): Obsidian 공식 문서 5건 원문과 프로젝트 결정 대조, 상충·확인 필요 11건 정리. 주요 사항: 런타임·모델 다운로드와 "Install or update themselves or their dependencies" 금지의 충돌 가능성, 등재 후 저장소 이전은 관리자 절차, README에 네트워크 사용·vault 밖 접근 고지 필요
 - `0-ENV-12` 완료: `scripts/deploy.mjs`, `npm run deploy` 추가. PlugVaults 시험 vault의 `.obsidian\plugins\on-the-record\`에 복사 확인. `ObsidianVaults` 경로 거부와 비 vault 폴더 거부 동작 확인
 - `0-ENV-11` 완료: 플러그인 프로젝트 골격 생성(`manifest.json`, `versions.json`, `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `eslint.config.mjs`, `src/main.ts`). `check`·`lint`·`build` 통과. `minAppVersion` 1.7.2는 잠정값
 - `TODO.md`에 `0-ENV-15`(사내 GitLab 인증서 신뢰 등록 검토) 보류 항목 추가
 - `0-ENV-02` 완료: private 저장소 `sparklings/ontherecord` 생성, 첫 커밋(`12881ff`) push. 공개 범위는 라이선스·회사 규정 확인 후 재결정
 
 ### 변경
-- 설계·참조 문서 `GLOSSARY.md`, `SETTINGS_DESIGN.md`, `HARDWARE_PROFILE.md`를 루트에서 `docs\`로 이동하고 README, TODO, `benchmarks\README.md`, 개발계획서의 링크를 갱신. `README.md`, `LICENSE`, `CHANGELOG.md`, `TODO.md`, `SUPPORT.md`는 루트 유지(이하 이전 기록의 파일 위치는 이동 전 기준)
+- 설계·참조 문서 `GLOSSARY.md`, `SETTINGS_DESIGN.md`, `HARDWARE_PROFILE.md`를 루트에서 `docs\design\`으로 이동하고 README, TODO, `benchmarks\README.md`, 개발계획서의 링크를 갱신. `README.md`, `LICENSE`, `CHANGELOG.md`, `TODO.md`, `SUPPORT.md`는 루트 유지
 - 프로젝트 문서의 일반 설명을 한국어로 정리하고 `SUPPORT.md`를 한국어로 작성. 제품명·기술 식별자·공식 문서의 원문 인용은 정확한 식별을 위해 원어 유지
 - 저자 표기를 `SUNGWON PARK`으로 변경(`manifest.json`, `package.json`, 네이밍 보고서, TODO). 기존 `Sungwon Park (SG)` 삭제
-- Git 전역 설정 `http.sslVerify=false`를 제거하고 사내 GitLab 호스트(`211.239.11.79:8443`, `10.20.2.79:8443`)에만 URL 단위로 적용. GitHub는 기본값(검증 사용)으로 복귀. 개발 PC 환경 설정이며 프로젝트 파일 변경 없음(이 PC만 적용, 다른 PC는 별도 설정 필요)
-- `SETTINGS_DESIGN.md`의 `<plugin-id>`를 `on-the-record`로 확정
+- Git 전역 설정 `http.sslVerify=false`를 제거하고 사내 GitLab 호스트에만 URL 단위로 적용. GitHub는 기본값(검증 사용)으로 복귀. 개발 PC 환경 설정이며 프로젝트 파일 변경 없음(이 PC만 적용, 다른 PC는 별도 설정 필요)
+- `docs\design\SETTINGS_DESIGN.md`의 `<plugin-id>`를 `on-the-record`로 확정
 - README 제목에 제품명 반영
 
 ### 추가
 - 프로젝트 관리 문서 `README.md`, `CHANGELOG.md`, `TODO.md` 초안 작성
-- 용어집 `GLOSSARY.md` 작성(provider, provider 계약, provider manifest, segment, 가속기). 항목별 작성일·변경 이력 표기 추가
+- 용어집 `docs\design\GLOSSARY.md` 작성(provider, provider 계약, provider manifest, segment, 가속기). 항목별 작성일·변경 이력 표기 추가
 - `TODO.md` 0단계 항목에 식별코드 부여(`0-ENV-01`~`14`, `0-BASE-01`~`05`, `0-OBS-01`~`03`)와 코드 관리 규칙 추가
-- `SETTINGS_DESIGN.md` 작성(`0-ENV-13`): 공유 설정(`data.json`)과 PC별 설정(`%LOCALAPPDATA%\<plugin-id>\local-settings.json`) 분리 기준, 항목 분류 초안, 충돌·불일치 처리 규칙
+- `docs\design\SETTINGS_DESIGN.md` 작성(`0-ENV-13`): 공유 설정(`data.json`)과 PC별 설정(`%LOCALAPPDATA%\<plugin-id>\local-settings.json`) 분리 기준, 항목 분류 초안, 충돌·불일치 처리 규칙
 - `.gitignore` 작성(`0-ENV-03`)
 - `benchmarks\` 폴더 생성(`hardware\`, `records\`, `README.md`). Lenovo 장치 프로필 `lenovo-ideapad-gaming3-15imh05.json` 작성(메모리 17,041,244,160 B, NVIDIA 전용 메모리 4 GiB 확인)
-- `HARDWARE_PROFILE.md` 작성(`0-ENV-14`): 장치 프로필과 측정 기록의 JSON 형식, 공통 규칙, Lenovo 예시
+- `docs\design\HARDWARE_PROFILE.md` 작성(`0-ENV-14`): 장치 프로필과 측정 기록의 JSON 형식, 공통 규칙, Lenovo 예시
 - `TODO.md` 0단계 환경 항목을 진행 순서로 재배열. 플러그인 이름, GitHub 저장소, 라이선스 정책 관련 항목(`0-ENV-02`, `05`~`12`)은 보류로 분리
 - `TODO.md` `0-ENV-01`을 보류로 이동(Samsung 노트북이 다른 장소에 있음, 2026-11-02 수행 예정)
 
@@ -46,7 +77,7 @@
 - 개발계획서 §5 PC 전환 절차: OneDrive 안의 `.git` 위험 평가를 수정. 병합 충돌은 발생 조건이 없고, 동기화 지연에 의한 불완전 상태만 남는다고 정리
 - 개발계획서 경로 표기를 `%USERPROFILE%`로 통일(PC별 사용자 계정이 다름)
 
-- OneDrive 전제 검토: OneDrive 동기화는 개발자 개인 환경이며 사용자 vault 동기화 방식은 다양하므로 제품 설계에서 가정하지 않도록 수정. `SETTINGS_DESIGN.md`(배경·저장 위치·규칙 6, "공유 설정"→"vault 설정"), 개발계획서(§5 개발자 개인 방식 표기, §12, §13, §14, §15-2), README 개발 환경 절을 변경
+- OneDrive 전제 검토: OneDrive 동기화는 개발자 개인 환경이며 사용자 vault 동기화 방식은 다양하므로 제품 설계에서 가정하지 않도록 수정. `docs\design\SETTINGS_DESIGN.md`(배경·저장 위치·규칙 6, "공유 설정"→"vault 설정"), 개발계획서(§5 개발자 개인 방식 표기, §12, §13, §14, §15-2), README 개발 환경 절을 변경
 - README 링크를 `docs\` 이동 후 경로로 수정
 - `systeminfo_*.md` 2개를 `docs\`에서 `benchmarks\hardware\`로 이동하고 README·개발계획서 링크를 수정
 
@@ -60,7 +91,7 @@
 ## 2026-10-31
 
 ### 추가
-- 개발계획서 `STT_회의록_커뮤니티플러그인_개발계획서.md` 작성
+- 개발계획서 `docs\design\STT_회의록_커뮤니티플러그인_개발계획서.md` 작성
 
 ## 2026-10-30
 

@@ -1,9 +1,9 @@
 # 상황특화형 회의록 Obsidian 플러그인 개발계획서
 
 - **문서 유형:** 분석·설계 계획서 (구현 미포함)
-- **작성일:** 2026-10-31 (개발 환경·다중 PC 운영 방식 반영: 2026-11-01)
+- **작성일:** 2026-10-31 (개발 환경·다중 PC 운영 방식 반영: 2026-11-01; Samsung GPU 확인 반영: 2026-11-02)
 - **대상:** Obsidian Desktop Only 커뮤니티 플러그인 (모바일 미지원)
-- **참조 시스템 정보:** [systeminfo_Samsung_960XFG.md](../benchmarks/hardware/systeminfo_Samsung_960XFG.md), [systeminfo_Lenovo_IdeaPad_Gaming3.md](../benchmarks/hardware/systeminfo_Lenovo_IdeaPad_Gaming3.md)
+- **참조 시스템 정보:** [systeminfo_Samsung_960XFG.md](../../benchmarks/hardware/systeminfo_Samsung_960XFG.md), [systeminfo_Lenovo_IdeaPad_Gaming3.md](../../benchmarks/hardware/systeminfo_Lenovo_IdeaPad_Gaming3.md)
 
 ## 1. 요약 및 권고안
 
@@ -75,17 +75,17 @@ Obsidian 코어 Audio recorder는 녹음 파일을 vault에 저장하고 활성 
 | 구분                   | Samsung 960XFG                                                                                                                              | Lenovo IdeaPad Gaming 3 15IMH05                                                                                                                                                                  |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | CPU / 메모리           | Intel Core i5-1340P, 12코어 16스레드 / 16 GB LPDDR5                                                                                         | Intel Core i7-10750H, 6코어 12스레드 / 16 GB                                                                                                                                                     |
-| 그래픽                 | Intel Iris Xe 내장 그래픽, 보고된 약 2 GB는 전용 VRAM이 아님                                                                                | Intel UHD 내장 그래픽 및 NVIDIA GeForce GTX 1650 Ti, 전용 메모리 4 GB                                                                                                                            |
+| 그래픽                 | Intel Iris Xe 내장 그래픽 확인(`VEN_8086&DEV_A7A0`), CIM `AdapterRAM` 2,147,479,552 bytes는 전용 VRAM이 아님                           | Intel UHD 내장 그래픽 및 NVIDIA GeForce GTX 1650 Ti, 전용 메모리 4 GB                                                                                                                            |
 | 현재 OS / CPU 아키텍처 | Windows 11 Pro, x64                                                                                                                         | Windows 11 Pro, x64                                                                                                                                                                              |
 | STT 관련 현재 상태     | Python 3.14.7, ONNX Runtime 1.30.0; CPU와 Azure provider 확인. CUDA·DirectML provider 미확인. `torch`, `faster-whisper`, `whisper` 미확인   | Python 3.12.0 및 uv 관리 Python 3.14.4; ONNX Runtime과 `torch`, `faster-whisper`, `whisper` 미확인. NVIDIA 드라이버 580.88 및 `nvidia-smi` 확인, `nvcc` 미확인                                   |
 | CPU 기준 권장          | 플러그인 관리형 `whisper.cpp` CPU 실행 파일 + 다국어 양자화 `base` 또는 `small` 모델부터 측정                                               | 동일한 CPU 실행 파일과 모델을 먼저 기준값으로 측정                                                                                                                                               |
-| 기기별 가속 후보       | Intel Iris Xe용 검증된 OpenVINO 빌드/provider를 별도 시험. 현재 확인된 ONNX Runtime의 CPU provider만으로 iGPU 사용 가능하다고 판단하지 않음 | Intel UHD용 OpenVINO 등 검증된 provider와 GTX 1650 Ti용 CUDA provider를 각각 시험. 4 GB VRAM에 맞는 모델·정밀도를 고르고, GPU 메모리 부족 시 CPU로 전환                                          |
+| 기기별 가속 후보       | 확인된 Intel Iris Xe용 OpenVINO 빌드/provider를 별도 시험. 현재 확인된 ONNX Runtime의 CPU provider만으로 iGPU 사용 가능하다고 판단하지 않음 | Intel UHD용 OpenVINO 등 검증된 provider와 GTX 1650 Ti용 CUDA provider를 각각 시험. 4 GB VRAM에 맞는 모델·정밀도를 고르고, GPU 메모리 부족 시 CPU로 전환                                          |
 | 설치 전략              | 시스템 Python이나 이미 설치된 ONNX Runtime에 의존하지 않고 플러그인 관리 경로에 독립 실행 파일 설치                                         | NVIDIA 드라이버가 있다고 CUDA 런타임 전체가 준비된 것은 아니다. `nvcc` 부재 자체를 CPU 동작의 차단 조건으로 삼지 않으며, 사전 빌드·버전 호환성 확인 및 실제 추론 테스트로 GPU 사용 가능성을 판정 |
 
 ### 조합별 구현 권고
 
 - **Samsung CPU:** 우선 CPU 실행 파일로 정확도·메모리·초 단위 처리율을 측정한다. 현재 Python 3.14.7/ORT 1.30.0은 사용자의 전역 환경 상태이므로 플러그인 런타임의 필수조건으로 삼지 않는다.
-- **Samsung Intel iGPU:** Intel Iris Xe가 장치로 존재한다는 사실만으로 실행 provider가 준비된 것은 아니다. 검증된 OpenVINO 기반 Windows 배포물의 드라이버·모델 호환성과 실제 iGPU 점유를 확인한다. 가속 실패 또는 이득 부족 시 CPU 선택은 계속 사용할 수 있어야 한다.
+- **Samsung Intel iGPU:** 2026-11-02 CIM 조회에서 Intel Iris Xe(`VEN_8086&DEV_A7A0`)를 확인했다. 장치가 식별된 사실만으로 실행 provider가 준비된 것은 아니므로, 검증된 OpenVINO 기반 Windows 배포물의 드라이버·모델 호환성과 실제 iGPU 점유를 확인한다. 가속 실패 또는 이득 부족 시 CPU 선택은 계속 사용할 수 있어야 한다.
 - **Lenovo CPU:** i7-10750H와 16 GB 환경에서 CPU 기준선을 만든다. 양자화 다국어 `small`부터 비교하고, 메모리나 처리시간이 부족하면 `base`로 낮추도록 모델 선택을 제공한다.
 - **Lenovo Intel UHD Graphics:** 내장 GPU를 감지하고 검증된 Intel GPU provider가 이를 지원하는지 시험한다. Iris Xe와 UHD Graphics는 서로 다른 장치로 검사하며, 공통 provider 지원 및 실제 가속 여부를 별도로 확인한다.
 - **Lenovo NVIDIA GPU:** 4 GB VRAM의 GeForce GTX 1650 Ti에서 작은 Whisper 모델과 GPU 분할/정밀도 설정을 우선 시험한다. GTX 계열은 모델·compute capability·CUDA 런타임 조합별로 호환성을 확인하고 provider가 실제 GPU에서 실행되는지 검증한다. 드라이버 버전만으로 CUDA/cuDNN ABI 호환성을 단정하지 않으며, 별도의 CUDA 툴체인 설치를 사용자 기본 전제로 두지 않는다.
@@ -424,3 +424,9 @@ Obsidian Settings / File Picker / Review UI
 - [faster-whisper — upstream repository and CUDA requirements](https://github.com/SYSTRAN/faster-whisper)
 
 가속기·패키지 호환성은 upstream 지원 목록만으로 보장하지 않는다. 실제 설치할 고정 버전과 대상 하드웨어에서 검증한 결과를 지원 manifest에 반영해야 한다.
+
+## 문서 변경 기록
+
+| 날짜 | 변경 |
+|---|---|
+| 2026-11-02 | Samsung 960XFG에서 `Win32_VideoController`로 Intel Iris Xe, 드라이버, CIM `AdapterRAM`, PNP 식별자를 확인해 기기 표와 가속 검증 전제에 반영. 상세 결과: [Samsung 960XFG GPU 확인 기록](../baselines/HARDWARE_CHECK_SAMSUNG_960XFG_2026-11-02.md). |

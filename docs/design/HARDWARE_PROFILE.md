@@ -21,7 +21,7 @@ PC마다 같은 형식으로 장치 정보와 측정 결과를 남겨 PC 간 결
 - 측정하지 않았거나 확인하지 못한 값은 `null`로 둔다. 추정값을 넣지 않는다.
 - 컴퓨터 이름, 사용자 이름, 일련번호, 경로의 사용자 계정 부분은 기록하지 않는다.
 - 시각은 ISO 8601(`2026-11-01T10:00:00+09:00`), 크기는 바이트, 시간은 초 단위이다.
-- 파일 위치: `benchmarks\hardware\<deviceId>.json`, `benchmarks\records\<날짜>_<deviceId>_<번호>.json` (폴더 설명은 `benchmarks\README.md`)
+- 파일 위치: `benchmarks\hardware\<deviceId>.json`, `benchmarks\records\<deviceId>\<날짜>_<deviceId>_<번호>.json` (폴더 설명은 `benchmarks\README.md`). 장치별 하위 폴더를 두어 장치가 수십 종으로 늘어도 폴더 하나에 파일이 쌓이지 않고, 장치 간 파일명 충돌과 Git 병합 충돌이 생기지 않는다.
 
 ## 장치 프로필
 
@@ -67,7 +67,9 @@ PC마다 같은 형식으로 장치 정보와 측정 결과를 남겨 PC 간 결
 | `result.peakRamBytes` | 최대 메모리(프로세스 기준) |
 | `result.peakVramBytes` | GPU 사용 시 최대 전용 메모리. CPU 측정이면 `null` |
 | `result.segmentCount` | 출력된 segment 수 |
-| `result.transcriptFile` | 전사 결과 파일 경로(저장소 기준 상대 경로) |
+| `result.uniqueSegmentCount`, `result.maxRepeatedSegmentCount` | 서로 다른 segment 수, 가장 많이 반복된 segment의 반복 횟수. 내용 없이 계산하는 반복·환각 점검 지표(2026-11-03 추가, 이전 기록에는 없음) |
+| `result.transcriptFile` | 전사 결과 파일 경로. 실제 회의 음성의 결과물은 동기화 폴더 밖에 보관하고 `%LOCALAPPDATA%` 같은 환경 변수 토큰 경로로 기록한다 |
+| `environment` | `powerSource`(`ac`, `battery`, `ac-no-battery`), `powerPlan`(Windows 전원 구성표 이름). 측정 스크립트가 자동 기록(2026-11-03 추가, 이전 기록에는 없음) |
 | `quality` | 전사 오류 지표(`metric`, `value`, 기준 정답 파일). 정답이 없으면 `null` |
 | `repeat` | 같은 조건 반복 횟수와 몇 번째 측정인지 |
 | `warnings[]` | 실행 중 경고, 오류 요약(원문 내용은 기록하지 않음) |
@@ -75,18 +77,18 @@ PC마다 같은 형식으로 장치 정보와 측정 결과를 남겨 PC 간 결
 
 ## 예시 (장치 프로필)
 
-실제 파일: [benchmarks\hardware\lenovo-ideapad-gaming3-15imh05.json](../benchmarks/hardware/lenovo-ideapad-gaming3-15imh05.json). 아래는 수집 전 초안 예시이며 메모리 값이 비어 있다.
+실제 Lenovo 프로필: [lenovo-ideapad-gaming3-15imh05.json](../../benchmarks/hardware/lenovo-ideapad-gaming3-15imh05.json). 아래는 2026-11-02에 확인한 revision 2의 예시이다.
 
-값은 `systeminfo_Lenovo_IdeaPad_Gaming3.md`와 2026-11-01 조회 결과에 있는 것만 적었다.
+확인값은 `systeminfo_Lenovo_IdeaPad_Gaming3.md` 및 WMI·`nvidia-smi` 조회를 따른다.
 
 ```json
 {
   "deviceId": "lenovo-ideapad-gaming3-15imh05",
-  "profileRevision": 1,
-  "recordedAt": "2026-11-01T10:00:00+09:00",
-  "os": { "name": "Windows 11 Pro", "version": "10.0.26200", "build": "26200", "arch": "x64" },
+  "profileRevision": 2,
+  "recordedAt": "2026-11-02T21:37:15+09:00",
+  "os": { "name": "Windows 11 Pro", "version": "10.0.26300", "build": "26300", "arch": "x64" },
   "cpu": { "model": "Intel Core i7-10750H", "cores": 6, "threads": 12 },
-  "memoryBytes": null,
+  "memoryBytes": 17041244160,
   "gpus": [
     {
       "name": "Intel UHD Graphics",
@@ -101,16 +103,27 @@ PC마다 같은 형식으로 장치 정보와 측정 결과를 남겨 PC 간 결
       "kind": "discrete",
       "vendor": "NVIDIA",
       "driverVersion": "32.0.15.8088",
-      "dedicatedMemoryBytes": null,
+      "dedicatedMemoryBytes": 4294967296,
       "pnpDeviceId": "VEN_10DE&DEV_1F95"
     }
   ],
-  "notes": "memoryBytes, dedicatedMemoryBytes는 수집 명령으로 다시 확인해 기입. NVIDIA 드라이버 버전은 Windows 표기(32.0.15.8088)이고 systeminfo 문서의 580.88과 같은 드라이버의 다른 표기로 보이나 미확인"
+  "notes": "2026-11-02 WMI로 재확인. NVIDIA 전용 메모리 4096 MiB는 nvidia-smi 기준이며, Windows AdapterRAM은 4,293,918,720 bytes로 보고됨. NVIDIA 드라이버는 Windows 표기(32.0.15.8088); nvidia-smi 표기는 580.88. Intel UHD는 공유 메모리 GPU라 dedicatedMemoryBytes는 null."
 }
 ```
+
+## 대량 누적 운영 (장치 수십 종 대비)
+
+2026-11-03 결정. 기록은 파일 단위로 추가만 하고(수정 금지), 비교와 요약은 스크립트가 만든다.
+
+- **원본**: `benchmarks\records\<deviceId>\*.json`만 Git에 둔다. 기록 한 건은 약 2 KB이며, 장치 50대 × 모델 5종 × 샘플 3종 × 반복 2회는 약 1,500건(약 3 MB)이다.
+- **요약**: `scripts\summarize-records.ps1`이 `benchmarks\summary\records.csv`(전체 목록)와 `summary.md`(조건별 중앙값)를 생성한다. 생성물은 Git에서 제외하여 장치별로 요약 파일을 두고 병합 충돌이 나는 일을 막는다. 장치·모델·샘플 필터 인자를 지원한다.
+- **비교 가능 조건**: 런타임·모델·샘플의 SHA-256과 스레드 수가 모두 같은 기록만 한 그룹으로 묶는다. 같은 샘플 ID에 SHA-256이 둘 이상 나오면 경고한다. 다른 조건과 섞어 비교하지 않는다.
+- **전원·환경**: `environment`를 자동 기록한다. 배터리 측정과 AC 측정은 분리해 비교한다.
+- **실제 회의 음성의 결과물**: 전사문은 `%LOCALAPPDATA%\on-the-record-dev\transcripts\`에만 둔다(OneDrive 동기화 밖). 저장소에는 해시·길이·통계만 남긴다.
+- **한계**: 기록이 수천 건을 넘거나 시계열 비교가 필요해지면 CSV를 SQLite 등으로 옮기는 방안을 검토한다. 현재 규모에서는 불필요하다.
 
 ## 미결정 사항
 
 - 파일 위치(`benchmarks\`)는 확정했다. 저장소 구성이 정해질 때 저장소 내 경로가 달라지면 갱신한다.
 - `quality`의 오류 지표(예: 한국어 CER)는 `0-BASE-02`에서 정답 전사본을 준비할 때 정한다.
-- 측정 기록을 사람이 읽는 요약표로 만드는 방법은 `0-BASE-04`에서 정한다.
+- 측정 기록을 사람이 읽는 요약표로 만드는 방법은 `scripts\summarize-records.ps1`로 정했다(2026-11-03).
