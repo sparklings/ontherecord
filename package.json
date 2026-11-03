@@ -9,7 +9,8 @@
     "build": "node esbuild.config.mjs production",
     "deploy": "node scripts/deploy.mjs",
     "check": "tsc --noEmit",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "test": "node --no-warnings --test test/*.test.ts"
   },
   "author": "SUNGWON PARK",
   "license": "MIT",

@@ -3,7 +3,7 @@
 STT(Speech-to-Text) 파이프라인 구성 전 현재 노트북의 하드웨어와 관련 소프트웨어 환경을 기록합니다.
 
 - **수집일:** 2026-10-30
-- **수집 방법:** Windows 시스템 정보와 현재 셸에서 확인 가능한 런타임·도구
+- **수집 방법:** Windows 시스템 정보와 현재 셸에서 확인 가능한 런타임·도구. GPU는 2026-11-02에 `Get-CimInstance Win32_VideoController | Select Name,DriverVersion,AdapterRAM,PNPDeviceID`로 재확인했습니다.
 - **개인정보:** 사용자 이름, 일련번호 등 식별 정보는 기록하지 않았습니다.
 
 ## 하드웨어
@@ -17,7 +17,8 @@ STT(Speech-to-Text) 파이프라인 구성 전 현재 노트북의 하드웨어�
 | 메모리 | 16 GB LPDDR5, 구성 속도 6,000 MHz (시스템 보고값) |
 | GPU | Intel Iris Xe Graphics (내장 그래픽) |
 | 그래픽 드라이버 | 32.0.101.7088 |
-| 그래픽 메모리 | Windows 보고값 약 2 GB. 내장 그래픽이므로 전용 VRAM 용량으로 간주하지 않습니다. |
+| 그래픽 메모리 | CIM `AdapterRAM`: 2,147,479,552 bytes (약 2 GiB로 보고됨). 내장 그래픽의 공유 메모리이므로 전용 VRAM 용량으로 간주하지 않습니다. |
+| GPU PNP 식별자 | `VEN_8086&DEV_A7A0` (일련 부분 제외) |
 
 ## 운영체제 및 개발 환경
 

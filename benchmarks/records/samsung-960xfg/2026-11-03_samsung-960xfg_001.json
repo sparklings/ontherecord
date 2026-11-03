@@ -1,0 +1,58 @@
+{
+    "recordId":  "2026-11-03_samsung-960xfg_001",
+    "measuredAt":  "2026-11-03T08:02:36+09:00",
+    "deviceId":  "samsung-960xfg",
+    "profileRevision":  1,
+    "provider":  {
+                     "id":  "whisper.cpp",
+                     "version":  "b5454 (v1.9.5, d1be6fd)",
+                     "executionDevice":  "cpu"
+                 },
+    "runtime":  {
+                    "version":  "whisper.cpp version: 1.9.5",
+                    "source":  "https://github.com/ggml-org/whisper.cpp/releases/tag/b5454 (whisper-bin-x64.zip)",
+                    "sha256":  "331dba46d6427105d2b802cdbc7eae916ea1c5abf9b0d3b5cfe460d8db8e4366",
+                    "archiveSha256":  "6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816ccb"
+                },
+    "model":  {
+                  "id":  "medium",
+                  "quantization":  "q5_0",
+                  "sha256":  "19fea4b380c3a618ec4723c3eef2eb785ffba0d0538cf43f8f235e7b3b34220f",
+                  "sizeBytes":  539212467
+              },
+    "sample":  {
+                   "id":  "real-sample-01.wav",
+                   "durationSeconds":  130.54,
+                   "language":  "ko",
+                   "sha256":  "b7deb789b11b45c7f2634c436f3d5c3f7b2ec4c40db830fb23c5a2584897f31c"
+               },
+    "options":  {
+                    "threads":  8,
+                    "language":  "ko",
+                    "beamSize":  5,
+                    "bestOf":  5,
+                    "threadInfo":  "n_threads = 8 / 16",
+                    "outputFormat":  "txt"
+                },
+    "result":  {
+                   "status":  "ok",
+                   "modelLoadSeconds":  2.075,
+                   "elapsedSeconds":  113.211,
+                   "wallSeconds":  115.807,
+                   "secondsPerAudioMinute":  52.035,
+                   "realtimeFactor":  0.8673,
+                   "peakRamBytes":  1267679232,
+                   "peakVramBytes":  null,
+                   "segmentCount":  15,
+                   "transcriptFile":  "%LOCALAPPDATA%\\on-the-record-dev\\transcripts\\samsung-960xfg-real-sample-01-medium-q5_0-t8-run1.txt"
+               },
+    "quality":  null,
+    "repeat":  {
+                   "count":  2,
+                   "index":  1
+               },
+    "warnings":  [
+
+                 ],
+    "notes":  ""
+}

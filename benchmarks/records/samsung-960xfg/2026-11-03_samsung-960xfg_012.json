@@ -1,0 +1,64 @@
+{
+    "recordId":  "2026-11-03_samsung-960xfg_012",
+    "measuredAt":  "2026-11-03T09:50:05+09:00",
+    "deviceId":  "samsung-960xfg",
+    "profileRevision":  1,
+    "provider":  {
+                     "id":  "whisper.cpp",
+                     "version":  "b5454 (v1.9.5, d1be6fd)",
+                     "executionDevice":  "cpu"
+                 },
+    "runtime":  {
+                    "version":  "whisper.cpp version: 1.9.5",
+                    "source":  "https://github.com/ggml-org/whisper.cpp/releases/tag/b5454 (whisper-bin-x64.zip)",
+                    "sha256":  "331dba46d6427105d2b802cdbc7eae916ea1c5abf9b0d3b5cfe460d8db8e4366",
+                    "archiveSha256":  "6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816ccb"
+                },
+    "model":  {
+                  "id":  "medium",
+                  "quantization":  "q5_0",
+                  "sha256":  "19fea4b380c3a618ec4723c3eef2eb785ffba0d0538cf43f8f235e7b3b34220f",
+                  "sizeBytes":  539212467
+              },
+    "sample":  {
+                   "id":  "real-sample-03.wav",
+                   "durationSeconds":  2650.06,
+                   "language":  "ko",
+                   "sha256":  "7e9c732a263525499ac315dc7eee3e0ce91f2ba00a3ee151fc9d30019a32dc35"
+               },
+    "options":  {
+                    "threads":  8,
+                    "language":  "ko",
+                    "beamSize":  5,
+                    "bestOf":  5,
+                    "threadInfo":  "n_threads = 8 / 16",
+                    "outputFormat":  "txt"
+                },
+    "result":  {
+                   "status":  "ok",
+                   "modelLoadSeconds":  2.192,
+                   "elapsedSeconds":  1940.469,
+                   "wallSeconds":  1942.978,
+                   "secondsPerAudioMinute":  43.934,
+                   "realtimeFactor":  0.7322,
+                   "peakRamBytes":  1563807744,
+                   "peakVramBytes":  null,
+                   "segmentCount":  368,
+                   "uniqueSegmentCount":  341,
+                   "maxRepeatedSegmentCount":  12,
+                   "transcriptFile":  "%LOCALAPPDATA%\\on-the-record-dev\\transcripts\\samsung-960xfg-real-sample-03-medium-q5_0-t8-run1.txt"
+               },
+    "environment":  {
+                        "powerSource":  "ac",
+                        "powerPlan":  "균형 조정"
+                    },
+    "quality":  null,
+    "repeat":  {
+                   "count":  1,
+                   "index":  1
+               },
+    "warnings":  [
+
+                 ],
+    "notes":  "long sample baseline"
+}

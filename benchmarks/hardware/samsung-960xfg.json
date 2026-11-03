@@ -1,0 +1,19 @@
+{
+  "deviceId": "samsung-960xfg",
+  "profileRevision": 1,
+  "recordedAt": "2026-11-02T19:00:00+09:00",
+  "os": { "name": "Windows 11 Pro", "version": "10.0.26300", "build": "26300", "arch": "x64" },
+  "cpu": { "model": "13th Gen Intel Core i5-1340P", "cores": 12, "threads": 16 },
+  "memoryBytes": 16718405632,
+  "gpus": [
+    {
+      "name": "Intel(R) Iris(R) Xe Graphics",
+      "kind": "integrated",
+      "vendor": "Intel",
+      "driverVersion": "32.0.101.7088",
+      "dedicatedMemoryBytes": null,
+      "pnpDeviceId": "VEN_8086&DEV_A7A0"
+    }
+  ],
+  "notes": "Get-CimInstance(Win32_ComputerSystem, Win32_Processor, Win32_VideoController)로 2026-11-02 수집. Win32_Processor의 NumberOfCores는 12(성능 4 + 효율 8 코어 구성)로 보고됨. Win32_VideoController의 AdapterRAM 2,147,479,552는 공유 메모리 보고값이며 전용 메모리가 아니므로 dedicatedMemoryBytes는 null. 그래픽 장치는 하나만 확인됨(Iris Xe, UHD 표기 장치 없음)."
+}

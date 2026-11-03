@@ -1,0 +1,58 @@
+{
+    "recordId":  "2026-11-02_lenovo-ideapad-gaming3-15imh05_006",
+    "measuredAt":  "2026-11-02T21:52:00+09:00",
+    "deviceId":  "lenovo-ideapad-gaming3-15imh05",
+    "profileRevision":  2,
+    "provider":  {
+                     "id":  "whisper.cpp",
+                     "version":  "b5454 (v1.9.5, d1be6fd)",
+                     "executionDevice":  "cpu"
+                 },
+    "runtime":  {
+                    "version":  "whisper.cpp version: 1.9.5",
+                    "source":  "https://github.com/ggml-org/whisper.cpp/releases/tag/b5454 (whisper-bin-x64.zip)",
+                    "sha256":  "331dba46d6427105d2b802cdbc7eae916ea1c5abf9b0d3b5cfe460d8db8e4366",
+                    "archiveSha256":  "6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816ccb"
+                },
+    "model":  {
+                  "id":  "small",
+                  "quantization":  "q5_1",
+                  "sha256":  "ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb",
+                  "sizeBytes":  190085487
+              },
+    "sample":  {
+                   "id":  "real-sample-01.wav",
+                   "durationSeconds":  130.54,
+                   "language":  "ko",
+                   "sha256":  "b7deb789b11b45c7f2634c436f3d5c3f7b2ec4c40db830fb23c5a2584897f31c"
+               },
+    "options":  {
+                    "threads":  8,
+                    "language":  "ko",
+                    "beamSize":  5,
+                    "bestOf":  5,
+                    "threadInfo":  "n_threads = 8 / 12",
+                    "outputFormat":  "txt"
+                },
+    "result":  {
+                   "status":  "ok",
+                   "modelLoadSeconds":  0.297,
+                   "elapsedSeconds":  49.558,
+                   "wallSeconds":  50.215,
+                   "secondsPerAudioMinute":  22.778,
+                   "realtimeFactor":  0.3796,
+                   "peakRamBytes":  626487296,
+                   "peakVramBytes":  null,
+                   "segmentCount":  24,
+                   "transcriptFile":  "%LOCALAPPDATA%\\on-the-record-dev\\transcripts\\lenovo-ideapad-gaming3-15imh05-real-sample-01-small-q5_1-t8-run2.txt"
+               },
+    "quality":  null,
+    "repeat":  {
+                   "count":  2,
+                   "index":  2
+               },
+    "warnings":  [
+
+                 ],
+    "notes":  "AC power; Windows Balanced power plan; CPU-only"
+}

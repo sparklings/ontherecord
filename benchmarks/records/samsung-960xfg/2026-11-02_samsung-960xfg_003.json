@@ -1,0 +1,58 @@
+{
+    "recordId":  "2026-11-02_samsung-960xfg_003",
+    "measuredAt":  "2026-11-02T19:01:53+09:00",
+    "deviceId":  "samsung-960xfg",
+    "profileRevision":  1,
+    "provider":  {
+                     "id":  "whisper.cpp",
+                     "version":  "b5454 (v1.9.5, d1be6fd)",
+                     "executionDevice":  "cpu"
+                 },
+    "runtime":  {
+                    "version":  "whisper.cpp version: 1.9.5",
+                    "source":  "https://github.com/ggml-org/whisper.cpp/releases/tag/b5454 (whisper-bin-x64.zip)",
+                    "sha256":  "331dba46d6427105d2b802cdbc7eae916ea1c5abf9b0d3b5cfe460d8db8e4366",
+                    "archiveSha256":  "6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816ccb"
+                },
+    "model":  {
+                  "id":  "base",
+                  "quantization":  "q5_1",
+                  "sha256":  "422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898",
+                  "sizeBytes":  59707625
+              },
+    "sample":  {
+                   "id":  "real-sample-02.wav",
+                   "durationSeconds":  1292.02,
+                   "language":  "ko",
+                   "sha256":  "9fd7987c6e2654ab7e4f48881b33b29293528f949959535213d12aa40d4d8d44"
+               },
+    "options":  {
+                    "threads":  8,
+                    "language":  "ko",
+                    "beamSize":  5,
+                    "bestOf":  5,
+                    "threadInfo":  "n_threads = 8 / 16",
+                    "outputFormat":  "txt"
+                },
+    "result":  {
+                   "status":  "ok",
+                   "modelLoadSeconds":  0.261,
+                   "elapsedSeconds":  151.011,
+                   "wallSeconds":  151.411,
+                   "secondsPerAudioMinute":  7.013,
+                   "realtimeFactor":  0.1169,
+                   "peakRamBytes":  482422784,
+                   "peakVramBytes":  null,
+                   "segmentCount":  323,
+                   "transcriptFile":  "samples\\transcripts\\real-sample-02-base-q5_1-t8-run1.txt"
+               },
+    "quality":  null,
+    "repeat":  {
+                   "count":  2,
+                   "index":  1
+               },
+    "warnings":  [
+
+                 ],
+    "notes":  ""
+}
