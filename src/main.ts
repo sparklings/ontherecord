@@ -6,8 +6,12 @@ import { RecordingWatcher } from "./recordingWatcher.ts";
 import { OnTheRecordSettingTab } from "./settingsTab.ts";
 import { RecordingQueue } from "./recordingQueue.ts";
 import { waitForLinkedNotes } from "./linkWaiter.ts";
+import { isSupportedAudioExtension } from "./audioFiles.ts";
+import { AudioFilePickerModal } from "./audioFilePicker.ts";
+import { waitForStable } from "./stability.ts";
 
 const LINK_WAIT_TIMEOUT_MS = 30_000;
+const MANUAL_FILE_STABILITY_TIMEOUT_MS = 15_000;
 
 export default class OnTheRecordPlugin extends Plugin {
 	private watcher: RecordingWatcher | null = null;
@@ -18,6 +22,7 @@ export default class OnTheRecordPlugin extends Plugin {
 	private localSettingsError: string | null = null;
 	private vaultSaveQueue: Promise<void> = Promise.resolve();
 	private localSaveQueue: Promise<void> = Promise.resolve();
+	private readonly pendingManualSelections = new Map<string, AbortController>();
 
 	async onload(): Promise<void> {
 		try {
@@ -50,6 +55,13 @@ export default class OnTheRecordPlugin extends Plugin {
 			),
 		);
 
+		this.addCommand({
+			id: "select-audio-file",
+			name: "전사할 오디오 파일 선택",
+			callback: () => this.openAudioFilePicker(),
+		});
+		this.addRibbonIcon("search", "전사할 오디오 파일 선택", () => this.openAudioFilePicker());
+
 		const watcher = new RecordingWatcher(
 			this.app,
 			(recording) =>
@@ -68,12 +80,16 @@ export default class OnTheRecordPlugin extends Plugin {
 			this.registerEvent(
 				this.app.vault.on("delete", (file) => {
 					watcher.handleDelete(file);
-					if (file instanceof TFile) this.removeQueuedRecording(file.path);
+					if (file instanceof TFile) {
+						this.cancelManualSelection(file.path);
+						this.removeQueuedRecording(file.path);
+					}
 				}),
 			);
 			this.registerEvent(
 				this.app.vault.on("rename", (file, oldPath) => {
 					if (file instanceof TFile) {
+						this.cancelManualSelection(oldPath);
 						this.recordingQueue.rename(oldPath, file.path);
 						if (this.vaultSettings.autoDetectRecording) watcher.handleRename(file, oldPath);
 					}
@@ -85,6 +101,8 @@ export default class OnTheRecordPlugin extends Plugin {
 	onunload(): void {
 		this.watcher?.dispose();
 		this.watcher = null;
+		for (const controller of this.pendingManualSelections.values()) controller.abort();
+		this.pendingManualSelections.clear();
 	}
 
 	private async updateVaultSettings(patch: Partial<VaultSettings>): Promise<void> {
@@ -138,6 +156,116 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		this.logQueueState();
 		new Notice("녹음 파일을 전사 대기열에 추가했습니다. 전사 엔진 연결은 아직 제공되지 않습니다.");
+	}
+
+	private openAudioFilePicker(): void {
+		const hasAudioFiles = this.app.vault
+			.getFiles()
+			.some((file) => isSupportedAudioExtension(file.extension));
+		if (!hasAudioFiles) {
+			new Notice("Vault에서 지원되는 오디오 파일을 찾지 못했습니다.");
+			return;
+		}
+
+		new AudioFilePickerModal(this.app, (file) => {
+			void this.queueSelectedAudioFile(file);
+		}).open();
+	}
+
+	private async queueSelectedAudioFile(selectedFile: TFile): Promise<void> {
+		const filePath = selectedFile.path;
+		const currentFile = this.app.vault.getAbstractFileByPath(filePath);
+		if (!(currentFile instanceof TFile) || !isSupportedAudioExtension(currentFile.extension)) {
+			new Notice("선택한 오디오 파일을 vault에서 찾을 수 없습니다.");
+			return;
+		}
+		if (currentFile.stat.size <= 0) {
+			new Notice("선택한 오디오 파일이 비어 있습니다.");
+			return;
+		}
+		if (this.recordingQueue.has(filePath)) {
+			new Notice("이 파일은 이미 전사 대기열에 있습니다.");
+			return;
+		}
+		if (this.pendingManualSelections.has(filePath)) {
+			new Notice("이 파일의 안정화 상태를 이미 확인하고 있습니다.");
+			return;
+		}
+
+		const controller = new AbortController();
+		this.pendingManualSelections.set(filePath, controller);
+		try {
+			const quietMs = this.vaultSettings.stabilizationSeconds * 1000;
+			const initialStat = await this.app.vault.adapter.stat(filePath);
+			if (!initialStat || initialStat.size <= 0) {
+				new Notice("선택한 오디오 파일을 읽을 수 없거나 비어 있습니다.");
+				return;
+			}
+
+			let size = initialStat.size;
+			if (Date.now() - initialStat.mtime < quietMs) {
+				const stability = await waitForStable(
+					filePath,
+					{
+						stat: async (path) => {
+							const stat = await this.app.vault.adapter.stat(path);
+							return stat ? { size: stat.size, mtime: stat.mtime } : null;
+						},
+						now: () => Date.now(),
+						sleep: (ms) => new Promise((resolve) => window.setTimeout(resolve, ms)),
+						signal: controller.signal,
+					},
+					{
+						intervalMs: 500,
+						quietMs,
+						timeoutMs: MANUAL_FILE_STABILITY_TIMEOUT_MS,
+					},
+				);
+				if (stability.status === "cancelled") return;
+				if (stability.status !== "stable") {
+					new Notice(
+						stability.status === "missing"
+							? "선택한 오디오 파일이 사라졌습니다."
+							: "파일이 계속 변경 중이어서 대기열에 추가하지 않았습니다.",
+					);
+					return;
+				}
+				size = stability.size ?? initialStat.size;
+			}
+
+			if (controller.signal.aborted) return;
+			const latestFile = this.app.vault.getAbstractFileByPath(filePath);
+			if (!(latestFile instanceof TFile)) {
+				new Notice("선택한 오디오 파일이 사라졌습니다.");
+				return;
+			}
+
+			const added = this.recordingQueue.enqueue({
+				filePath,
+				notePaths: this.findLinkedNotes(filePath),
+				size,
+				queuedAt: Date.now(),
+				status: "queued",
+			});
+			if (!added) {
+				new Notice("이 파일은 이미 전사 대기열에 있습니다.");
+				return;
+			}
+
+			this.logQueueState();
+			new Notice("선택한 오디오 파일을 전사 대기열에 추가했습니다. 전사 엔진 연결은 아직 제공되지 않습니다.");
+		} catch (error) {
+			if (!controller.signal.aborted) this.reportError("선택한 오디오 파일을 확인하지 못했습니다.", error);
+		} finally {
+			if (this.pendingManualSelections.get(filePath) === controller) {
+				this.pendingManualSelections.delete(filePath);
+			}
+		}
+	}
+
+	private cancelManualSelection(filePath: string): void {
+		this.pendingManualSelections.get(filePath)?.abort();
+		this.pendingManualSelections.delete(filePath);
 	}
 
 	private findLinkedNotes(filePath: string): string[] {

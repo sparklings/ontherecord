@@ -86,9 +86,9 @@ MIT 라이선스 정책과 프로젝트 권리자·공개 승인, Obsidian 디�
 
 ### 1단계: 공통 파이프라인
 - [x] `1-PIPE-01` 설정 화면 → 구현 및 Obsidian에서 저장·복원 확인 완료(2026-11-05, 사용자 확인). 구현: `src\settings.ts`, `src\localSettingsStore.ts`, `src\settingsTab.ts`. vault 설정은 `loadData`/`saveData`, PC별 런타임·모델 경로는 `%LOCALAPPDATA%\<plugin-id>\local-settings.json`에 저장한다. 녹음 감지 및 안정화 시간 변경은 watcher에 반영하며 자동 전사/언어/모델/장치 기본값을 제공한다. PC별 갱신은 여러 창에서 직렬화한다. 런타임 경로 검증은 후속 범위다.
-- [~] `1-PIPE-02` 녹음 감지와 자동 전사 대기열 → 설정(`autoDetectRecording`, `autoTranscribe`, `stabilizationSeconds`)과 watcher 연결. 파일 안정화 후 공개 MetadataCache에서 오디오 embed를 확인하며, 최대 30초 내 링크가 없으면 안내하고 큐잉하지 않는다. 메모리 대기열은 파일 경로로 중복을 막고 삭제·이름 변경을 반영한다. 아직 대기열 UI·디스크 영속성·전사 worker/provider 실행은 미구현. 구현: `src\main.ts`, `src\recordingWatcher.ts`, `src\linkWaiter.ts`, `src\recordingQueue.ts`; 단위 테스트 통과. `PlugVaults`에서 실제 녹음 및 설정 토글 수동 확인 필요.
-- [ ] `1-PIPE-03` 파일 찾기 버튼 → 사용자가 vault 오디오 파일을 선택하면 형식·상태를 확인하고 작업에 전달한다.
-- [ ] `1-PIPE-04` provider 계약 정의 → 엔진별 입력·실행·취소·진행 상태·결과·오류를 공통 타입과 인터페이스로 정한다.
+- [x] `1-PIPE-02` 녹음 감지와 자동 전사 대기열 → 설정(`autoDetectRecording`, `autoTranscribe`, `stabilizationSeconds`)과 watcher 연결. 파일 안정화 후 공개 MetadataCache에서 오디오 embed를 확인하며, 최대 30초 내 링크가 없으면 안내하고 큐잉하지 않는다. 메모리 대기열은 파일 경로로 중복을 막고 삭제·이름 변경을 반영한다. Obsidian에서 녹음 감지 및 설정 토글 수동 시험 완료(2026-11-05, 사용자 확인). 대기열 UI·디스크 영속성·전사 worker/provider 실행은 후속 범위. 구현: `src\main.ts`, `src\recordingWatcher.ts`, `src\linkWaiter.ts`, `src\recordingQueue.ts`; 단위 테스트 통과.
+- [x] `1-PIPE-03` 파일 찾기 버튼 → 리본 아이콘과 명령 팔레트에서 vault의 지원 확장자 오디오를 선택하고, 파일 존재·비어 있지 않음·안정화 상태를 확인해 메모리 대기열에 전달한다. 수동 선택은 녹음 자동 감지 설정과 독립적이다. Obsidian에서 이미 안정된 파일 선택 후 대기열 추가 알림과 동일 파일 재선택 시 중복 거부 알림을 확인(2026-11-05, 사용자 확인). 컨테이너/코덱 및 손상 여부 판정은 디코더 검증 단계에서 추가한다. 자동 시험 22개 통과.
+- [x] `1-PIPE-04` provider 계약 정의 → 완료(2026-11-05): `src\provider.ts`에 provider 메타데이터·준비 상태·정규화 요청·진행률·초 단위 segment 결과·공통 오류와 취소 신호 계약을 정의하고 오류 타입 테스트를 추가했다. 타입 검사, lint, 테스트 23개, production build 통과. 특정 엔진 구현, provider 선택/registry, worker 연결 및 mock provider 통합 시험은 후속 범위다.
 - [ ] `1-PIPE-05` 결과 미리보기 → 전사 결과를 노트에 반영하기 전에 검토·편집·승인 또는 취소할 수 있게 한다.
 
 ### 2단계: CPU 전사

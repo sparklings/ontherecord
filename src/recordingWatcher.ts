@@ -1,9 +1,8 @@
 import { TFile } from "obsidian";
 import type { App } from "obsidian";
+import { isSupportedAudioExtension } from "./audioFiles.ts";
 import { waitForStable } from "./stability";
 import type { StabilityOptions, StabilityResult } from "./stability";
-
-export const AUDIO_EXTENSIONS: readonly string[] = ["m4a", "mp3", "wav", "aac", "ogg"];
 
 export interface DetectedRecording {
 	file: TFile;
@@ -31,7 +30,7 @@ export class RecordingWatcher {
 	}
 
 	isAudio(file: unknown): file is TFile {
-		return file instanceof TFile && AUDIO_EXTENSIONS.includes(file.extension.toLowerCase());
+		return file instanceof TFile && isSupportedAudioExtension(file.extension);
 	}
 
 	/** vault `create` 이벤트에서 호출한다. 레이아웃 준비 전의 초기 로딩 이벤트는 호출 측에서 걸러야 한다. */
