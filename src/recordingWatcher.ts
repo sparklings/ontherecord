@@ -8,9 +8,11 @@ export const AUDIO_EXTENSIONS: readonly string[] = ["m4a", "mp3", "wav", "aac", 
 export interface DetectedRecording {
 	file: TFile;
 	stability: StabilityResult;
+	signal: AbortSignal;
 }
 
-export type RecordingHandler = (recording: DetectedRecording) => void;
+export type RecordingHandler = (recording: DetectedRecording) => void | Promise<void>;
+export type RecordingErrorHandler = (error: unknown) => void;
 
 export class RecordingWatcher {
 	private readonly pending = new Map<string, AbortController>();
@@ -18,8 +20,15 @@ export class RecordingWatcher {
 	constructor(
 		private readonly app: App,
 		private readonly onStable: RecordingHandler,
-		private readonly options: Partial<StabilityOptions> = {},
+		private options: Partial<StabilityOptions> = {},
+		private readonly onError: RecordingErrorHandler = (error) => {
+			console.error("[on-the-record] 녹음 파일 처리에 실패했습니다.", error);
+		},
 	) {}
+
+	setOptions(options: Partial<StabilityOptions>): void {
+		this.options = options;
+	}
 
 	isAudio(file: unknown): file is TFile {
 		return file instanceof TFile && AUDIO_EXTENSIONS.includes(file.extension.toLowerCase());
@@ -37,17 +46,24 @@ export class RecordingWatcher {
 	}
 
 	handleDelete(file: unknown): void {
-		if (file instanceof TFile) this.pending.get(file.path)?.abort();
+		if (!(file instanceof TFile)) return;
+		this.pending.get(file.path)?.abort();
+		this.pending.delete(file.path);
 	}
 
 	handleRename(file: unknown, oldPath: string): void {
 		const controller = this.pending.get(oldPath);
 		if (!controller) return;
 		controller.abort();
+		this.pending.delete(oldPath);
 		this.handleCreate(file);
 	}
 
 	dispose(): void {
+		this.cancelPending();
+	}
+
+	cancelPending(): void {
 		for (const controller of this.pending.values()) controller.abort();
 		this.pending.clear();
 	}
@@ -68,8 +84,12 @@ export class RecordingWatcher {
 				},
 				this.options,
 			);
-			if (stability.status === "stable") this.onStable({ file, stability });
+			if (stability.status === "stable" && !controller.signal.aborted) {
+				await this.onStable({ file, stability, signal: controller.signal });
+			}
 			else console.debug(`[on-the-record] 녹음 파일 대기 종료: ${stability.status}`);
+		} catch (error) {
+			if (!controller.signal.aborted) this.onError(error);
 		} finally {
 			if (this.pending.get(file.path) === controller) this.pending.delete(file.path);
 		}

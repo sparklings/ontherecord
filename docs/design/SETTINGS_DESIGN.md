@@ -1,6 +1,6 @@
 # 설정 저장 구조: vault 설정과 PC별 설정
 
-작성일: 2026-11-01 / 관련 항목: `0-ENV-13` / 상태: 초안(구현 전 설계)
+작성일: 2026-11-01 · 구현 반영: 2026-11-05 / 관련 항목: `0-ENV-13`, `1-PIPE-01` / 상태: 1단계 설정 기본 기능 구현
 
 플러그인 설정을 vault 안에 저장하는 **vault 설정**과 PC 로컬 폴더에 저장하는 **PC별 설정**으로 나누는 규칙이다. `<plugin-id>`는 플러그인 id `on-the-record`이다(`0-ENV-05`, 2026-11-01 결정).
 
@@ -12,7 +12,7 @@
 
 - **vault 설정은 vault에 속한다.** `.obsidian\plugins\<plugin-id>\data.json`(Obsidian `loadData`/`saveData`가 읽고 쓰는 파일)은 vault 폴더를 복사·이동·동기화하면 함께 따라간다. 따라서 다른 PC, 다른 사용자, 백업 복원 환경에 그대로 전달될 수 있다.
 - **같은 PC에 vault가 여러 개일 수 있다.** 런타임과 모델은 크기가 크므로 vault마다 설치하지 않고 PC에 한 벌만 둔다.
-- **설치 상태와 장치는 PC에 속한다.** 런타임·모델 설치 여부, 사용 가능한 GPU, 시험 추론 결과는 PC마다 다르다. 다른 환경에서 만든 값을 그대로 쓰면 맞지 않을 수 있다.
+- **로컬 경로와 장치는 PC에 속한다.** 사용자가 지정한 런타임·모델 경로, 사용 가능한 GPU, 시험 추론 결과는 PC마다 다르다. 다른 환경에서 만든 값을 그대로 쓰면 맞지 않을 수 있다. 플러그인은 해당 파일을 설치·업데이트·삭제하지 않는다.
 - **vault가 동기화되는 환경이라면** 위 값이 다른 PC에 전달되어 문제가 될 수 있다. 이 경우를 시험할 때는 개발자의 OneDrive 환경을 하나의 사례로 쓴다.
 
 ## 저장 위치
@@ -21,11 +21,13 @@
 |---|---|---|---|
 | vault 설정 | `<vault>\.obsidian\plugins\<plugin-id>\data.json` | vault와 같이 이동·동기화될 수 있다 | `loadData()` / `saveData()` |
 | PC별 설정 | `%LOCALAPPDATA%\<plugin-id>\local-settings.json` | vault 밖의 PC 로컬 폴더이므로 vault 동기화에 포함되지 않는다. 사용자가 이 폴더를 별도로 동기화하는 경우는 지원 범위 밖이다 | Node `fs`(Desktop Only이므로 사용 가능) |
-| 런타임·모델·캐시 | `%LOCALAPPDATA%\<plugin-id>\runtimes\`, `models\`, `cache\` | 위와 같음 | Runtime Manager |
+| 사용자가 관리하는 런타임·모델·캐시 | `%LOCALAPPDATA%\<plugin-id>\runtimes\`, `models\`, `cache\` | 위와 같음 | 사용자가 별도 취득·설치·갱신·삭제하고 플러그인은 지정 경로를 검증·사용 |
+
+`1-PIPE-01` 구현 범위: vault 설정은 `Plugin.loadData`/`saveData`로 저장하고, PC별 런타임 실행 파일·모델 파일 경로는 `%LOCALAPPDATA%\<plugin-id>\local-settings.json`에 저장한다. 설정 탭에서 녹음 감지, 자동 전사 기본값, 안정화 대기 시간, 언어, 모델 크기, 장치 선호 및 PC별 경로를 편집한다. PC별 경로 변경은 잠금 파일로 직렬화하고 atomic rename으로 저장해 여러 Obsidian 창의 동시 갱신에서 서로 다른 필드를 보존한다. 5초 안에 잠금을 얻지 못하면 저장 실패를 알린다. 런타임 경로를 저장할 뿐 파일 선택·검증·실행은 제공하지 않는다. 자동 전사 설정은 `1-PIPE-02`의 메모리 대기열에 연결하며 실제 전사 실행은 후속 provider·전사 단계에서 연결한다.
 
 - 런타임·모델·캐시는 PC별 설정 파일과 같은 `%LOCALAPPDATA%\<plugin-id>\` 아래에 둔다. 개발계획서의 "vault 밖 사용자별 데이터 위치"에 해당한다.
 - `%LOCALAPPDATA%`는 Windows 계정마다 다르므로 계정이 다른 PC에서도 같은 코드로 동작한다. 경로는 코드에서 환경 변수로 계산하고 설정 파일에는 절대 경로를 저장하지 않는다.
-- 같은 PC에서 여러 vault가 같은 `%LOCALAPPDATA%\<plugin-id>\`를 공유한다. 두 vault가 동시에 같은 파일을 쓰는 경우의 잠금 방식은 1단계 구현 때 정한다.
+- 같은 PC에서 여러 vault가 같은 `%LOCALAPPDATA%\<plugin-id>\`를 공유한다. 동일 플러그인의 여러 Obsidian 창에서 설정을 갱신할 수 있으므로 잠금 파일로 쓰기를 직렬화하고 atomic rename으로 저장한다. 잠금은 설정 저장소 단위로 적용되며 5초 안에 획득하지 못하면 오류를 알린다(`1-PIPE-01`).
 
 ### Obsidian `localStorage` API를 쓰지 않는 이유
 
@@ -71,6 +73,8 @@
 | `limits` | 이 PC의 메모리 기준 동시 작업·모델 크기 상한 |
 | `externalPaths` | 외부 경로 입력을 허용하는 경우의 PC 로컬 경로(미정) |
 
+현재 구현은 PC별 파일에 `schemaVersion`, `runtimePath`, `modelPath`를 저장한다. 나머지 PC별 항목은 후속 provider·런타임 검증 작업에서 추가한다.
+
 ## 충돌·불일치 처리 규칙
 
 1. **선택한 장치가 이 PC에서 사용 불가:** vault 설정은 `devicePreference`만 담으므로 구체 장치 충돌이 없다. PC별 `selectedProvider`가 없거나 검증 실패면 CPU provider로 전사하고 사용자에게 알린다. 조용히 바꾸지 않는다.
@@ -91,5 +95,5 @@
 - `<plugin-id>`: `on-the-record`로 확정(`0-ENV-05`). 경로의 폴더명은 id와 같은 `on-the-record`를 쓴다.
 - `externalPaths`: 외부 경로 입력 허용 여부(개발계획서 §8)가 정해지면 확정한다.
 - 저장 직전 `data.json` 수정 시각 확인(규칙 6): 1단계 구현 시 검토한다. 동기화 방식과 무관한 방어이므로 구현 쪽에 무게를 둔다.
-- 같은 PC의 여러 vault가 `%LOCALAPPDATA%\<plugin-id>\`를 공유할 때의 파일 잠금 방식: 1단계 구현 시 정한다.
+- 여러 vault/Obsidian 창이 `%LOCALAPPDATA%\<plugin-id>\`를 공유할 때 PC별 설정의 갱신은 잠금 파일과 원자적 교체로 직렬화한다. 잠금이 5초 안에 해제되지 않으면 오류를 표시하며, stale lock의 수동 복구 절차는 필요 시 후속 보완한다.
 - 설정 항목 목록은 1단계 설정 화면 설계 때 추가·삭제한다. 분류 기준은 유지한다.

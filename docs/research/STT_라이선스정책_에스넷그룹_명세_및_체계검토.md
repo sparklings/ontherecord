@@ -1,8 +1,8 @@
 ---
 created: 2026-11-01
-last_updated: 2026-11-01
-version: V1.1.0
-status: final
+last_updated: 2026-11-05
+version: V1.6.0
+status: policy-final; publication-blocked
 topic:
   - 라이선스 정책
   - Obsidian 커뮤니티 플러그인
@@ -30,21 +30,23 @@ aliases:
 
 # On the Record — 라이선스 정책 수립 보고서 (대상 조직 명세 · 라이선스 체계 검토)
 
-**문서 버전: V1.1.0** (2026-11-01) · 상태: 확정(final) · 변경 내역은 §11 문서 이력 참조
+**문서 버전: V1.6.0** (2026-11-05) · 상태: MIT 정책·공개 승인·Obsidian 디렉터리 정책 반영 확인, artifact별 검토 미완료 · 변경 내역은 §11 문서 이력 참조
 
-> **결론 한 줄 (확정):** 새 라이선스를 발명하지 않는다. **공개 코드는 MIT로 배포**하고, 에스넷그룹 임직원에게 줄 수 있는 것은 라이선스 제한이 아니라 **§9의 사내 혜택**(반입 심의 패키지·사내 프리셋·검증된 하드웨어 프로파일·우선 지원·교육)으로 제공한다. 이 조합이 요구사항·커뮤니티 관행·Obsidian 디렉터리 규정·오픈소스 윤리를 모두 만족한다.
+> **결론:** 프로젝트 자체 코드의 라이선스 정책은 MIT이며, 임직원 혜택은 라이선스를 제한하지 않는 **§9의 추가 지원**(반입 심의 패키지·사내 프리셋·검증된 하드웨어 프로파일·우선 지원·교육)으로 제공한다. 저작권자 `에스넷시스템`과 공개 승인은 2026-11-05 사용자 확인을 받았다. Obsidian 디렉터리 정책을 검토해 사용자 관리 런타임·모델 방식을 반영했다. 실제 배포 구성요소별 권리·의무 검토가 남아 있으므로 완료 전까지 공개 릴리스는 보류한다.
 
 ## 1. 결론 요약
 
 | 항목 | 확정 사항 | 근거 |
 |---|---|---|
-| 공개 라이선스 | **MIT (확정)** — Apache-2.0 대안은 채택하지 않음 | OSI 승인, 커뮤니티 관행, GitHub 자동 인식(디렉터리 경고 없음) |
+| 프로젝트 자체 코드의 라이선스 정책 | **MIT (확정)** — Apache-2.0 대안은 채택하지 않음 | 라이선스 정책 결정. `LICENSE` 권리자 표기와 공개 권한은 별도 확인 필요 |
+| 권리자·프로젝트 공개 승인 | **확인 완료** — 저작권자 `에스넷시스템` | 사용자 확인(2026-11-05); `LICENSE`에 반영 |
+| 공개·배포 상태 | **artifact별 권리·의무 검토 보류** | `0-ENV-16`의 배포 산출물 검토가 미완료. Obsidian 정책은 검토 및 계획 반영 완료 |
 | 임직원 혜택 | 라이선스가 아닌 **「사내 사용 정책」+ §9 사내 혜택**으로 제공 | MIT는 이미 전원 무료 사용을 허용하므로 제한이 아니라 *추가 제공*만 남음 |
 | 혜택 대상 조직 | **3층 확정(§6.1)** — 1순위 에스넷시스템 + 계열 7개사 / 2순위 인성정보 + 인성정보 계열 8개사 / 3순위 블루로터스㈜ | DART 사업보고서 제27기 계열회사 현황 (2025.12.31) |
 | 배포 표기 | 디렉터리 등록 시 **Free** | Obsidian FAQ의 Free/Optional payment/Paid 구분 |
 | 신규 라이선스 | **만들지 않음** | 비OSI 라이선스는 디렉터리에서 'Custom license' 경고 + 오픈소스 정의(OSD 제5·6조) 위반 |
 | 라이선스상 사용 제한 | **없음** — 행위 기준 제한(재판매 금지 등)도 두지 않음 | §4.6 윤리 검증, §3.1 R5 기각 |
-| 배포·기술 제약 | 있음 — 등재 플러그인의 자동 업데이트 금지 등 | §9.3 제약 1 (라이선스 제한이 아니라 플랫폼 정책) |
+| 배포·기술 제약 | 있음 — 플러그인과 의존성의 자체 설치·업데이트 금지, README 공개 등 | §4.4, §9.3 제약 1 (라이선스 제한이 아니라 플랫폼 정책) |
 
 ## 2. 대상 조직 명세 (DART 근거)
 
@@ -173,7 +175,7 @@ aliases:
 
 - **R1·R2 vs R4 (V1.0.1 정정):** 재직 기간·기기 한정은 **라이선스로 표현할 수 없다.** MIT는 대상을 구분하지 않으므로, 커뮤니티 등록 후에는 일반 사용자도 같은 코드를 설치한다. R1·R2는 **§9 혜택의 적용 범위**로만 표현한다.
 - **R5 vs R4:** Obsidian 커뮤니티 디렉터리 FAQ는 **Free / Optional payment / Paid** 세 가지를 구분하고, "결제 없이는 쓸 수 없으면 Paid", "일부 기능을 결제 뒤에 두면 Optional payment"로 규정한다. 즉 *차별화*는 허용되지만, 디렉터리 등록을 유지하려면 등록 라벨과 README 공개 내용이 일치해야 한다.
-- **결론 (V1.0.1 갱신):** R1~R3은 **라이선스가 아니라 §6 정책 문서와 §9 사내 혜택**으로 충족하고, **R5는 기각**한다. 이 구조가 요구사항·플랫폼 규정·윤리를 동시에 만족하는 유일한 조합이다.
+- **결론 (V1.0.1 갱신, 정책 선택):** R1~R3은 **라이선스가 아니라 §6 정책 문서와 §9 사내 혜택**으로 다루고, **R5는 기각**한다. MIT 선택은 라이선스 정책 결정이며 권리 귀속·공개 승인 또는 Obsidian의 별도 플랫폼 정책 검토를 대신하지 않는다.
 
 ### 3.3 라이선스로 표현할 때의 대안
 
@@ -236,17 +238,18 @@ aliases:
 
 | 요건 | 원문 요지 | 출처 |
 |---|---|---|
-| 라이선스 파일 필수 | "Include a LICENSE file and clearly indicate the license of your plugin or theme." (LICENSE 파일을 포함하고 플러그인 또는 테마의 라이선스를 명확히 표시할 것) | Developer policies |
-| 원 라이선스 준수 | 사용한 코드의 원 라이선스를 준수하고 필요 시 README에 출처 표기 | Developer policies |
-| 상표 | "Obsidian" 상표를 1차 제작물로 오인하게 쓰지 말 것 | Developer policies |
-| 결제 고지 | "Payment is required for full access" (전체 기능을 이용하려면 결제가 필요함)를 README에 명시하면 허용 | Developer policies |
-| 비공개 소스 | "Close sourced code. This will be handled on a case by case basis." (비공개 소스 코드는 사안별로 심사) | Developer policies |
-| 라벨 구분 | Free / Optional payment / Paid 중 선택, 결제 없이 못 쓰면 Paid | Frequently asked questions |
-| 커스텀 라이선스 경고 | GitHub이 `Custom license`로 인식하면 "recognized license" 경고 발생 | Frequently asked questions |
-| 제출 시 LICENSE 필요 | 저장소 루트에 LICENSE 포함 필요 | Submit your plugin |
-| 정책 적용 범위 | "These policies only apply to plugins listed in the official Obsidian Community directory. These policies do not apply to plugins installed outside of the Obsidian directory." | Developer policies |
+| LICENSE 및 제3자 코드 | LICENSE 포함·라이선스 명시, 사용한 코드의 원 라이선스 준수 및 필요한 attribution·고지 | Developer policies; Submission requirements |
+| 설치·업데이트 | 플러그인 자신 또는 자신의 의존성을 설치·업데이트하지 않음 | Developer policies |
+| 행위 금지 | 코드 난독화, 클라이언트 측 텔레메트리 및 정책에서 금지하는 광고를 포함하지 않음 | Developer policies |
+| README 공개 | 네트워크 사용과 vault 밖 파일 접근의 목적을 명확히 설명 | Developer policies |
+| 메타데이터 | `minAppVersion` 설정, 설명 250자 이하·마침표 종료·이모지 제외, Node/Electron API 사용 시 데스크톱 전용 지정 | Submission requirements |
+| 비공개 소스·소유 | 비공개 소스는 사안별 심사. 공식 GitHub App이 비공개 저장소 소스를 읽을 수 있는 제출 방식 지원. 조직도 Directory Owner 가능 | Developer policies; FAQ; Organizations |
+| 저장소·ID 변경 | 등록 후 저장소 위치 변경은 관리자 절차가 필요하고 게시된 플러그인 ID는 변경할 수 없음 | FAQ; Manage your plugin or theme |
+| 결제 구분 | Free / Optional payment / Paid. 결제가 전체 사용의 필수조건이면 Paid | Frequently asked questions |
+| 제출 절차 | Directory 제출 양식 이용, manifest와 일치하는 GitHub 릴리스 및 필요한 빌드 자산, 자동 검사 | Submit your plugin; Submission requirements |
+| 적용 범위 | 공식 Community Directory에 등재된 플러그인에 적용 | Developer policies |
 
-- 위 마지막 항목이 **§9 사내 혜택의 규정 근거**다. 사내 배포·사내 프리셋·사내 지원은 디렉터리 정책의 적용 대상이 아니므로, 등록 플러그인의 공개 조건을 건드리지 않고 별도로 운영할 수 있다.
+세부 근거와 프로젝트별 대응은 [Obsidian 디렉터리 정책 검토](./Obsidian_디렉터리정책_상충검토.md)를 참조한다. 본 프로젝트는 불확실한 정책 해석을 피하기 위해 런타임·모델을 의존 구성요소로 취급하고 플러그인에 다운로드·설치·업데이트·제거 기능을 제공하지 않는다. README에는 플러그인 자체의 네트워크 미사용 및 vault 밖 런타임·모델 접근 이유를 공개한다. 사내 혜택은 MIT 조건을 바꾸지 않는 추가 지원으로 제공한다.
 
 **운영 리스크:** 맞춤 라이선스를 쓰면 ①디렉터리 스캐너 경고 ②"오픈소스가 아니다"라는 커뮤니티 반응 ③Obsidian 정책의 사안별 심사 대상이 된다. MIT/Apache-2.0은 이 세 가지를 모두 회피한다.
 
@@ -366,11 +369,11 @@ package.json       : "license": "MIT", "private": false
 
 | # | 리스크 | 심각도 | 내용 | 대응 |
 |---|---|---|---|---|
-| 1 | **권리 귀속** | 높음 | 회사 업무 범위·회사 자원을 사용해 개발했다면 회사가 저작권/직무발명 권리를 주장할 수 있다. 그러면 개인이 라이선서가 될 수 없고, MIT 공개 자체가 회사 승인 사항이 된다 | 진행 전 소속 회사 규정(직무발명·업무상저작물·보안서약) 확인. 개인 프로젝트로 진행했음을 남기고, 필요하면 회사 명의 공개 또는 회사 승인 문서 확보 |
+| 1 | **권리 귀속·공개 승인** | 해소(사용자 확인) | 저작권자 `에스넷시스템` 및 공개 승인을 사용자에게 확인했다(2026-11-05). 사용자 확인을 다른 contributor나 제3자 자료의 권리까지 확장 해석하지 않는다 | `LICENSE` 표기 반영. 추가 기여물과 제3자 artifact의 권리·고지는 `0-ENV-16`에서 별도 확인 |
 | 2 | 상표 | 중 | "On the Record"는 동명 미디어·프로그램이 다수 | KIPRIS·USPTO 9·42류 검색(미확인), 로고·디자인 차별화 |
 | 3 | Obsidian 상표 정책 | 중 | 저장소·문서에 "Obsidian"을 1차 제작물처럼 쓰면 정책 위반 소지 | 저장소명 `ontherecord`, 설명에 "community plugin" 명시 |
 | 4 | 디렉터리 라벨 불일치 | 중 | "Paid"로 인식되면 README 고지 필요, "Free"인데 유료 기능이 있으면 신고 대상 | Free로 등록, 유료 기능 없음. 향후 유료 기능 추가 시 README·라벨 동시 갱신 |
-| 5 | 의존 구성요소 | 중 | whisper.cpp·GGML 모델·오디오 디코더의 라이선스가 MIT 공개와 충돌할 수 있다 | `0-ENV-10` 검토 결과(아래) 반영. 실제 릴리스 산출물 선택 시 버전·빌드 설정·고지를 확인하고 SBOM 갱신 |
+| 5 | 의존 구성요소 | 높음 | 런타임·모델·오디오 디코더·선택 분석 모델은 서로 다른 라이선스, 고지와 재배포 의무를 가질 수 있다. upstream 코드 또는 유사 모델의 라이선스가 실제 artifact를 증명하지 않는다 | `0-ENV-16`에서 제품에 포함하거나 다운로드로 제공할 정확한 artifact별 출처·버전·해시·라이선스·빌드 구성·고지·의무를 확인하고 SBOM을 갱신. 미확인·미승인 artifact는 제외 |
 | 6 | 대상 회사 변동 | 낮음 | 계열·관계사 지분이 바뀌면 대상 목록이 낡는다(하이케어넷 사례) | 사업보고서 공시 주기(연 1회)로 목록 갱신, 정책 문서에 기준일 명시 |
 | 7 | 맞춤 라이선스 유혹 | 낮음 | "우리 회사만 무료"를 라이선스로 만들고 싶은 요구가 재발할 수 있다 | 본 보고서 §4.5를 근거로 정책 문서로 처리 |
 | 8 | 직원 검증 수단 부재 | 낮음 | 해외 법인·비상장 자회사 직원 확인이 어렵다 | 자기 신고 기반, 필요 시 그룹 인사 확인 |
@@ -381,12 +384,12 @@ package.json       : "license": "MIT", "private": false
 
 | 구성요소 | 확인한 라이선스·근거 | MIT 공개 및 배포 판단 |
 |---|---|---|
-| 현재 플러그인 런타임 | `package.json`에는 `dependencies`가 없고 개발 도구만 `devDependencies`로 선언되어 있다. `src/main.ts`는 Obsidian 플러그인 빈 골격이다. | 현재 코드에는 whisper.cpp, 모델, 오디오 변환기가 들어 있지 않다. 현재 개발 의존성과 추후 설치할 런타임을 혼합해 SBOM을 작성하지 않는다. |
+| 현재 플러그인 런타임 | `package.json`에는 `dependencies`가 없고 빌드·개발 도구만 `devDependencies`로 선언되어 있다. 소스에는 녹음 파일 감지와 안정화 로직이 있으나 STT 엔진·모델·오디오 변환기를 제품 코드에 통합하지 않았다. | 현재 제품 코드에 포함되지 않은 whisper.cpp, 모델, 오디오 변환기 및 추가 분석 기능은 실제 선택·배포 시 artifact별로 검토한다. 현재 개발 의존성과 추후 설치할 런타임을 혼합해 SBOM을 작성하지 않는다. |
 | `whisper.cpp` 및 `ggml` 코드 | 공식 upstream 저장소의 각 `LICENSE`는 MIT이다. whisper.cpp upstream README는 기본 CLI가 16-bit WAV만 입력으로 받으며 별도 변환 예로 FFmpeg를 안내한다. | MIT 공개와 양립 가능하다. 바이너리를 재배포하면 해당 코드의 저작권·라이선스 고지를 보존한다. 공식 릴리스 또는 자체 빌드의 선택적 backend와 포함 DLL은 별도 구성요소로 확인한다. |
 | whisper.cpp용 변환 모델 | Hugging Face `ggerganov/whisper.cpp` 모델 저장소는 카드에 `license: mit`를 표시하고 `base`, `base-q5_1`, `small`, `small-q5_1` 등을 제공한다. 반면 Hugging Face `openai/whisper-base` 모델 카드는 `license: apache-2.0`를 표시한다. | 모델 전체를 일괄적으로 MIT라고 표기하지 않는다. 실제 설치할 저장소·파일의 카드와 고지, revision, 파일 해시를 고정하고 그 모델에 적용되는 라이선스·고지를 함께 제공한다. |
 | FFmpeg 후보 (`0-BASE-05`, 2026-11-02) | 공식 FFmpeg `n9.0.1` 소스의 [`LICENSE.md`](https://github.com/FFmpeg/FFmpeg/blob/n9.0.1/LICENSE.md)를 확인했다. 기본은 LGPL-2.1+이며, `--enable-gpl` 및 일부 외부 라이브러리·빌드 옵션에 따라 GPL 계열로 바뀔 수 있다. `--enable-nonfree` 결과물은 재배포할 수 없다. | 제품용 후보는 GPL·version3·nonfree 옵션 및 외부 라이브러리가 없는 LGPL 기본 빌드로 한정한다. Lenovo의 시험용 Gyan.dev 바이너리는 `--enable-gpl --enable-version3` 빌드(GPL v3)로 확인했으며 제품 배포 후보에서 제외했다. 정확한 제품 바이너리의 구성, 고지·소스 제공 의무 및 Obsidian 설치 정책은 배포 전에 별도 확인한다. 세부 시험과 해시는 [0-BASE-05 기록](../baselines/BASE-05_AUDIO_DECODER_2026-11-02.md)에 있다. |
 
-위 upstream 문서는 whisper.cpp·ggml 관련 변경 가능 브랜치를 기준으로 2026-11-01에 확인했으며, FFmpeg는 `n9.0.1` 태그로 고정해 2026-11-02에 재확인했다. `0-BASE-03`은 실행 파일을 선정했고, `0-BASE-05`는 FFmpeg 소스 및 LGPL 빌드 경로를 후보로 선택했다. 실제 배포할 빌드·산출물은 버전, 구성 요소, 고지·소스 제공 조건과 함께 별도 고정해야 한다. 모델도 실제 catalog에 넣는 파일별 revision과 SHA-256을 고정한다. 이는 본 검토 범위를 넘어선 미해결 라이선스 충돌이 아니라, 배포물의 재현 가능한 SBOM을 확정하기 위한 조건이다.
+위 upstream 문서는 whisper.cpp·ggml 관련 변경 가능 브랜드를 기준으로 2026-11-01에 확인했으며, FFmpeg는 `n9.0.1` 태그로 고정해 2026-11-02에 재확인했다. 이 조사는 설계 후보의 예비 검토이며 실제 제품 artifact에 대한 배포 승인이나 포괄적인 법률 적합성 판단이 아니다. 실제 배포할 빌드·산출물은 버전, 구성 요소, 고지·소스 제공 조건과 함께 별도 고정해야 한다. 모델도 실제 catalog에 넣는 파일별 revision과 SHA-256을 고정한다. 해당 검토가 완료될 때까지 SBOM과 라이선스 적합성을 확정된 것으로 표시하지 않고, 미확인 artifact를 배포하지 않는다.
 
 **주요 upstream 출처**
 - [whisper.cpp LICENSE](https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/LICENSE), [ggml LICENSE](https://raw.githubusercontent.com/ggml-org/ggml/master/LICENSE)
@@ -401,9 +404,11 @@ package.json       : "license": "MIT", "private": false
 |---|---|---|
 | `0-ENV-06` 라이선스 정책 확정 + 대상 회사명 목록 | **해소 (V1.1.0)** | 라이선스 MIT 확정(§1·§5) + 회사명 3층 명단 확정(§2 명세 · §6.1) |
 | `0-ENV-08` 커뮤니티 등록 라이선스 조건 확인 | **본 문서 §4.4로 해소** | Obsidian 정책 원문 확인 완료 |
-| `0-ENV-09` LICENSE 파일 작성, README 갱신 | **구현 완료 (2026-11-01)** | `LICENSE`, `README.md`, `package.json`, `SUPPORT.md` 반영. 저작권자·공개 승인 및 사내 지원 운영 정보는 미정이며 `TODO.md`에 후속 확인사항 기록 |
-| `0-ENV-10` 의존 구성요소 라이선스 충돌 확인 | **해소 (2026-11-01, 현재 설계 수준)** | §7 검토 결과 참조. whisper.cpp/ggml은 MIT, 모델 라이선스는 실제 출처별 확인, FFmpeg는 빌드·배포 조건부. 최종 배포 파일 단위 SBOM은 `0-BASE-03`·`0-BASE-05`에서 고정 |
-| `0-ENV-11` 프로젝트 초기화 | 완료 | `package.json`이 `private: true`, `license: UNLICENSED` → **MIT 확정에 따라 `MIT`/`false`로 변경 필요** |
+| `0-ENV-07` 권리 귀속 및 공개 승인 | **완료(2026-11-05)** | 사용자 확인: 저작권자 `에스넷시스템`, 권리 귀속 및 공개 승인 확인. `LICENSE`에 반영 |
+| `0-ENV-09` LICENSE 파일 작성, README 갱신 | **정책 표기 반영** | MIT 저작권자 표기와 정책 안내 완료. 실제 artifact 배포 조건은 `0-ENV-16`에서 별도 검토 |
+| `0-ENV-10` 의존 구성요소 라이선스 충돌 확인 | **설계 후보 예비 검토만 완료** | §7의 upstream 검토는 artifact별 배포 승인 아님. 정확한 제품 구성요소·고지·의무 확인과 SBOM은 `0-ENV-16`에서 처리 |
+| `0-ENV-11` 프로젝트 초기화 | 완료 | 현재 `package.json`은 `private: false`, `license: MIT`이다. 이 메타데이터는 artifact별 배포 조건이나 Obsidian 정책을 대신하지 않는다 |
+| `0-ENV-16` 실제 배포 구성요소 검토 | **미착수** | 배포물별 출처·revision·해시·라이선스·고지·재배포/소스 제공 의무 및 SBOM을 확정 |
 
 ## 9. 사내 혜택 정책 (에스넷그룹 임직원 전용)
 
@@ -439,7 +444,7 @@ package.json       : "license": "MIT", "private": false
 | 항목 | 내용 |
 |---|---|
 | 규정 근거 | Obsidian 정책은 **공식 디렉터리 등재 플러그인에만 적용**되며, 디렉터리 밖에서 설치하는 플러그인에는 적용되지 않는다(§4.4 인용). 따라서 사내 배포·사내 프리셋 운영은 공개 조건과 독립적이다 |
-| 제약 1 | 등재 플러그인은 **"스스로 또는 의존성을 설치·업데이트"할 수 없다**는 금지 항목이 있다. 사내 배포도 자동 업데이트 기능을 넣지 않고, 사용자가 파일을 내려받아 적용하는 방식으로 설계한다 |
+| 제약 1 | 등재 플러그인은 **스스로 또는 의존성을 설치·업데이트할 수 없다.** 프로젝트는 런타임·모델에도 보수적으로 적용해 플러그인이 다운로드·설치·업데이트·삭제하지 않도록 한다. 사용자가 플러그인 외부에서 직접 관리하고, 플러그인은 경로·파일 검증과 실행만 한다 |
 | 제약 2 | 혜택은 MIT 조건을 **변경하지 않는다**. 사내 프리셋·문서는 별도 저작물이며, 플러그인 코드의 라이선스는 MIT로 유지된다 |
 | 제약 3 | 반입 심의 패키지에 포함하는 SBOM·라이선스 명세는 `0-ENV-10`(의존 구성요소 라이선스 확인) 완료 후 확정한다 |
 | 제약 4 | 사내 프리셋에 회의 녹음·전사 결과 등 개인정보가 포함되지 않도록, 용어집은 회사명·제품명·약어만 담는다 |
@@ -451,6 +456,8 @@ package.json       : "license": "MIT", "private": false
 - Frequently asked questions: https://docs.obsidian.md/Community+directory/Frequently+asked+questions
 - Submit your plugin: https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin
 - Submission requirements for plugins: https://docs.obsidian.md/Community+directory/Submission+requirements+for+plugins
+- Manage your plugin or theme: https://docs.obsidian.md/Community+directory/Manage+your+plugin+or+theme
+- Organizations: https://docs.obsidian.md/Community+directory/Organizations
 
 **라이선스 원문·기준**
 - OSI 승인 라이선스 목록: https://opensource.org/licenses
@@ -477,6 +484,9 @@ package.json       : "license": "MIT", "private": false
 | V1.1.0 | 2026-11-01 | ①상태를 **확정(final)** 으로 전환 ②**§6.1 혜택 대상 조직 3층 명단 확정**(블루로터스㈜·인성정보 계열 8개사 포함) ③§6.2 그랜트 문구 명단·우선순위 갱신 ④§9.2에 대상·혜택 우선순위 조합 규칙 추가 ⑤`0-ENV-06` 해소 처리 |
 | V1.2.0 | 2026-11-01 | `0-ENV-09` 구현 결과 반영: MIT `LICENSE`·README·패키지 메타데이터·`SUPPORT.md` 작성. 저작권자와 공개 승인, 사내 지원 운영 세부사항은 미정으로 유지 |
 | V1.3.0 | 2026-11-01 | 혜택 안내 원안을 한국어로 정리하고, `0-ENV-09` 반영 후 상충 검토서의 라이선스 상태를 현행화 |
+| V1.4.0 | 2026-11-05 | 프로젝트 자체 코드에 대한 MIT 정책과 공개·배포 승인을 분리. 권리자 및 공개 승인 미완료를 출시 차단 조건으로 명시하고, 제3자 artifact 단위 라이선스·고지·SBOM 검토를 별도 작업으로 지정. `package.json` 상태와 TODO 매핑 정정 |
+| V1.5.0 | 2026-11-05 | 사용자 확인에 따라 저작권자를 `에스넷시스템`으로 반영하고 `0-ENV-07`을 완료 처리. README·SUPPORT·TODO 및 보고서의 권리자·공개 승인 상태를 일치시키고, artifact·Obsidian 정책만 남은 출시 차단 조건으로 정리 |
+| V1.6.0 | 2026-11-05 | 최신 Obsidian 정책·제출 요건·FAQ·관리 절차·조직 문서를 대조하고 §4.4를 갱신. 런타임·모델의 플러그인 자동 설치·업데이트를 제공하지 않는 보수적 결정을 반영하고, `0-ENV-08` 완료 및 README 공개 요건과 출시 전 점검을 문서화 |
 
 ### 11.1 V1.0.1 상충 검토 (내용 논증)
 
@@ -499,11 +509,12 @@ package.json       : "license": "MIT", "private": false
 | 미결 항목 | 위치 | 상태 (V1.1.0) |
 |---|---|---|
 | ~~블루로터스㈜·인성정보 계열 8개사의 그랜트 포함 여부~~ | §6.1 | **해결** — 3층 명단으로 확정 |
-| ~~프론트메터 `status` — 확정 문서로 전환할지~~ | frontmatter | **해결** — `status: final` |
-| `LICENSE` 저작권자 표기 (권리 귀속 확인) | §7-1 | 미해결 — 착수 전 회사 규정 확인 필요 |
+| 문서 상태 표기 | frontmatter | 정책 결정·프로젝트 공개 승인·Obsidian 정책 반영 확인. 현재 V1.6.0은 artifact별 검토 미완료 상태 |
+| `LICENSE` 저작권자 표기 (권리 귀속 확인) | §7-1 | 완료 — `에스넷시스템`, 사용자 확인(2026-11-05) |
+| 권리 귀속·공개 권한 승인 | §7 리스크 1 | 완료 — 사용자 확인(2026-11-05) |
 | 인성정보 지분율·하이케어넷 관계 변동 재확인 | §2.4 | 미해결 — 차기 사업보고서 공시 시 갱신 |
 | 사내 프리셋 번들·용어집 등 배포물 제작 | §9.2 | 미착수 |
-| SBOM·라이선스 명세 확정 | §9.3 제약 3 | `0-ENV-10` 완료 후 |
+| 배포물별 라이선스 및 SBOM 확정 | §7·§9.3 제약 3 | `0-ENV-16` 완료 후 |
 
 ---
 

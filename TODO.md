@@ -13,6 +13,14 @@
 | ENV | 개발 환경, 저장소, 라이선스, 프로젝트 구성 |
 | BASE | 입력·전사 기준선 측정 |
 | OBS | Obsidian 연동 검증 |
+| PIPE | 공통 플러그인 파이프라인 |
+
+## 2026-11-05
+
+### 라이선스 및 공개 준비
+
+- [ ] `0-ENV-16` 실제 배포 구성요소의 라이선스·고지·재배포 조건을 artifact 단위로 확정 → 런타임, 모델, 디코더, 선택 분석 기능 각각의 출처·정확한 버전/revision·SHA-256·라이선스 원문·빌드 옵션·고지·소스 제공 의무를 기록하고 SBOM을 작성한다. `0-ENV-10`은 upstream/설계 후보 예비 검토로만 간주한다. 의무를 충족할 수 없거나 권리 근거가 불명확한 구성요소는 배포 대상에서 제외한다. 실제 산출물과 고지 검토가 끝나기 전에는 공개 릴리스를 하지 않는다.
+- 프로젝트 자체 코드에 MIT 정책을 적용한다. 저작권자 `에스넷시스템`과 권리 귀속·공개 승인은 2026-11-05 사용자 확인을 받았고 `LICENSE`에 반영했다. 공개 릴리스는 실제 배포 구성요소 검토(`0-ENV-16`) 및 제출 직전 Directory 체크리스트 완료 전까지 보류한다.
 
 ## 2026-11-01
 
@@ -28,17 +36,17 @@
 - [x] `0-ENV-05` 플러그인 id, 이름 결정 → **결정(2026-11-01): 이름 `On the Record`, id `on-the-record`, 부제 `Local minutes for Obsidian`, 저자 `SUNGWON PARK`(변경: 기존 `Sungwon Park (SG)`), 저장소명 `ontherecord`(접근성 우선, 보고서의 기존 `obsidian-on-the-record`에서 변경).** 근거: [네이밍 보고서](./docs/research/STT_사업보고서_OnTheRecord_네이밍.md). id 규칙(소문자·하이픈, `obsidian` 미포함, `plugin` 미종료)과 커뮤니티 목록 중복 없음은 보고서 기준 확인됨(2026-11-01 목록 9,755개). 미확인: 국내·USPTO 상표 검색(9·42류), 도메인 확보. 상표 결과에 따라 이름이 바뀔 수 있으며, 그 경우 id는 공개 전까지만 변경 가능하다
 - [x] `0-ENV-02` Git 저장소 생성 및 GitHub 원격 연결 → 완료(2026-11-01). 로컬 저장소(`main`, `.gitignore` 동작 확인) 첫 커밋 후 private 저장소 `https://github.com/sparklings/ontherecord` 생성·push. 공개 범위는 라이선스·회사 규정 확인(`0-ENV-06`~`09`) 후 재결정. Git 사용자 정보는 전역 설정, `gh` 2.103.3 설치·로그인(`sparklings`)
 
-#### 보류: 정책·이름 결정 후 진행
+#### 보류: 남은 출시 준비 확인 후 진행
 
-라이선스 정책이 정해져야 시작할 수 있는 항목이다. 결정 시점은 미정이다.
+MIT 라이선스 정책과 프로젝트 권리자·공개 승인, Obsidian 디렉터리 정책 검토는 완료됐다. 실제 배포 구성요소 검토(`0-ENV-16`)와 최종 제출 점검이 끝나기 전까지 공개·배포를 진행하지 않는다.
 
-- [x] `0-ENV-11` 플러그인 프로젝트 초기화(AssistantEmily 구조 참조) → 완료(2026-11-01). 저장소 루트에 `manifest.json`(id `on-the-record`, `isDesktopOnly: true`), `versions.json`, `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `eslint.config.mjs`, `src/main.ts`(빈 `Plugin` 클래스) 생성. `npm install` 후 `npm run check`, `npm run lint`, `npm run build` 통과, `main.js` 생성 확인. AssistantEmily와 다른 점: PlugVaults 자동 배포와 `.env` 로드는 넣지 않음(배포는 `0-ENV-12`), 라이선스 미정이라 `package.json`은 `private: true`, `license: UNLICENSED`. 잠정값: `minAppVersion` 1.7.2(AssistantEmily 값, 이 플러그인 요구 API로 검증하지 않음 → `0-OBS` 검증 후 확정), 버전 0.0.0. `npm install`에서 `npm audit` 경고가 출력됨(내용 미확인)
+- [x] `0-ENV-11` 플러그인 프로젝트 초기화(AssistantEmily 구조 참조) → 완료(2026-11-01). 저장소 루트에 `manifest.json`(id `on-the-record`, `isDesktopOnly: true`), `versions.json`, `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `eslint.config.mjs`, `src/main.ts` 생성. 초기화 당시 `package.json`은 `private: true`, `license: UNLICENSED`였으나 `0-ENV-09`에서 MIT 정책에 맞게 `private: false`, `license: MIT`로 갱신했다. 이 메타데이터는 저장소 공개 승인이나 제3자 artifact의 재배포 허가를 의미하지 않는다. 잠정값: `minAppVersion` 1.7.2(AssistantEmily 값, 이 플러그인 요구 API로 검증하지 않음 → `0-OBS` 검증 후 확정), 버전 0.0.0. `npm install`에서 `npm audit` 경고가 출력됨(내용 미확인)
 - [x] `0-ENV-12` PlugVaults 배포 절차 작성(빌드 결과를 `.obsidian\plugins\<id>\`에 복사) → 완료(2026-11-01). [scripts/deploy.mjs](./scripts/deploy.mjs)와 `npm run deploy` 추가. 절차: (1) 프로덕션 빌드 (2) `main.js`, `manifest.json`, `styles.css`(있을 때만)를 `<vault>\.obsidian\plugins\on-the-record\`에 복사 (3) Obsidian에서 플러그인 활성화(최초 1회) 또는 재활성화. 대상 vault는 환경 변수 `OTR_TEST_VAULT`, 없으면 `%USERPROFILE%\OneDrive\PlugVaults`. 안전장치: 경로에 `ObsidianVaults`가 있으면 거부, `.obsidian`이 없는 폴더는 거부(두 경우 종료 코드 1 확인). 활성화 목록(`community-plugins.json`)은 수정하지 않음. 실제 실행으로 `main.js`, `manifest.json` 복사 확인. Obsidian 로드 확인 완료(2026-11-01, 사용자 확인): 커뮤니티 플러그인 목록에서 활성화되고 오류 없음. 빈 `onload()`라 리본·명령·설정 탭은 없음
-- [x] `0-ENV-06` 라이선스 정책 확정 → **결정(2026-11-01): 공개 코드는 MIT, 소속 회사 구성원 혜택은 라이선스 제한이 아닌 사내 혜택(지원·반입 심의 패키지·프리셋·교육)으로 제공.** 근거: [라이선스 정책 보고서 V1.1.0](./docs/research/STT_라이선스정책_에스넷그룹_명세_및_체계검토.md). 이전 계획("구성원에게만 무료인 라이선스")에서 변경됨. 이유(보고서 §4.5~4.6): 대상을 지목한 라이선스는 OSI 승인을 받을 수 없고 Obsidian 디렉터리에서 'Custom license' 경고 대상이며, 설치 시 신원을 확인할 수단이 없다. 대상 조직 3층 명단(1순위 소속 회사와 계열사, 2순위 경영참여 출자 관계사와 계열사, 3순위 그 밖의 관계사)은 보고서 §6.1이 정본이다. 미해결: `LICENSE` 저작권자 표기(`0-ENV-07` 결과 필요), 관계사 지분 변동 재확인(차기 사업보고서). 보고서의 DART 수치와 Obsidian 정책 인용은 이 세션에서 원문 대조하지 않음
-- [~] `0-ENV-07` 회사의 소프트웨어 배포·소유권 관련 규정 확인(공개 GitHub 저장소 게시 가능 여부 포함) → **규정은 확인되지 않음(2026-11-01).** 확인되지 않은 상태에서 다음 방침을 기록한다(사용자 지시): (1) 소유권은 소속 회사 구성원 모두의 것으로 한다. (2) 관리는 소속 회사 담당 조직이 한다. (3) 현재 GitHub 저장소는 개발자 개인 계정이 관리한다. (4) 회사 공식 GitHub 저장소가 확정되면 이관한다. 미해결: 위 방침은 회사 규정으로 확인된 것이 아니며, "구성원 모두의 소유"를 `LICENSE` 저작권자 표기에 어떻게 적을지(법인명, 부서명, 개인명 중 무엇인지) 정해지지 않았다. 저장소를 공개로 전환하기 전에 회사 규정 확인 또는 승인이 필요하다
-- [~] `0-ENV-08` 공개 GitHub 저장소와 Obsidian 커뮤니티 플러그인 등록에 맞는 라이선스 조건 확인 → 공식 문서 5건 원문 대조 완료(2026-11-01), 상충 11건 정리: [Obsidian_디렉터리정책_상충검토.md](./docs/research/Obsidian_디렉터리정책_상충검토.md). 라이선스 조건(MIT, `LICENSE` 파일)은 충돌 없음. **미결정: 런타임·모델 다운로드 기능이 "Install or update themselves or their dependencies" 금지에 해당할 가능성(문서 §3의 선택지 A/B/C).** 등재 전 저장소 위치 확정 필요(등재 후 이전은 관리자 절차). Obsidian 상표 정책 원문은 미확인. 위 결정이 나면 완료 처리
-- [x] `0-ENV-10` 의존 구성 요소(`whisper.cpp`, 모델, 오디오 변환기)의 라이선스와 MIT 공개의 충돌 여부 확인 → 완료(2026-11-01, FFmpeg 후보 추가 검토 2026-11-02): 현재 설계에서 일괄 충돌 없음. `whisper.cpp`·`ggml`은 MIT, 모델 라이선스는 실제 출처별로 다르므로 배포 파일 기준으로 고정 필요. FFmpeg 9.0.1은 LGPL 기본 빌드와 GPL·외부 라이브러리 포함 빌드를 구분하고, 제품용 후보를 GPL·version3·nonfree 옵션 및 외부 라이브러리가 없는 LGPL 구성으로 제한했다. 최종 바이너리와 배포 고지는 배포 전 확정한다. 자세한 내용: [라이선스 정책 보고서 §7 검토 결과](./docs/research/STT_라이선스정책_에스넷그룹_명세_및_체계검토.md) 및 [0-BASE-05 기록](./docs/baselines/BASE-05_AUDIO_DECODER_2026-11-02.md)
-- [x] `0-ENV-09` `LICENSE`(MIT) 작성, `README.md` 라이선스 항목 갱신, `package.json`을 `license: MIT`, `private: false`로 변경, 사내 혜택 안내 문서(`SUPPORT.md`) 작성 → 완료(2026-11-01). 불명확한 사항은 미정으로 기록: `LICENSE` 저작권자, 공개 저장소 승인 및 회사 규정 확인은 `0-ENV-07` 미해결이며 저장소는 비공개 유지. `SUPPORT.md`의 지원 연락처/채널, 임직원 확인 절차, 사내 배포·자료 위치는 미정; 대상 조직은 라이선스 정책 보고서 §6.1을 기준으로 하고 하이케어넷 포함 여부 재확인 필요. 미확정 운영 세부사항과 권리 귀속을 확정한 뒤 문서 및 저작권자 표기를 갱신한다
+- [x] `0-ENV-06` 라이선스 정책 확정 → **결정(2026-11-01): 프로젝트 자체 코드는 MIT, 소속 회사 구성원 혜택은 라이선스 제한이 아닌 사내 혜택(지원·반입 심의 패키지·프리셋·교육)으로 제공.** 근거: [라이선스 정책 보고서](./docs/research/STT_라이선스정책_에스넷그룹_명세_및_체계검토.md). 이전 계획("구성원에게만 무료인 라이선스")에서 변경됨. 권리자 `에스넷시스템`과 공개 승인은 2026-11-05 확인 및 반영했다. 제3자 구성요소 검토는 `0-ENV-16`에서 별도 처리한다. 대상 조직 명세는 보고서 §6.1을 참조한다.
+- [x] `0-ENV-07` 회사의 소프트웨어 권리 귀속·공개 규정 확인(공개 GitHub 저장소 게시 가능 여부 포함) → 2026-11-05 사용자 확인: 저작권자 `에스넷시스템`, 권리 귀속 및 공개 승인 완료. `LICENSE` 저작권자 표기를 반영했다. 관련 확인은 사용자 제공 정보에 근거하며, 제3자 artifact별 권리 검토는 `0-ENV-16`에서 별도 수행한다.
+- [x] `0-ENV-08` 공개 GitHub 저장소와 Obsidian 커뮤니티 플러그인 등록 정책 확인 → 공식 정책·제출 요건·FAQ·제출/관리 절차·조직 문서를 2026-11-05 대조하고 [정책 검토 문서](./docs/research/Obsidian_디렉터리정책_상충검토.md), README, 개발계획서 및 라이선스 보고서에 반영. 플러그인·의존성 설치/업데이트 금지에 런타임·모델을 보수적으로 포함해 플러그인 자동 다운로드·설치·업데이트·삭제를 제외한다. README에 네트워크 미사용과 vault 밖 파일 접근 이유를 공개한다. 남은 출시 전 작업: `0-ENV-16`, 최종 저장소·Owner 결정, manifest·릴리스 자산·자동 검사 체크리스트. 정책상 허용 여부를 미확인한 설치 방식에 의존하지 않는다.
+- [x] `0-ENV-10` 의존 구성 요소(`whisper.cpp`, 모델, 오디오 변환기)의 예비 라이선스 조사 → 설계 후보 수준 조사 완료(2026-11-01, FFmpeg 후보 추가 검토 2026-11-02): `whisper.cpp`·`ggml` upstream은 MIT로 확인했으나 실제 배포 바이너리/옵션의 포함물은 별도 확인이 필요하다. 모델은 실제 출처·revision별 확인이 필요하다. FFmpeg GPLv3 시험 바이너리는 제품 후보에서 제외하고 LGPL 후보도 정확한 빌드와 의무 확인 전에는 승인하지 않는다. 이 결과는 배포 승인이나 충돌 없음의 포괄적 보증이 아니다. 실제 artifact 검토와 SBOM은 `0-ENV-16`에서 완료한다. 자세한 내용: [라이선스 정책 보고서](./docs/research/STT_라이선스정책_에스넷그룹_명세_및_체계검토.md) 및 [0-BASE-05 기록](./docs/baselines/BASE-05_AUDIO_DECODER_2026-11-02.md)
+- [x] `0-ENV-09` MIT 정책 표기, `LICENSE` 파일, README 및 패키지 메타데이터 반영, 사내 혜택 안내 문서(`SUPPORT.md`) 작성 → 정책 표기·문서 반영 완료. 2026-11-05 사용자 확인에 따라 저작권자를 `에스넷시스템`으로 기재했다. 실제 배포 구성요소 검토는 `0-ENV-16`에서 계속한다. `SUPPORT.md`의 연락처/채널, 임직원 확인 절차, 사내 배포·자료 위치는 미정이다.
 
 #### 보류: 장소·장비 사유
 
@@ -52,7 +60,8 @@
 - [x] `0-BASE-03` `whisper.cpp` Windows x64 CPU 빌드 또는 배포본 선정, 라이선스 확인 → 완료(2026-11-02): v1.9.5(=`b5454` 바이너리 태그) `whisper-bin-x64.zip`, MIT, 해시 고정. `whisper-cli`는 flac/mp3/ogg/wav만 읽음(m4a/aac 불가). [기록](./docs/baselines/BASE-03_WHISPER_CPP_RUNTIME_2026-11-02.md)
 - [x] `0-BASE-04` 두 PC에서 `base`·`small` 양자화 모델의 처리율·메모리·전사 결과 측정 → 완료(2026-11-02, 장치별 기록 8건). Lenovo 긴 샘플 기준 base 14.5~14.7초/오디오 1분, small 25.5~26.4초/오디오 1분, 최대 RAM 약 0.72 GB. 전사 품질(CER)은 미평가. [결과](./docs/baselines/BASE-04_THROUGHPUT_MEASUREMENT_2026-11-02.md)
 - [x] `0-BASE-05` 오디오 변환기(decoder) 후보 선정 및 라이선스 확인 → 완료(2026-11-02): FFmpeg 9.0.1 공식 소스의 LGPL 기본 빌드를 제품 후보로 선정하고, 합성 표본 5종 및 실제 Opus/M4A 3종의 Lenovo 디코딩 확인. 현재 PC의 GPLv3 빌드는 시험 전용이며 제품용 실행 파일·배포 고지·Obsidian 설치 정책 검토는 제품화 단계에서 별도 확인. [검토 기록](./docs/baselines/BASE-05_AUDIO_DECODER_2026-11-02.md)
-- [~] `0-BASE-06` 상위 모델(`medium`, `large-v3-turbo`, `large-v3`) 입력 전사 기준선 확대 측정 → Samsung 측정 마무리(2026-11-03, 기록 14건): 샘플 01~03, 5개 모델. 오디오 1분당 base 7~9초, small 12~19초, medium 44~52초, turbo 60~67초, large-v3 85~134초, 최대 RAM ≤2.4GB. 반복·환각 모델 전반에 확인(turbo·base 한 줄 900회 이상). **모델 선정은 `0-BASE-08` 육안 검증 후 결정**, Lenovo medium 이상은 측정 예정(후속 ②). 상태 `[~]`는 Lenovo 측정이 끝날 때까지 유지. [결과](./docs/baselines/BASE-06_LARGER_MODELS_2026-11-03.md). 계획:
+
+- [~] `0-BASE-06` 상위 모델(`medium`, `large-v3-turbo`, `large-v3`) 입력 전사 기준선 확대 측정 → Samsung 측정 마무리(2026-11-03, 기록 14건): 샘플 01~03, 5개 모델. 오디오 1분당 base 7~9초, small 12~19초, medium 44~52초, turbo 60~67초, large-v3 85~134초, 최대 RAM ≤2.4GB. 반복·환각 모델 전반에 확인(turbo·base 한 줄 900회 이상). **모델 선정은 `0-BASE-08` 육안 검증 후 결정**, Lenovo medium 이상은 측정 예정(후속 ②). 상태 `[~]`는 Lenovo 측정이 끝날 때까지 유지. [결과](./docs/baselines/BASE-06_LARGER_MODELS_2026-11-03.md). 계획:
   - 모델: 각 `q5_0`, Hugging Face `ggerganov/whisper.cpp` 커밋 `5359861`로 고정, SHA-256 검증 완료(`medium` 514MB, `large-v3-turbo` 547MB, `large-v3` 1,031MB). `*.en`, `large-v1/v2`, `tiny`는 제외(영어 전용·구버전·한국어 품질 부족). 파일은 저장소 밖 `%LOCALAPPDATA%\on-the-record-dev\models\`
   - 조건: whisper.cpp b5454 CPU 전용, `-l ko -t 8`, `scripts\measure-whisper.ps1`. 샘플 `real-sample-01`은 2회, `real-sample-02`는 1회(소요 시간 때문). 비교 기준은 `0-BASE-04`의 `base`/`small`
   - 장치: Samsung 960XFG 먼저(완료), 이후 Lenovo에서 같은 모델·해시·스레드로 반복
@@ -73,19 +82,17 @@
 ### 0단계: Obsidian 연동 검증
 - [x] `0-OBS-01` 대상 Obsidian 버전에서 공개 API만으로 코어 Audio recorder 산출물 생성·변경 감지 가능 여부 확인 → 2026-11-02 Obsidian 1.14.4, `PlugVaults`에서 공개 `app.vault` 이벤트를 시험. 코어 recorder의 `.m4a` 생성 이벤트 1회 감지(77,134 bytes), 녹음 중 `modify` 이벤트는 관찰되지 않음. 생성 감지는 가능하지만 진행 중 변경·종료 시점 판정은 미입증. [시험 기록](./docs/baselines/OBS-01_AUDIO_RECORDER_EVENT_PROBE_2026-11-02.md)
 - [x] `0-OBS-02` 파일 안정화 감지 조건(수정 시각·크기) 시험 → 완료(2026-11-03): 판정 로직 구현(`src\stability.ts`, 단위·실제 파일 시뮬레이션 9건 통과)과 코어 Audio recorder 실제 녹음 4건 확인. 코어 recorder는 종료 시 파일을 한 번에 생성(변경 0회, 5초 후 안정화 판정), `quietMs` 5초 확정. 다른 녹음 앱·동기화 유입 파일은 미확인. [시험 기록](./docs/baselines/OBS-02_FILE_STABILITY_2026-11-03.md)
-- [ ] `0-OBS-03` 노트 링크 삽입 시점 확인
-
-## 이후 단계(일정 미정)
+- [x] `0-OBS-03` 노트 링크 삽입 시점 확인 → 2026-11-05 Obsidian 1.14.5 `PlugVaults` 코어 Audio recorder 실제 녹음 1회에서 `.m4a` 생성 후 약 2.008초 뒤 Markdown 노트가 수정됐고, 최종 노트에 오디오 embed가 있음을 확인. 수정 시각은 링크 삽입 시각의 대리값이며 단일 시험이므로 반복 검증은 미완료. 구현 시 파일 안정화 외에 공개 MetadataCache의 링크 확인을 요구하고 제한 시간 후 수동 선택으로 복구한다. [시험 기록](./docs/baselines/OBS-03_AUDIO_NOTE_LINK_TIMING_2026-11-05.md)
 
 ### 1단계: 공통 파이프라인
-- [ ] 설정 화면
-- [~] 녹음 감지와 자동 전사 대기열 → 2026-11-03 녹음 감지 구현(`src\recordingWatcher.ts`): 레이아웃 준비 후 생성된 `.m4a/.mp3/.wav/.aac/.ogg` 파일을 감지하고 안정화(`0-OBS-02`)를 기다린 뒤 알림. 삭제·이름 변경 처리, 언로드 시 정리. 설정 화면(감지 켜기/끄기, 대기 시간)·전사 대기열은 미구현. 코어 Audio recorder 실제 녹음 4건에서 알림·로그 동작 확인(2026-11-03)
-- [ ] 파일 찾기 버튼
-- [ ] provider 계약 정의
-- [ ] 결과 미리보기
+- [x] `1-PIPE-01` 설정 화면 → 구현 및 Obsidian에서 저장·복원 확인 완료(2026-11-05, 사용자 확인). 구현: `src\settings.ts`, `src\localSettingsStore.ts`, `src\settingsTab.ts`. vault 설정은 `loadData`/`saveData`, PC별 런타임·모델 경로는 `%LOCALAPPDATA%\<plugin-id>\local-settings.json`에 저장한다. 녹음 감지 및 안정화 시간 변경은 watcher에 반영하며 자동 전사/언어/모델/장치 기본값을 제공한다. PC별 갱신은 여러 창에서 직렬화한다. 런타임 경로 검증은 후속 범위다.
+- [~] `1-PIPE-02` 녹음 감지와 자동 전사 대기열 → 설정(`autoDetectRecording`, `autoTranscribe`, `stabilizationSeconds`)과 watcher 연결. 파일 안정화 후 공개 MetadataCache에서 오디오 embed를 확인하며, 최대 30초 내 링크가 없으면 안내하고 큐잉하지 않는다. 메모리 대기열은 파일 경로로 중복을 막고 삭제·이름 변경을 반영한다. 아직 대기열 UI·디스크 영속성·전사 worker/provider 실행은 미구현. 구현: `src\main.ts`, `src\recordingWatcher.ts`, `src\linkWaiter.ts`, `src\recordingQueue.ts`; 단위 테스트 통과. `PlugVaults`에서 실제 녹음 및 설정 토글 수동 확인 필요.
+- [ ] `1-PIPE-03` 파일 찾기 버튼 → 사용자가 vault 오디오 파일을 선택하면 형식·상태를 확인하고 작업에 전달한다.
+- [ ] `1-PIPE-04` provider 계약 정의 → 엔진별 입력·실행·취소·진행 상태·결과·오류를 공통 타입과 인터페이스로 정한다.
+- [ ] `1-PIPE-05` 결과 미리보기 → 전사 결과를 노트에 반영하기 전에 검토·편집·승인 또는 취소할 수 있게 한다.
 
 ### 2단계: CPU 전사
-- [ ] 런타임·모델 설치(다운로드, SHA-256 검증, 시험 추론)
+- [ ] 사용자가 플러그인 외부에서 설치한 런타임·모델의 경로·버전·SHA-256 검증 및 시험 추론. 플러그인 다운로드·설치·업데이트·삭제 기능은 제공하지 않음. 배포 후보 artifact 검토는 `0-ENV-16`에 따름.
 - [ ] 오디오 정규화
 - [ ] segment timestamp 출력
 - [ ] 전사문 검색
