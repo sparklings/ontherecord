@@ -10,6 +10,23 @@ import { isSupportedAudioExtension } from "./audioFiles.ts";
 import { AudioFilePickerModal } from "./audioFilePicker.ts";
 import { waitForStable } from "./stability.ts";
 
+import { ExistingResultModal, ResultPreviewModal } from "./resultPreviewModal.ts";
+import { applyHeadingInsertion, hasExistingResult } from "./resultPreview.ts";
+import type { ExistingResultChoice } from "./resultPreview.ts";
+import type { TranscriptionResult } from "./provider.ts";
+
+const SAMPLE_AUDIO_PATH = "sample/preview-test.m4a";
+const SAMPLE_RESULT: TranscriptionResult = {
+	language: "ko",
+	text: "샘플 문장입니다. 실제 전사 결과가 아닙니다.",
+	segments: [
+		{ startSeconds: 0, endSeconds: 3.2, text: "샘플 문장입니다." },
+		{ startSeconds: 3.2, endSeconds: 7.5, text: "실제 전사 결과가 아닙니다." },
+	],
+	engine: { providerId: "sample", providerVersion: "0", modelId: "none", device: "cpu" },
+	warnings: ["시험용 샘플입니다. 실제 녹음을 전사한 결과가 아닙니다."],
+};
+
 const LINK_WAIT_TIMEOUT_MS = 30_000;
 const MANUAL_FILE_STABILITY_TIMEOUT_MS = 15_000;
 
@@ -59,6 +76,13 @@ export default class OnTheRecordPlugin extends Plugin {
 			id: "select-audio-file",
 			name: "전사할 오디오 파일 선택",
 			callback: () => this.openAudioFilePicker(),
+		});
+		this.addCommand({
+			id: "preview-sample-result",
+			name: "샘플 전사 결과 미리보기 시험",
+			callback: () => {
+				void this.previewAndInsertResult(SAMPLE_RESULT, SAMPLE_AUDIO_PATH);
+			},
 		});
 		this.addRibbonIcon("search", "전사할 오디오 파일 선택", () => this.openAudioFilePicker());
 
@@ -156,6 +180,45 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		this.logQueueState();
 		new Notice("녹음 파일을 전사 대기열에 추가했습니다. 전사 엔진 연결은 아직 제공되지 않습니다.");
+	}
+
+	// 승인 전에는 노트를 수정하지 않는다. 실제 엔진이 연결되면 같은 경로로 결과를 전달한다.
+	async previewAndInsertResult(result: TranscriptionResult, audioPath: string): Promise<void> {
+		const target = this.app.workspace.getActiveFile();
+		if (!target || target.extension !== "md") {
+			new Notice("결과를 넣을 마크다운 노트를 먼저 여세요.");
+			return;
+		}
+
+		const approved = await new ResultPreviewModal(this.app, result, target.path).prompt();
+		if (!approved) {
+			new Notice("취소했습니다. 노트는 수정되지 않았습니다.");
+			return;
+		}
+
+		try {
+			let choice: ExistingResultChoice | null = "append";
+			const current = await this.app.vault.read(target);
+			if (hasExistingResult(current, audioPath)) {
+				choice = await new ExistingResultModal(this.app).prompt();
+				if (!choice) {
+					new Notice("취소했습니다. 노트는 수정되지 않았습니다.");
+					return;
+				}
+			}
+			const selectedChoice = choice;
+			await this.app.vault.process(target, (content) =>
+				applyHeadingInsertion(content, {
+					heading: approved.heading,
+					audioPath,
+					markdown: approved.markdown,
+					existing: selectedChoice,
+				}),
+			);
+			new Notice("전사 결과를 노트에 반영했습니다.");
+		} catch (error) {
+			this.reportError("전사 결과를 노트에 반영하지 못했습니다.", error);
+		}
 	}
 
 	private openAudioFilePicker(): void {
