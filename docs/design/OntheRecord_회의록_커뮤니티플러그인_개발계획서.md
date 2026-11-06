@@ -110,7 +110,7 @@ Obsidian 코어 Audio recorder는 녹음 파일을 vault에 저장하고 활성 
 
 #### 개발 환경 전제 (개발자 개인 방식)
 
-- **작업 폴더:** 개발 소스는 OneDrive의 `%USERPROFILE%\OneDrive\STT`에 두고 여러 PC에서 동기화한다. 이후 Git 저장소로 연결하더라도 이 구조(OneDrive 동기화 작업 폴더)를 유지한다. 즉 Git은 이력·백업·원격 기준본을 담당하고, OneDrive는 PC 간 작업 폴더 동기화를 담당한다.
+- **작업 폴더:** 개발 소스는 OneDrive의 `%USERPROFILE%\OneDrive\OntheRecord`에 두고 여러 PC에서 동기화한다. 이후 Git 저장소로 연결하더라도 이 구조(OneDrive 동기화 작업 폴더)를 유지한다. 즉 Git은 이력·백업·원격 기준본을 담당하고, OneDrive는 PC 간 작업 폴더 동기화를 담당한다.
 - **순차 작업:** PC들은 물리적으로 분리되어 있고 원격 작업을 하지 않으므로 같은 코드를 동시에 편집하는 일은 없다. 따라서 브랜치 병합 충돌 방지를 위한 복잡한 협업 절차는 요구하지 않고, **한 번에 한 PC만 작업한다**는 전제 위에서 PC를 바꿀 때의 인수인계 절차만 규정한다.
 - **선례 워크플로(AssistantEmily):** 동일한 방식으로 개발 중인 `%USERPROFILE%\OneDrive\AssistantEmily` 플러그인과 같은 흐름을 따른다. 소스는 개발 폴더에서 관리하고, 빌드된 플러그인(`main.js`, `manifest.json`, `styles.css`)은 `%USERPROFILE%\OneDrive\PlugVaults`의 사용자 테스트용 Obsidian 볼트 `.obsidian\plugins\<플러그인 id>\`에 배포해 시험한다. 업무용 볼트는 시험에 사용하지 않고 PlugVaults로 볼트를 전환해 테스트한다.
 

@@ -13,6 +13,7 @@
 - `2-CPU-06`: 알려진 로컬 설치 폴더에서 whisper.cpp 런타임과 기준 모델을 검색하고 버전·SHA-256을 확인한 뒤, 사용자가 승인한 조합만 PC별 설정에 적용. PlugVaults에서 검색 기능 정상 동작 확인(2026-11-06, 사용자 확인)
 
 ### 변경
+- 프로젝트 명칭을 `OntheRecord`로 통일하고 설계·조사 문서 파일명(`docs/design/`, `docs/research/`) 및 상호 참조 링크, 개발 환경 작업 경로 표기를 일괄 갱신
 - 시험 입력의 정규화 오디오·전사 결과를 임시 폴더에서 처리 후 정리하도록 연결. 런타임·모델·FFmpeg의 다운로드나 설치는 하지 않음
 - `TODO.md`에서 `2-CPU-01`~`2-CPU-06`을 완료 처리. 전체 PC 검색 및 다운로드·설치·업데이트·삭제·명령어 안내 검토를 `3-CPU-02`로 이관
 - TypeScript 검사, lint, production build 통과. CPU 전사·검색 및 기존 기능 테스트 38개 통과. PlugVaults 시험용 빌드를 배포하고 소스·배포 파일 해시 일치 확인
@@ -69,8 +70,8 @@
 
 ### 결정
 - `0-ENV-07`: 회사 규정은 확인되지 않음. 방침으로 기록: 소유는 소속 회사 구성원 모두, 관리는 소속 회사 담당 조직, 현재 저장소는 개발자 개인 계정이 관리하고 회사 공식 GitHub 저장소 확정 시 이관. 규정 확인 전까지 저장소는 private 유지. `LICENSE` 저작권자 표기 형식은 미정
-- `0-ENV-06`: 공개 코드는 MIT, 소속 회사 구성원 혜택은 라이선스 제한이 아닌 사내 혜택으로 제공. 근거는 `docs\research\STT_라이선스정책_에스넷그룹_명세_및_체계검토.md` V1.1.0. 이전 계획(구성원 한정 무료 라이선스)에서 변경. `LICENSE` 파일과 `package.json` 라이선스 값 변경은 `0-ENV-09`에서 수행. 저작권자 표기는 `0-ENV-07` 결과 필요
-- `0-ENV-05`: 이름 `On the Record`, 플러그인 id `on-the-record`, 부제 `Local minutes for Obsidian`, 저장소명 `ontherecord`(주소 `https://github.com/sparklings/ontherecord`, 접근성 우선. 네이밍 보고서의 기존 `obsidian-on-the-record`에서 변경). 근거는 `docs\research\STT_사업보고서_OnTheRecord_네이밍.md`. 상표 검색과 도메인 확보는 미확인
+- `0-ENV-06`: 공개 코드는 MIT, 소속 회사 구성원 혜택은 라이선스 제한이 아닌 사내 혜택으로 제공. 근거는 `docs\research\OntheRecord_라이선스정책_에스넷그룹_명세_및_체계검토.md` V1.1.0. 이전 계획(구성원 한정 무료 라이선스)에서 변경. `LICENSE` 파일과 `package.json` 라이선스 값 변경은 `0-ENV-09`에서 수행. 저작권자 표기는 `0-ENV-07` 결과 필요
+- `0-ENV-05`: 이름 `On the Record`, 플러그인 id `on-the-record`, 부제 `Local minutes for Obsidian`, 저장소명 `ontherecord`(주소 `https://github.com/sparklings/ontherecord`, 접근성 우선. 네이밍 보고서의 기존 `obsidian-on-the-record`에서 변경). 근거는 `docs\research\OntheRecord_사업보고서_네이밍.md`. 상표 검색과 도메인 확보는 미확인
 
 ### 추가
 - `docs\research\Obsidian_디렉터리정책_상충검토.md` 작성(`0-ENV-08`): Obsidian 공식 문서 5건 원문과 프로젝트 결정 대조, 상충·확인 필요 11건 정리. 주요 사항: 런타임·모델 다운로드와 "Install or update themselves or their dependencies" 금지의 충돌 가능성, 등재 후 저장소 이전은 관리자 절차, README에 네트워크 사용·vault 밖 접근 고지 필요
@@ -121,7 +122,7 @@
 ## 2026-10-31
 
 ### 추가
-- 개발계획서 `docs\design\STT_회의록_커뮤니티플러그인_개발계획서.md` 작성
+- 개발계획서 `docs\design\OntheRecord_회의록_커뮤니티플러그인_개발계획서.md` 작성
 
 ## 2026-10-30
 

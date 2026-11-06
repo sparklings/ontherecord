@@ -20,7 +20,7 @@ aliases:
   - On the Record 네이밍 보고서
 ---
 
-# On the Record — STT 플러그인 네이밍 사업보고서
+# On the Record — 네이밍 사업보고서
 
 > **결정:** 제품명 `On the Record` · 플러그인 id `on-the-record` · 부제 "Local minutes for Obsidian"
 
@@ -104,4 +104,4 @@ aliases:
 
 ---
 
-관련 문서: [STT_회의록_커뮤니티플러그인_개발계획서.md](../design/STT_회의록_커뮤니티플러그인_개발계획서.md)
+관련 문서: [OntheRecord_회의록_커뮤니티플러그인_개발계획서.md](../design/OntheRecord_회의록_커뮤니티플러그인_개발계획서.md)

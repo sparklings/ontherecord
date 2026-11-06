@@ -18,4 +18,4 @@
 ## 설계 반영
 
 - Samsung 960XFG의 GPU 정보와 식별 결과를 [시스템 정보](../../benchmarks/hardware/systeminfo_Samsung_960XFG.md)에 반영했습니다.
-- [STT 개발계획서](../design/STT_회의록_커뮤니티플러그인_개발계획서.md)에 Intel Iris Xe가 확인된 하드웨어임을 반영했습니다. GPU 실행 provider와 실제 가속 성능은 별도 검증 대상으로 유지합니다.
+- [OntheRecord 개발계획서](../design/OntheRecord_회의록_커뮤니티플러그인_개발계획서.md)에 Intel Iris Xe가 확인된 하드웨어임을 반영했습니다. GPU 실행 provider와 실제 가속 성능은 별도 검증 대상으로 유지합니다.

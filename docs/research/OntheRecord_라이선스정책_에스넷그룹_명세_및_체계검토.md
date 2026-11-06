@@ -518,4 +518,4 @@ package.json       : "license": "MIT", "private": false
 
 ---
 
-관련 문서: [STT_사업보고서_OnTheRecord_네이밍.md](./STT_사업보고서_OnTheRecord_네이밍.md) · [STT_회의록_커뮤니티플러그인_개발계획서.md](../design/STT_회의록_커뮤니티플러그인_개발계획서.md)
+관련 문서: [OntheRecord_사업보고서_네이밍.md](./OntheRecord_사업보고서_네이밍.md) · [OntheRecord_회의록_커뮤니티플러그인_개발계획서.md](../design/OntheRecord_회의록_커뮤니티플러그인_개발계획서.md)
