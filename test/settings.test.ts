@@ -17,19 +17,25 @@ test("vault 설정은 기본값으로 초기화하고 저장된 값은 기본값
 		normalizeVaultSettings({ autoTranscribe: false }),
 		{ ...DEFAULT_VAULT_SETTINGS, autoTranscribe: false },
 	);
+	assert.deepEqual(
+		normalizeVaultSettings({ transcriptSearchTerms: [" 결정 ", "", "결정", "담당자"] }).transcriptSearchTerms,
+		["결정", "담당자"],
+	);
 });
 
 test("지원하지 않는 vault 설정 값과 미래 스키마를 거부한다", () => {
 	assert.throws(() => normalizeVaultSettings({ stabilizationSeconds: 0 }));
+	assert.throws(() => normalizeVaultSettings({ transcriptSearchTerms: "결정" }));
 	assert.throws(() => normalizeVaultSettings({ schemaVersion: 2 }));
 });
 
-test("PC별 설정은 런타임과 모델 경로만 저장한다", () => {
+test("PC별 설정은 런타임, 모델, FFmpeg 경로를 저장한다", () => {
 	assert.deepEqual(normalizeLocalSettings({ runtimePath: "C:\\Tools\\whisper.exe" }), {
 		...DEFAULT_LOCAL_SETTINGS,
 		runtimePath: "C:\\Tools\\whisper.exe",
 	});
 	assert.throws(() => normalizeLocalSettings({ modelPath: 42 }));
+	assert.throws(() => normalizeLocalSettings({ ffmpegPath: 42 }));
 });
 
 test("PC별 설정 저장소는 초기 파일을 만들고 수정값을 복원한다", async () => {
@@ -41,6 +47,7 @@ test("PC별 설정 저장소는 초기 파일을 만들고 수정값을 복원�
 		const updated = await store.update({
 			runtimePath: "C:\\Tools\\whisper.exe",
 			modelPath: "C:\\Models\\ggml-base.bin",
+			ffmpegPath: "C:\\Tools\\ffmpeg.exe",
 		});
 		assert.deepEqual(await store.load(), updated);
 	} finally {

@@ -1,18 +1,26 @@
 import { FuzzySuggestModal, TFile } from "obsidian";
 import type { App } from "obsidian";
-import { isSupportedAudioExtension } from "./audioFiles.ts";
+import { AUDIO_EXTENSIONS } from "./audioFiles.ts";
 
 export class AudioFilePickerModal extends FuzzySuggestModal<TFile> {
+	private readonly supportedExtensions: ReadonlySet<string>;
+
 	constructor(
 		app: App,
 		private readonly onChoose: (file: TFile) => void,
+		supportedExtensions: readonly string[] = AUDIO_EXTENSIONS,
 	) {
 		super(app);
-		this.setPlaceholder("전사할 오디오 파일을 검색하세요");
+		this.supportedExtensions = new Set(supportedExtensions.map((extension) => extension.toLowerCase()));
+		this.setPlaceholder(
+			supportedExtensions === AUDIO_EXTENSIONS
+				? "전사할 오디오 파일을 검색하세요"
+				: "시험 추론에 사용할 WAV, MP3, OGG 또는 FLAC 파일을 검색하세요",
+		);
 	}
 
 	getItems(): TFile[] {
-		return this.app.vault.getFiles().filter((file) => isSupportedAudioExtension(file.extension));
+		return this.app.vault.getFiles().filter((file) => this.supportedExtensions.has(file.extension.toLowerCase()));
 	}
 
 	getItemText(file: TFile): string {

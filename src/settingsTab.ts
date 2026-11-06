@@ -11,6 +11,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		private readonly getLocalSettings: () => LocalSettings | null,
 		private readonly updateLocalSettings: (patch: Partial<LocalSettings>) => Promise<void>,
 		private readonly localSettingsError: string | null,
+		private readonly testCpuSetup: () => void,
 		plugin: Plugin,
 	) {
 		super(app, plugin);
@@ -99,9 +100,23 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl).setName("이 기기의 런타임 및 모델 경로").setHeading();
+		new Setting(containerEl)
+			.setName("전사문 검색어")
+			.setDesc("검색어를 한 줄에 하나씩 입력하세요. 검색 명령에서 이 목록을 제안하며, 전사 segment와 timestamp를 찾습니다.")
+			.addTextArea((text) =>
+				text
+					.setValue(vaultSettings.transcriptSearchTerms.join("\n"))
+					.setPlaceholder("예: 결정 사항\n담당자")
+					.onChange((value) => {
+						void this.updateVaultSettings({
+							transcriptSearchTerms: value.split(/\r?\n/).map((term) => term.trim()).filter(Boolean),
+						});
+					}),
+			);
+
+		new Setting(containerEl).setName("이 기기의 CPU 전사 도구 경로").setHeading();
 		containerEl.createEl("p", {
-			text: "경로는 이 기기에만 저장됩니다. 런타임과 모델은 플러그인 밖에서 직접 설치·관리하세요.",
+			text: "경로는 이 기기에만 저장됩니다. 런타임·모델·ffmpeg는 플러그인 밖에서 직접 설치·관리하세요.",
 			cls: "setting-item-description",
 		});
 
@@ -136,6 +151,25 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					.onChange((value) => {
 						void this.updateLocalSettings({ modelPath: value.trim() });
 					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Ffmpeg 실행 파일")
+			.setDesc("사용자가 직접 설치한 ffmpeg.exe의 전체 경로입니다. 설치·업데이트하지 않습니다.")
+			.addText((text) =>
+				text
+					.setValue(localSettings.ffmpegPath)
+					.setPlaceholder("예: C:\\Tools\\ffmpeg.exe")
+					.onChange((value) => {
+						void this.updateLocalSettings({ ffmpegPath: value.trim() });
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("런타임·모델 검증 및 시험 추론")
+			.setDesc("whisper.cpp 기준선 버전·SHA-256을 확인하고, 선택한 오디오를 FFmpeg로 16 kHz 모노 PCM WAV로 변환해 시험 전사합니다. 결과문과 변환 파일은 저장하지 않습니다.")
+			.addButton((button) =>
+				button.setButtonText("시험 시작").onClick(() => this.testCpuSetup()),
 			);
 	}
 }

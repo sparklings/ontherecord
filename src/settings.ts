@@ -8,12 +8,14 @@ export interface VaultSettings {
 	autoDetectRecording: boolean;
 	autoTranscribe: boolean;
 	stabilizationSeconds: number;
+	transcriptSearchTerms: string[];
 }
 
 export interface LocalSettings {
 	schemaVersion: 1;
 	runtimePath: string;
 	modelPath: string;
+	ffmpegPath: string;
 }
 
 export const DEFAULT_VAULT_SETTINGS: VaultSettings = {
@@ -24,12 +26,14 @@ export const DEFAULT_VAULT_SETTINGS: VaultSettings = {
 	autoDetectRecording: true,
 	autoTranscribe: true,
 	stabilizationSeconds: 5,
+	transcriptSearchTerms: [],
 };
 
 export const DEFAULT_LOCAL_SETTINGS: LocalSettings = {
 	schemaVersion: 1,
 	runtimePath: "",
 	modelPath: "",
+	ffmpegPath: "",
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -88,6 +92,17 @@ export function normalizeVaultSettings(value: unknown): VaultSettings {
 		}
 		result.stabilizationSeconds = value.stabilizationSeconds;
 	}
+	if (value.transcriptSearchTerms !== undefined) {
+		if (
+			!Array.isArray(value.transcriptSearchTerms) ||
+			!value.transcriptSearchTerms.every((term) => typeof term === "string")
+		) {
+			throw new Error("transcriptSearchTerms 설정은 문자열 배열이어야 합니다.");
+		}
+		result.transcriptSearchTerms = value.transcriptSearchTerms
+			.map((term) => term.trim())
+			.filter((term, index, terms) => term.length > 0 && terms.indexOf(term) === index);
+	}
 	return result;
 }
 
@@ -104,6 +119,10 @@ export function normalizeLocalSettings(value: unknown): LocalSettings {
 	if (value.modelPath !== undefined) {
 		if (typeof value.modelPath !== "string") throw new Error("modelPath 설정이 올바르지 않습니다.");
 		result.modelPath = value.modelPath;
+	}
+	if (value.ffmpegPath !== undefined) {
+		if (typeof value.ffmpegPath !== "string") throw new Error("ffmpegPath 설정이 올바르지 않습니다.");
+		result.ffmpegPath = value.ffmpegPath;
 	}
 	return result;
 }

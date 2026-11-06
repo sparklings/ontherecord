@@ -1,0 +1,10 @@
+.modal.otr-cpu-runtime-test {
+	width: 720px;
+	max-width: 90vw;
+}
+
+.otr-cpu-runtime-report {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	user-select: text;
+}

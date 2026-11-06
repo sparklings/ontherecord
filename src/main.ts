@@ -1,4 +1,4 @@
-import { getLinkpath, Notice, Plugin, TFile } from "obsidian";
+import { FileSystemAdapter, getLinkpath, Modal, Notice, Plugin, TFile } from "obsidian";
 import { DEFAULT_VAULT_SETTINGS, normalizeVaultSettings } from "./settings.ts";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
 import { LocalSettingsStore } from "./localSettingsStore.ts";
@@ -9,11 +9,16 @@ import { waitForLinkedNotes } from "./linkWaiter.ts";
 import { isSupportedAudioExtension } from "./audioFiles.ts";
 import { AudioFilePickerModal } from "./audioFilePicker.ts";
 import { waitForStable } from "./stability.ts";
+import { WhisperCppCpuRuntime, WHISPER_CPP_CPU_AUDIO_EXTENSIONS } from "./whisperCppCpu.ts";
+import { findTranscriptMatches } from "./transcriptSearch.ts";
+import type { TranscriptSearchMatch } from "./transcriptSearch.ts";
+import { openTranscriptMatch, TranscriptSearchModal, TranscriptSearchResultsModal } from "./transcriptSearchModal.ts";
 
 import { ExistingResultModal, ResultPreviewModal } from "./resultPreviewModal.ts";
 import { applyHeadingInsertion, hasExistingResult } from "./resultPreview.ts";
 import type { ExistingResultChoice } from "./resultPreview.ts";
 import type { TranscriptionResult } from "./provider.ts";
+import type { CpuSmokeTestStage } from "./whisperCppCpu.ts";
 
 const SAMPLE_AUDIO_PATH = "sample/preview-test.m4a";
 const SAMPLE_RESULT: TranscriptionResult = {
@@ -29,6 +34,86 @@ const SAMPLE_RESULT: TranscriptionResult = {
 
 const LINK_WAIT_TIMEOUT_MS = 30_000;
 const MANUAL_FILE_STABILITY_TIMEOUT_MS = 15_000;
+
+class CpuRuntimeTestProgressModal extends Modal {
+	private statusEl!: HTMLElement;
+	private detailEl!: HTMLElement;
+	private elapsedEl!: HTMLElement;
+	private progressEl!: HTMLProgressElement;
+	private readonly startedAt = Date.now();
+	private timer: number | null = null;
+
+	onOpen(): void {
+		this.modalEl.addClass("otr-cpu-runtime-test");
+		this.titleEl.setText("CPU 런타임 시험");
+		this.statusEl = this.contentEl.createEl("p");
+		this.detailEl = this.contentEl.createEl("p", { cls: "setting-item-description" });
+		this.elapsedEl = this.contentEl.createEl("p", { cls: "setting-item-description" });
+		this.progressEl = this.contentEl.createEl("progress", { attr: { max: 100 } });
+		this.timer = window.setInterval(() => this.updateElapsed(), 1000);
+		this.updateElapsed();
+		this.setStage("checking-files");
+	}
+
+	onClose(): void {
+		if (this.timer !== null) window.clearInterval(this.timer);
+		this.timer = null;
+		this.contentEl.empty();
+	}
+
+	setStage(stage: CpuSmokeTestStage, percent?: number): void {
+		const labels: Record<CpuSmokeTestStage, string> = {
+			"checking-files": "런타임과 모델 파일 확인 중",
+			"hashing-runtime": "런타임 SHA-256 확인 중",
+			"hashing-model": "모델 SHA-256 확인 중",
+			"checking-version": "런타임 버전 확인 중",
+			"checking-audio": "입력 오디오 확인 중",
+			"normalizing-audio": "오디오를 16 kHz 모노 PCM WAV로 변환 중",
+			transcribing: "시험 추론 실행 중",
+		};
+		this.statusEl.setText(labels[stage]);
+		if ((stage === "hashing-runtime" || stage === "hashing-model") && percent !== undefined) {
+			this.progressEl.value = percent;
+			this.detailEl.setText(`${percent}%`);
+		} else {
+			this.progressEl.removeAttribute("value");
+			this.detailEl.setText(
+				stage === "transcribing"
+					? "모델 로드와 전사 중입니다. 오디오 길이와 모델에 따라 시간이 걸릴 수 있습니다."
+					: "잠시 기다려 주세요.",
+			);
+		}
+		this.updateElapsed();
+	}
+
+	showCompleted(): void {
+		this.stopTimer();
+		this.titleEl.setText("CPU 런타임 검증 완료");
+		this.statusEl.setText("시험 추론이 정상적으로 완료되었습니다.");
+		this.detailEl.setText("정규화 오디오와 시험 전사 결과는 임시 폴더에서 삭제했습니다.");
+		this.progressEl.value = 100;
+	}
+
+	showFailed(message: string): void {
+		this.stopTimer();
+		this.titleEl.setText("CPU 런타임 시험 실패");
+		this.statusEl.setText(message);
+		this.detailEl.setText("설정 경로와 런타임·모델 파일을 확인한 뒤 다시 시도하세요.");
+		this.progressEl.removeAttribute("value");
+	}
+
+	private updateElapsed(): void {
+		if (!this.elapsedEl) return;
+		const elapsedSeconds = Math.floor((Date.now() - this.startedAt) / 1000);
+		const elapsed = `${Math.floor(elapsedSeconds / 60)}:${String(elapsedSeconds % 60).padStart(2, "0")}`;
+		this.elapsedEl.setText(`경과 시간: ${elapsed}`);
+	}
+
+	private stopTimer(): void {
+		if (this.timer !== null) window.clearInterval(this.timer);
+		this.timer = null;
+	}
+}
 
 export default class OnTheRecordPlugin extends Plugin {
 	private watcher: RecordingWatcher | null = null;
@@ -68,6 +153,7 @@ export default class OnTheRecordPlugin extends Plugin {
 				() => this.localSettings,
 				(patch) => this.updateLocalSettings(patch),
 				this.localSettingsError,
+				() => this.openCpuRuntimeTestPicker(),
 				this,
 			),
 		);
@@ -83,6 +169,11 @@ export default class OnTheRecordPlugin extends Plugin {
 			callback: () => {
 				void this.previewAndInsertResult(SAMPLE_RESULT, SAMPLE_AUDIO_PATH);
 			},
+		});
+		this.addCommand({
+			id: "search-transcripts",
+			name: "전사문 검색",
+			callback: () => this.openTranscriptSearch(),
 		});
 		this.addRibbonIcon("search", "전사할 오디오 파일 선택", () => this.openAudioFilePicker());
 
@@ -233,6 +324,96 @@ export default class OnTheRecordPlugin extends Plugin {
 		new AudioFilePickerModal(this.app, (file) => {
 			void this.queueSelectedAudioFile(file);
 		}).open();
+	}
+
+	private openCpuRuntimeTestPicker(): void {
+		if (!this.localSettings?.runtimePath || !this.localSettings.modelPath || !this.localSettings.ffmpegPath) {
+			new Notice("설정에서 런타임·모델·ffmpeg 경로를 먼저 지정하세요.");
+			return;
+		}
+
+		const picker = new AudioFilePickerModal(
+			this.app,
+			(file) => {
+				void this.runCpuRuntimeSmokeTest(file);
+			},
+			WHISPER_CPP_CPU_AUDIO_EXTENSIONS,
+		);
+		if (picker.getItems().length === 0) {
+			new Notice("시험 추론에는 m4a, mp3, wav, aac, ogg 또는 flac 오디오 파일이 필요합니다.");
+			return;
+		}
+		picker.open();
+	}
+
+	private openTranscriptSearch(): void {
+		new TranscriptSearchModal(
+			this.app,
+			this.vaultSettings.transcriptSearchTerms,
+			(query) => {
+				void this.searchTranscripts(query);
+			},
+		).open();
+	}
+
+	private async searchTranscripts(query: string): Promise<void> {
+		try {
+			const matches: TranscriptSearchMatch[] = [];
+			for (const file of this.app.vault.getMarkdownFiles()) {
+				const content = await this.app.vault.cachedRead(file);
+				matches.push(...findTranscriptMatches(file.path, content, query));
+			}
+			new TranscriptSearchResultsModal(
+				this.app,
+				query,
+				matches,
+				(match) => {
+					void openTranscriptMatch(this.app, match).catch((error: unknown) => {
+						this.reportError("검색 결과 위치를 열지 못했습니다.", error);
+					});
+				},
+			).open();
+		} catch (error) {
+			this.reportError("전사문을 검색하지 못했습니다.", error);
+		}
+	}
+
+	private async runCpuRuntimeSmokeTest(file: TFile): Promise<void> {
+		const settings = this.localSettings;
+		if (!settings) {
+			new Notice(this.localSettingsError ?? "PC별 런타임 설정을 불러올 수 없습니다.");
+			return;
+		}
+
+		const progress = new CpuRuntimeTestProgressModal(this.app);
+		progress.open();
+		try {
+			const adapter = this.app.vault.adapter;
+			if (!(adapter instanceof FileSystemAdapter)) {
+				throw new Error("로컬 파일 경로를 제공하지 않는 Vault에서는 시험 추론을 실행할 수 없습니다.");
+			}
+			const verification = await new WhisperCppCpuRuntime().smokeTest(
+				settings.runtimePath,
+				settings.modelPath,
+				settings.ffmpegPath,
+				adapter.getFullPath(file.path),
+				this.vaultSettings.language,
+				(stage, percent) => progress.setStage(stage, percent),
+			);
+			const report = [
+				`런타임: ${verification.runtimeVersion}`,
+				`런타임 SHA-256: ${verification.runtimeSha256}`,
+				`모델: ${verification.modelId} (${verification.modelQuantization})`,
+				`모델 SHA-256: ${verification.modelSha256}`,
+				"시험 추론 성공. 정규화 오디오와 전사 결과는 임시 폴더에서 삭제했습니다.",
+			].join("\n");
+			progress.showCompleted();
+			progress.contentEl.createEl("pre", { cls: "otr-cpu-runtime-report", text: report });
+		} catch (error) {
+			this.reportError("CPU 런타임 검증 또는 시험 추론에 실패했습니다.", error);
+			const message = error instanceof Error ? error.message : "원인을 확인할 수 없는 오류입니다.";
+			progress.showFailed(message);
+		}
 	}
 
 	private async queueSelectedAudioFile(selectedFile: TFile): Promise<void> {
