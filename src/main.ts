@@ -1,4 +1,5 @@
-import { FileSystemAdapter, getLinkpath, Modal, Notice, Plugin, TFile } from "obsidian";
+import { FileSystemAdapter, getLinkpath, MarkdownView, Modal, Notice, Plugin, TFile } from "obsidian";
+import type { EmbedCache } from "obsidian";
 import { DEFAULT_VAULT_SETTINGS, normalizeVaultSettings } from "./settings.ts";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
 import { LocalSettingsStore } from "./localSettingsStore.ts";
@@ -6,21 +7,29 @@ import { RecordingWatcher } from "./recordingWatcher.ts";
 import { OnTheRecordSettingTab } from "./settingsTab.ts";
 import { RecordingQueue } from "./recordingQueue.ts";
 import { waitForLinkedNotes } from "./linkWaiter.ts";
-import { isSupportedAudioExtension } from "./audioFiles.ts";
+import { AUDIO_EXTENSIONS, isSupportedAudioExtension } from "./audioFiles.ts";
 import { AudioFilePickerModal } from "./audioFilePicker.ts";
 import { waitForStable } from "./stability.ts";
 import { WhisperCppCpuRuntime, WHISPER_CPP_CPU_AUDIO_EXTENSIONS } from "./whisperCppCpu.ts";
+import type { WhisperCppModelIdentity, WhisperCppRuntimeIdentity } from "./whisperCppCpu.ts";
+import { getCpuToolSearchRoots, scanCpuToolCandidates } from "./cpuRuntimeDiscovery.ts";
+import {
+	CpuRuntimeDiscoveryProgressModal,
+	CpuRuntimeDiscoveryResultsModal,
+} from "./cpuRuntimeDiscoveryModal.ts";
+import type { CpuToolDiscoveryReport, VerifiedCpuToolPair } from "./cpuRuntimeDiscoveryModal.ts";
 import { findTranscriptMatches } from "./transcriptSearch.ts";
 import type { TranscriptSearchMatch } from "./transcriptSearch.ts";
 import { openTranscriptMatch, TranscriptSearchModal, TranscriptSearchResultsModal } from "./transcriptSearchModal.ts";
+import type { AudioEmbedPosition } from "./resultPreview.ts";
 
-import { ExistingResultModal, ResultPreviewModal } from "./resultPreviewModal.ts";
-import { applyHeadingInsertion, hasExistingResult } from "./resultPreview.ts";
+import { AudioEmbedTargetPickerModal, ExistingResultModal, ResultPreviewModal } from "./resultPreviewModal.ts";
+import type { AudioEmbedTarget } from "./resultPreviewModal.ts";
+import { applyAudioEmbedInsertion, hasExistingResult, prioritizeAudioEmbeds } from "./resultPreview.ts";
 import type { ExistingResultChoice } from "./resultPreview.ts";
 import type { TranscriptionResult } from "./provider.ts";
 import type { CpuSmokeTestStage } from "./whisperCppCpu.ts";
 
-const SAMPLE_AUDIO_PATH = "sample/preview-test.m4a";
 const SAMPLE_RESULT: TranscriptionResult = {
 	language: "ko",
 	text: "샘플 문장입니다. 실제 전사 결과가 아닙니다.",
@@ -125,6 +134,7 @@ export default class OnTheRecordPlugin extends Plugin {
 	private vaultSaveQueue: Promise<void> = Promise.resolve();
 	private localSaveQueue: Promise<void> = Promise.resolve();
 	private readonly pendingManualSelections = new Map<string, AbortController>();
+	private cpuDiscoveryInProgress = false;
 
 	async onload(): Promise<void> {
 		try {
@@ -151,9 +161,14 @@ export default class OnTheRecordPlugin extends Plugin {
 				() => this.vaultSettings,
 				(patch) => this.updateVaultSettings(patch),
 				() => this.localSettings,
-				(patch) => this.updateLocalSettings(patch),
+				async (patch) => {
+					await this.updateLocalSettings(patch);
+				},
 				this.localSettingsError,
 				() => this.openCpuRuntimeTestPicker(),
+				() => {
+					void this.discoverCpuSetup();
+				},
 				this,
 			),
 		);
@@ -167,7 +182,14 @@ export default class OnTheRecordPlugin extends Plugin {
 			id: "preview-sample-result",
 			name: "샘플 전사 결과 미리보기 시험",
 			callback: () => {
-				void this.previewAndInsertResult(SAMPLE_RESULT, SAMPLE_AUDIO_PATH);
+				this.openSamplePreviewPicker();
+			},
+		});
+		this.addCommand({
+			id: "transcribe-audio-insert",
+			name: "오디오 전사 및 결과 삽입",
+			callback: () => {
+				this.openCpuTranscriptionPicker();
 			},
 		});
 		this.addCommand({
@@ -273,15 +295,9 @@ export default class OnTheRecordPlugin extends Plugin {
 		new Notice("녹음 파일을 전사 대기열에 추가했습니다. 전사 엔진 연결은 아직 제공되지 않습니다.");
 	}
 
-	// 승인 전에는 노트를 수정하지 않는다. 실제 엔진이 연결되면 같은 경로로 결과를 전달한다.
-	async previewAndInsertResult(result: TranscriptionResult, audioPath: string): Promise<void> {
-		const target = this.app.workspace.getActiveFile();
-		if (!target || target.extension !== "md") {
-			new Notice("결과를 넣을 마크다운 노트를 먼저 여세요.");
-			return;
-		}
-
-		const approved = await new ResultPreviewModal(this.app, result, target.path).prompt();
+	private async previewAndInsertResult(result: TranscriptionResult, audioPath: string, target: AudioEmbedTarget): Promise<void> {
+		const targetName = `${target.note.path} · ${target.embed.position.start.line + 1}행`;
+		const approved = await new ResultPreviewModal(this.app, result, targetName).prompt();
 		if (!approved) {
 			new Notice("취소했습니다. 노트는 수정되지 않았습니다.");
 			return;
@@ -289,7 +305,7 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		try {
 			let choice: ExistingResultChoice | null = "append";
-			const current = await this.app.vault.read(target);
+			const current = await this.app.vault.read(target.note);
 			if (hasExistingResult(current, audioPath)) {
 				choice = await new ExistingResultModal(this.app).prompt();
 				if (!choice) {
@@ -298,11 +314,11 @@ export default class OnTheRecordPlugin extends Plugin {
 				}
 			}
 			const selectedChoice = choice;
-			await this.app.vault.process(target, (content) =>
-				applyHeadingInsertion(content, {
-					heading: approved.heading,
+			await this.app.vault.process(target.note, (content) =>
+				applyAudioEmbedInsertion(content, {
 					audioPath,
 					markdown: approved.markdown,
+					embed: this.toAudioEmbedPosition(target.embed),
 					existing: selectedChoice,
 				}),
 			);
@@ -344,6 +360,84 @@ export default class OnTheRecordPlugin extends Plugin {
 			return;
 		}
 		picker.open();
+	}
+
+	private openSamplePreviewPicker(): void {
+		this.openCurrentNoteAudioPicker(AUDIO_EXTENSIONS, (target) => {
+			void this.previewAndInsertResult(SAMPLE_RESULT, target.audioFile.path, target);
+		});
+	}
+
+	private openCpuTranscriptionPicker(): void {
+		if (!this.localSettings?.runtimePath || !this.localSettings.modelPath || !this.localSettings.ffmpegPath) {
+			new Notice("설정에서 런타임·모델·ffmpeg 경로를 먼저 지정하세요.");
+			return;
+		}
+		this.openCurrentNoteAudioPicker(WHISPER_CPP_CPU_AUDIO_EXTENSIONS, (target) => {
+			void this.transcribeAndPreview(target.audioFile, target);
+		});
+	}
+
+	private openCurrentNoteAudioPicker(
+		supportedExtensions: readonly string[],
+		onChoose: (target: AudioEmbedTarget) => void,
+	): void {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		const note = view?.file;
+		if (!view || !note) {
+			new Notice("녹음 embed가 있는 Markdown 노트를 먼저 여세요.");
+			return;
+		}
+		const embeds = this.app.metadataCache.getFileCache(note)?.embeds ?? [];
+		const supported = new Set(supportedExtensions);
+		const targets = embeds.flatMap((embed) => {
+			const destination = this.app.metadataCache.getFirstLinkpathDest(getLinkpath(embed.link), note.path);
+			if (!(destination instanceof TFile) || !supported.has(destination.extension.toLowerCase())) return [];
+			return [{ note, embed, audioFile: destination }];
+		});
+		if (targets.length === 0) {
+			new Notice("현재 노트에 지원되는 녹음 embed가 없습니다.");
+			return;
+		}
+		const orderedTargets = prioritizeAudioEmbeds(
+			targets.map((target) => ({ target, position: target.embed.position })),
+			view.editor.getCursor(),
+		).map(({ target }) => target);
+		new AudioEmbedTargetPickerModal(this.app, orderedTargets, onChoose).open();
+	}
+
+	private async transcribeAndPreview(file: TFile, target: AudioEmbedTarget): Promise<void> {
+		const settings = this.localSettings;
+		if (!settings) {
+			new Notice(this.localSettingsError ?? "PC별 런타임 설정을 불러올 수 없습니다.");
+			return;
+		}
+		const adapter = this.app.vault.adapter;
+		if (!(adapter instanceof FileSystemAdapter)) {
+			new Notice("로컬 파일 경로를 제공하지 않는 vault에서는 전사할 수 없습니다.");
+			return;
+		}
+
+		const progress = new CpuRuntimeTestProgressModal(this.app);
+		progress.open();
+		let result: TranscriptionResult;
+		try {
+			result = await new WhisperCppCpuRuntime().transcribe(
+				settings.runtimePath,
+				settings.modelPath,
+				settings.ffmpegPath,
+				adapter.getFullPath(file.path),
+				this.vaultSettings.language,
+				(stage, percent) => progress.setStage(stage, percent),
+			);
+		} catch (error) {
+			this.reportError("CPU 전사에 실패했습니다.", error);
+			const message = error instanceof Error ? error.message : "원인을 확인할 수 없는 오류입니다.";
+			progress.showFailed(message);
+			return;
+		}
+		progress.close();
+		await this.previewAndInsertResult(result, file.path, target);
 	}
 
 	private openTranscriptSearch(): void {
@@ -413,6 +507,102 @@ export default class OnTheRecordPlugin extends Plugin {
 			this.reportError("CPU 런타임 검증 또는 시험 추론에 실패했습니다.", error);
 			const message = error instanceof Error ? error.message : "원인을 확인할 수 없는 오류입니다.";
 			progress.showFailed(message);
+		}
+	}
+
+	private async discoverCpuSetup(): Promise<void> {
+		if (this.cpuDiscoveryInProgress) return;
+		if (!this.localSettings) {
+			new Notice(this.localSettingsError ?? "PC별 설정을 불러올 수 없습니다.");
+			return;
+		}
+
+		this.cpuDiscoveryInProgress = true;
+		const progress = new CpuRuntimeDiscoveryProgressModal(this.app);
+		progress.open();
+		try {
+			const candidates = await scanCpuToolCandidates(getCpuToolSearchRoots({
+				userProfile: process.env.USERPROFILE,
+				localAppData: process.env.LOCALAPPDATA,
+				programFiles: process.env.ProgramFiles,
+				programFilesX86: process.env["ProgramFiles(x86)"],
+				programData: process.env.ProgramData,
+			}));
+			const runtime = new WhisperCppCpuRuntime();
+			const verifiedRuntimes: Array<{ path: string; identity: WhisperCppRuntimeIdentity }> = [];
+			const verifiedModels: Array<{ path: string; identity: WhisperCppModelIdentity }> = [];
+			const rejections: string[] = [];
+
+			for (const runtimePath of candidates.runtimePaths) {
+				progress.setMessage(`런타임 검증 중: ${runtimePath}`);
+				try {
+					const identity = await runtime.identifyRuntime(runtimePath, (_stage, percent) => {
+						if (percent !== undefined) progress.setMessage(`런타임 SHA-256 확인 중 (${percent}%): ${runtimePath}`);
+					});
+					verifiedRuntimes.push({ path: runtimePath, identity });
+				} catch (error) {
+					rejections.push(`${runtimePath}: ${errorMessage(error)}`);
+				}
+			}
+
+			for (const modelPath of candidates.modelPaths) {
+				progress.setMessage(`모델 SHA-256 확인 중: ${modelPath}`);
+				try {
+					const identity = await runtime.identifyModel(modelPath, (_stage, percent) => {
+						if (percent !== undefined) progress.setMessage(`모델 SHA-256 확인 중 (${percent}%): ${modelPath}`);
+					});
+					verifiedModels.push({ path: modelPath, identity });
+				} catch (error) {
+					rejections.push(`${modelPath}: ${errorMessage(error)}`);
+				}
+			}
+
+			const pairs: VerifiedCpuToolPair[] = [];
+			for (const verifiedRuntime of verifiedRuntimes) {
+				for (const verifiedModel of verifiedModels) {
+					if (pairs.length >= 25) break;
+					pairs.push({
+						runtimePath: verifiedRuntime.path,
+						modelPath: verifiedModel.path,
+						verification: { ...verifiedRuntime.identity, ...verifiedModel.identity },
+					});
+				}
+				if (pairs.length >= 25) break;
+			}
+			const pairsTruncated = verifiedRuntimes.length * verifiedModels.length > pairs.length;
+			const report: CpuToolDiscoveryReport = {
+				runtimeCandidateCount: candidates.runtimePaths.length,
+				modelCandidateCount: candidates.modelPaths.length,
+				pairs,
+				pairsTruncated,
+				warnings: candidates.warnings,
+				rejections: rejections.slice(0, 5),
+				rejectionCount: rejections.length,
+			};
+			progress.close();
+			new CpuRuntimeDiscoveryResultsModal(
+				this.app,
+				report,
+				(pair) => void this.applyDiscoveredCpuSetup(pair),
+			).open();
+		} catch (error) {
+			progress.close();
+			this.reportError("CPU 런타임과 모델을 검색하지 못했습니다.", error);
+		} finally {
+			this.cpuDiscoveryInProgress = false;
+		}
+	}
+
+	private async applyDiscoveredCpuSetup(pair: VerifiedCpuToolPair): Promise<void> {
+		try {
+			const saved = await this.updateLocalSettings({
+				runtimePath: pair.runtimePath,
+				modelPath: pair.modelPath,
+			});
+			if (!saved) return;
+			new Notice(`검증된 ${pair.verification.modelId} 모델과 런타임 경로를 설정에 적용했습니다.`);
+		} catch (error) {
+			this.reportError("검색한 CPU 도구 경로를 설정에 적용하지 못했습니다.", error);
 		}
 	}
 
@@ -513,19 +703,32 @@ export default class OnTheRecordPlugin extends Plugin {
 	}
 
 	private findLinkedNotes(filePath: string): string[] {
-		const linkedNotes: string[] = [];
+		return [...new Set(this.findAudioEmbedTargets(filePath).map((target) => target.note.path))];
+	}
+
+	private findAudioEmbedTargets(filePath: string): AudioEmbedTarget[] {
+		const targets: AudioEmbedTarget[] = [];
 		for (const note of this.app.vault.getMarkdownFiles()) {
 			const embeds = this.app.metadataCache.getFileCache(note)?.embeds ?? [];
-			const matches = embeds.some((embed) => {
+			for (const embed of embeds) {
 				const destination = this.app.metadataCache.getFirstLinkpathDest(
 					getLinkpath(embed.link),
 					note.path,
 				);
-				return destination?.path === filePath;
-			});
-			if (matches) linkedNotes.push(note.path);
+				if (destination instanceof TFile && destination.path === filePath) {
+					targets.push({ note, embed, audioFile: destination });
+				}
+			}
 		}
-		return linkedNotes;
+		return targets;
+	}
+
+	private toAudioEmbedPosition(embed: EmbedCache): AudioEmbedPosition {
+		return {
+			start: { line: embed.position.start.line, ch: embed.position.start.col },
+			end: { line: embed.position.end.line, ch: embed.position.end.col },
+			link: embed.link,
+		};
 	}
 
 	private removeQueuedRecording(filePath: string): void {
@@ -536,25 +739,31 @@ export default class OnTheRecordPlugin extends Plugin {
 		console.debug(`[on-the-record] 전사 대기열 항목: ${this.recordingQueue.list().length}`);
 	}
 
-	private async updateLocalSettings(patch: Partial<LocalSettings>): Promise<void> {
+	private async updateLocalSettings(patch: Partial<LocalSettings>): Promise<boolean> {
 		if (!this.localSettingsStore || !this.localSettings) {
 			new Notice(this.localSettingsError ?? "PC별 설정을 저장할 수 없습니다.");
-			return;
+			return false;
 		}
-		this.localSettings = { ...this.localSettings, ...patch };
 		const store = this.localSettingsStore;
+		let saved = false;
 		const save = this.localSaveQueue.then(async () => {
 			this.localSettings = await store.update(patch);
+			saved = true;
 		});
 		this.localSaveQueue = save.catch((error: unknown) => {
 			this.reportError("PC별 설정을 저장하지 못했습니다.", error);
 		});
 		await this.localSaveQueue;
+		return saved;
 	}
 
 	private reportError(message: string, error: unknown): void {
-		const errorType = error instanceof Error ? error.name : "UnknownError";
-		console.error(`[on-the-record] ${message} (${errorType})`);
-		new Notice(message);
+		console.error(`[on-the-record] ${message}`, error);
+		const detail = error instanceof Error ? error.message : String(error);
+		new Notice(`${message}\n${detail}`, 10_000);
 	}
+}
+
+function errorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : String(error);
 }

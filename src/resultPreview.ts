@@ -1,8 +1,34 @@
 import type { TranscriptionResult } from "./provider.ts";
 
-export const DEFAULT_RESULT_HEADING = "전사 결과";
-
 export type ExistingResultChoice = "replace" | "append";
+
+export interface AudioEmbedPosition {
+	start: { line: number; ch: number };
+	end: { line: number; ch: number };
+	link: string;
+}
+
+export function prioritizeAudioEmbeds<T extends { position: { start: { line: number; col: number } } }>(
+	embeds: readonly T[],
+	cursor: { line: number; ch: number },
+): T[] {
+	const comparePosition = (left: T, right: T) =>
+		left.position.start.line - right.position.start.line ||
+		left.position.start.col - right.position.start.col;
+	const atOrAbove = embeds
+		.filter((embed) =>
+			embed.position.start.line < cursor.line ||
+			(embed.position.start.line === cursor.line && embed.position.start.col <= cursor.ch),
+		)
+		.sort((left, right) => comparePosition(right, left));
+	const below = embeds
+		.filter((embed) =>
+			embed.position.start.line > cursor.line ||
+			(embed.position.start.line === cursor.line && embed.position.start.col > cursor.ch),
+		)
+		.sort(comparePosition);
+	return [...atOrAbove, ...below];
+}
 
 export function formatTimestamp(seconds: number): string {
 	const total = Math.max(0, Math.floor(Number.isFinite(seconds) ? seconds : 0));
@@ -51,67 +77,75 @@ export function findResultBlock(content: string, audioPath: string): BlockRange 
 	return { start, end: endIndex + END_MARKER.length };
 }
 
-interface HeadingLine {
-	level: number;
-	offset: number;
-	lineEnd: number;
-	text: string;
-}
-
-function scanHeadings(content: string): HeadingLine[] {
-	const headings: HeadingLine[] = [];
-	let offset = 0;
-	let fence: string | null = null;
-	for (const line of content.split("\n")) {
-		const lineEnd = offset + line.length;
-		const fenceMatch = /^\s{0,3}(`{3,}|~{3,})/.exec(line);
-		if (fenceMatch) {
-			const marker = fenceMatch[1].charAt(0);
-			if (fence === null) fence = marker;
-			else if (fence === marker) fence = null;
-		} else if (fence === null) {
-			const match = /^(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line.replace(/\r$/, ""));
-			if (match) headings.push({ level: match[1].length, offset, lineEnd, text: match[2].trim() });
-		}
-		offset = lineEnd + 1;
-	}
-	return headings;
-}
-
 export function hasExistingResult(content: string, audioPath: string): boolean {
 	return findResultBlock(content, audioPath) !== null;
 }
 
-// 지정 헤딩 섹션의 끝에 결과 블록을 넣는다. 헤딩이 없으면 문서 끝에 새 헤딩을 만든다.
-export function applyHeadingInsertion(
+export function applyAudioEmbedInsertion(
 	content: string,
 	options: {
-		heading: string;
 		audioPath: string;
 		markdown: string;
+		embed: AudioEmbedPosition;
 		existing?: ExistingResultChoice;
 	},
 ): string {
-	const heading = options.heading.trim() || DEFAULT_RESULT_HEADING;
-	const block = wrapResultBlock(options.audioPath, options.markdown);
-	const existing = findResultBlock(content, options.audioPath);
-
-	if (existing && options.existing === "replace") {
-		return content.slice(0, existing.start) + block + content.slice(existing.end);
+	const lineStarts = [0];
+	for (let index = 0; index < content.length; index += 1) {
+		if (content[index] === "\n") lineStarts.push(index + 1);
+	}
+	const startLine = lineStarts[options.embed.start.line];
+	const endLine = lineStarts[options.embed.end.line];
+	if (startLine === undefined || endLine === undefined) {
+		throw new Error("오디오 embed 위치가 현재 노트 범위를 벗어났습니다. 다시 시도하세요.");
+	}
+	const embedStart = startLine + options.embed.start.ch;
+	const embedEnd = endLine + options.embed.end.ch;
+	if (embedStart < 0 || embedEnd < embedStart || embedEnd > content.length) {
+		throw new Error("오디오 embed 위치가 올바르지 않습니다. 다시 시도하세요.");
+	}
+	const embedText = content.slice(embedStart, embedEnd);
+	const hasEmbedPrefix = embedText.startsWith("!") || (embedStart > 0 && content[embedStart - 1] === "!");
+	if (!hasEmbedPrefix || !embedText.includes(options.embed.link)) {
+		throw new Error("노트의 오디오 embed가 변경되었습니다. 검색 후 다시 시도하세요.");
 	}
 
-	const headings = scanHeadings(content);
-	const index = headings.findIndex((candidate) => candidate.text === heading);
-	if (index < 0) {
-		const base = content.replace(/\s+$/, "");
-		const prefix = base.length > 0 ? `${base}\n\n` : "";
-		return `${prefix}## ${heading}\n\n${block}\n`;
+	const embedLine = options.embed.end.ch === 0 && options.embed.end.line > options.embed.start.line
+		? options.embed.end.line - 1
+		: options.embed.end.line;
+	const lineStart = lineStarts[embedLine];
+	if (lineStart === undefined) throw new Error("오디오 embed 행을 찾을 수 없습니다.");
+	const nextNewline = content.indexOf("\n", lineStart);
+	const anchor = nextNewline < 0 ? content.length : nextNewline + 1;
+	const existingBlocks: BlockRange[] = [];
+	const marker = new RegExp(
+		`<!-- on-the-record:begin audio="${escapeRegExp(encodeURIComponent(options.audioPath))}" -->[\\s\\S]*?<!-- on-the-record:end -->`,
+		"g",
+	);
+	for (const match of content.matchAll(marker)) {
+		const start = match.index;
+		existingBlocks.push({ start, end: start + match[0].length });
+	}
+	if (existingBlocks.length > 0 && options.existing === undefined) {
+		throw new Error("기존 전사 결과의 처리 방법을 선택하세요.");
 	}
 
-	const target = headings[index];
-	const next = headings.slice(index + 1).find((candidate) => candidate.level <= target.level);
-	const sectionEnd = next ? next.offset : content.length;
-	const before = content.slice(0, sectionEnd).replace(/\s+$/, "");
-	const after = content.slice(sectionEnd);
-	return `${before}\n\n${block}\n${after.length > 0 ? `\n${after}` : ""}`;
+	let adjustedAnchor = anchor;
+	let result = content;
+	for (const range of [...existingBlocks].reverse()) {
+		result = result.slice(0, range.start) + result.slice(range.end);
+		if (range.end <= anchor) adjustedAnchor -= range.end - range.start;
+	}
+
+	const blocks = options.existing === "append"
+		? [...existingBlocks.map((range) => content.slice(range.start, range.end)), wrapResultBlock(options.audioPath, options.markdown)]
+		: [wrapResultBlock(options.audioPath, options.markdown)];
+	const before = result.slice(0, adjustedAnchor);
+	const after = result.slice(adjustedAnchor);
+	const prefix = before.endsWith("\n") ? "\n" : "\n\n";
+	return `${before}${prefix}${blocks.join("\n\n")}\n${after}`;
+}
+
+function escapeRegExp(value: string): string {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

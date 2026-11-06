@@ -79,6 +79,17 @@ export interface WhisperCppCpuVerification {
 	modelSha256: string;
 }
 
+export interface WhisperCppRuntimeIdentity {
+	runtimeVersion: string;
+	runtimeSha256: string;
+}
+
+export interface WhisperCppModelIdentity {
+	modelId: string;
+	modelQuantization: string;
+	modelSha256: string;
+}
+
 export function parseWhisperCppJsonOutput(json: string, fallbackLanguage: string): Pick<TranscriptionResult, "language" | "text" | "segments"> {
 	let output: unknown;
 	try {
@@ -164,16 +175,27 @@ export class WhisperCppCpuRuntime {
 		onProgress: CpuSmokeTestProgress = () => undefined,
 	): Promise<WhisperCppCpuVerification> {
 		onProgress("checking-files");
-		if (process.platform !== "win32") {
-			throw new ProviderError("현재 검증된 whisper.cpp 런타임은 Windows용입니다.", "runtime-unavailable", "whisper-cpp-cpu");
-		}
 		if (!runtimePath.trim() || !modelPath.trim()) {
 			throw new ProviderError("설정에서 런타임 실행 파일과 모델 경로를 모두 지정하세요.", "runtime-unavailable", "whisper-cpp-cpu");
 		}
 
-		await assertRegularFile(runtimePath, "런타임 실행 파일");
-		await assertRegularFile(modelPath, "모델 파일");
+		const runtime = await this.identifyRuntime(runtimePath, onProgress);
+		const model = await this.identifyModel(modelPath, onProgress);
+		return { ...runtime, ...model };
+	}
 
+	async identifyRuntime(
+		runtimePath: string,
+		onProgress: CpuSmokeTestProgress = () => undefined,
+	): Promise<WhisperCppRuntimeIdentity> {
+		onProgress("checking-files");
+		if (process.platform !== "win32") {
+			throw new ProviderError("현재 검증된 whisper.cpp 런타임은 Windows용입니다.", "runtime-unavailable", "whisper-cpp-cpu");
+		}
+		if (!runtimePath.trim()) {
+			throw new ProviderError("런타임 실행 파일 경로를 지정하세요.", "runtime-unavailable", "whisper-cpp-cpu");
+		}
+		await assertRegularFile(runtimePath, "런타임 실행 파일");
 		onProgress("hashing-runtime", 0);
 		const runtimeSha256 = await this.dependencies.hashFile(runtimePath, (percent) => onProgress("hashing-runtime", percent));
 		if (runtimeSha256 !== EXPECTED_RUNTIME_SHA256) {
@@ -183,18 +205,6 @@ export class WhisperCppCpuRuntime {
 				"whisper-cpp-cpu",
 			);
 		}
-
-		onProgress("hashing-model", 0);
-		const modelSha256 = await this.dependencies.hashFile(modelPath, (percent) => onProgress("hashing-model", percent));
-		const model = VERIFIED_MODELS.find((candidate) => candidate.sha256 === modelSha256);
-		if (!model) {
-			throw new ProviderError(
-				`등록된 기준 모델과 일치하지 않습니다. 계산된 모델 SHA-256: ${modelSha256}`,
-				"invalid-model",
-				"whisper-cpp-cpu",
-			);
-		}
-
 		let versionResult: CommandResult;
 		onProgress("checking-version");
 		try {
@@ -215,9 +225,29 @@ export class WhisperCppCpuRuntime {
 			);
 		}
 
+		return { runtimeVersion, runtimeSha256 };
+	}
+
+	async identifyModel(
+		modelPath: string,
+		onProgress: CpuSmokeTestProgress = () => undefined,
+	): Promise<WhisperCppModelIdentity> {
+		onProgress("checking-files");
+		if (!modelPath.trim()) {
+			throw new ProviderError("모델 파일 경로를 지정하세요.", "invalid-model", "whisper-cpp-cpu");
+		}
+		await assertRegularFile(modelPath, "모델 파일");
+		onProgress("hashing-model", 0);
+		const modelSha256 = await this.dependencies.hashFile(modelPath, (percent) => onProgress("hashing-model", percent));
+		const model = VERIFIED_MODELS.find((candidate) => candidate.sha256 === modelSha256);
+		if (!model) {
+			throw new ProviderError(
+				`등록된 기준 모델과 일치하지 않습니다. 계산된 모델 SHA-256: ${modelSha256}`,
+				"invalid-model",
+				"whisper-cpp-cpu",
+			);
+		}
 		return {
-			runtimeVersion,
-			runtimeSha256,
 			modelId: model.id,
 			modelQuantization: model.quantization,
 			modelSha256,

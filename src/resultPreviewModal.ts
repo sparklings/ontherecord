@@ -1,18 +1,95 @@
-import { App, Modal, Setting } from "obsidian";
+import { App, Modal, Setting, TFile } from "obsidian";
+import type { EmbedCache } from "obsidian";
 import type { TranscriptionResult } from "./provider.ts";
-import { DEFAULT_RESULT_HEADING, formatResultMarkdown } from "./resultPreview.ts";
+import { formatResultMarkdown } from "./resultPreview.ts";
 import type { ExistingResultChoice } from "./resultPreview.ts";
 
 export interface ApprovedResult {
 	markdown: string;
-	heading: string;
+}
+
+export interface AudioEmbedTarget {
+	note: TFile;
+	embed: EmbedCache;
+	audioFile: TFile;
+}
+
+export class AudioEmbedTargetPickerModal extends Modal {
+	private selectedIndex = 0;
+	private readonly rows: HTMLElement[] = [];
+	private readonly buttons: HTMLButtonElement[] = [];
+
+	constructor(
+		app: App,
+		private readonly targets: readonly AudioEmbedTarget[],
+		private readonly onChoose: (target: AudioEmbedTarget) => void,
+	) {
+		super(app);
+	}
+
+	onOpen(): void {
+		this.modalEl.addClass("otr-audio-embed-picker");
+		this.setTitle("현재 노트의 녹음 선택");
+		this.contentEl.createEl("p", {
+			text: "커서 위에 있는 가장 가까운 녹음이 먼저 선택됩니다. 화살표 키로 목록을 이동하고 enter로 선택하세요.",
+		});
+		this.targets.forEach((target, index) => {
+			const row = new Setting(this.contentEl)
+				.setName(target.audioFile.path)
+				.setDesc(`${target.embed.position.start.line + 1}행`)
+				.addButton((button) =>
+					button.setButtonText(index === 0 ? "선택됨" : "선택").onClick(() => this.choose(index)),
+				);
+			row.settingEl.addClass("otr-audio-embed-picker-row");
+			this.rows.push(row.settingEl);
+			const button = row.settingEl.querySelector("button");
+			if (!button) throw new Error("오디오 선택 버튼을 만들지 못했습니다.");
+			this.buttons.push(button);
+		});
+		this.select(0);
+		this.contentEl.addEventListener("keydown", this.handleKeyDown);
+		this.buttons[0]?.focus();
+	}
+
+	onClose(): void {
+		this.contentEl.removeEventListener("keydown", this.handleKeyDown);
+		this.contentEl.empty();
+	}
+
+	private readonly handleKeyDown = (event: KeyboardEvent): void => {
+		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+			event.preventDefault();
+			const delta = event.key === "ArrowDown" ? 1 : -1;
+			this.select((this.selectedIndex + delta + this.targets.length) % this.targets.length);
+			this.buttons[this.selectedIndex]?.focus();
+		} else if (event.key === "Enter") {
+			event.preventDefault();
+			this.choose(this.selectedIndex);
+		}
+	};
+
+	private select(index: number): void {
+		this.selectedIndex = index;
+		this.rows.forEach((row, rowIndex) => {
+			row.toggleClass("is-selected", rowIndex === index);
+			const button = this.buttons[rowIndex];
+			if (button) button.textContent = rowIndex === index ? "선택됨" : "선택";
+			button?.setAttribute("aria-pressed", String(rowIndex === index));
+		});
+	}
+
+	private choose(index: number): void {
+		const target = this.targets[index];
+		if (!target) return;
+		this.close();
+		this.onChoose(target);
+	}
 }
 
 export class ResultPreviewModal extends Modal {
 	private resolve: (value: ApprovedResult | null) => void = () => undefined;
 	private settled = false;
 	private includeTimestamps = true;
-	private heading = DEFAULT_RESULT_HEADING;
 	private markdown = "";
 
 	constructor(
@@ -51,7 +128,7 @@ export class ResultPreviewModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.createEl("p", {
-			text: `승인하기 전에는 노트가 수정되지 않습니다. 대상 노트: ${this.targetName}`,
+			text: `승인하기 전에는 노트가 수정되지 않습니다. 녹음 embed 바로 아래에 삽입합니다. 대상 노트: ${this.targetName}`,
 		});
 		for (const warning of this.result.warnings) contentEl.createEl("p", { text: `경고: ${warning}` });
 
@@ -62,12 +139,6 @@ export class ResultPreviewModal extends Modal {
 				this.render();
 			}),
 		);
-		new Setting(contentEl).setName("삽입할 헤딩").addText((text) =>
-			text.setValue(this.heading).onChange((value) => {
-				this.heading = value;
-			}),
-		);
-
 		const area = contentEl.createEl("textarea");
 		area.value = this.markdown;
 		area.rows = 14;
@@ -83,7 +154,7 @@ export class ResultPreviewModal extends Modal {
 					.setCta()
 					.onClick(() => {
 						if (this.markdown.trim().length === 0) return;
-						this.finish({ markdown: this.markdown, heading: this.heading });
+						this.finish({ markdown: this.markdown });
 						this.close();
 					}),
 			)

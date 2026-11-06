@@ -15,7 +15,7 @@ export class AudioFilePickerModal extends FuzzySuggestModal<TFile> {
 		this.setPlaceholder(
 			supportedExtensions === AUDIO_EXTENSIONS
 				? "전사할 오디오 파일을 검색하세요"
-				: "시험 추론에 사용할 WAV, MP3, OGG 또는 FLAC 파일을 검색하세요",
+				: `오디오 파일을 검색하세요 (${supportedExtensions.join(", ")})`,
 		);
 	}
 

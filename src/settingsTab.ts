@@ -12,6 +12,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		private readonly updateLocalSettings: (patch: Partial<LocalSettings>) => Promise<void>,
 		private readonly localSettingsError: string | null,
 		private readonly testCpuSetup: () => void,
+		private readonly discoverCpuSetup: () => void,
 		plugin: Plugin,
 	) {
 		super(app, plugin);
@@ -163,6 +164,13 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					.onChange((value) => {
 						void this.updateLocalSettings({ ffmpegPath: value.trim() });
 					}),
+			);
+
+		new Setting(containerEl)
+			.setName("설치된 CPU 도구 자동 검색")
+			.setDesc("사용자 폴더의 whisper.cpp, models, programs 등 알려진 위치만 검색해 기준 SHA-256·버전을 검증합니다. 전체 드라이브는 검색하지 않으며, 설정 적용은 직접 승인해야 합니다.")
+			.addButton((button) =>
+				button.setButtonText("검색").onClick(() => this.discoverCpuSetup()),
 			);
 
 		new Setting(containerEl)

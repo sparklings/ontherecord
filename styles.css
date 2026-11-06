@@ -8,3 +8,11 @@
 	overflow-wrap: anywhere;
 	user-select: text;
 }
+
+.otr-audio-embed-picker-row.is-selected {
+	background-color: var(--background-modifier-hover);
+}
+
+.otr-cpu-discovery-results .setting-item-description {
+	overflow-wrap: anywhere;
+}
