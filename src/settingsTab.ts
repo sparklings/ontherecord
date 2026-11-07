@@ -22,9 +22,39 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName("음성 전사").setHeading();
+		new Setting(containerEl).setName("음성 녹음 및 세션").setHeading();
 
 		const vaultSettings = this.getVaultSettings();
+
+		new Setting(containerEl)
+			.setName("녹음 시작 방식")
+			.setDesc("새 마크다운 노트 생성 시 녹음 개시 방식입니다. (노트 frontmatter에 recorder가 있으면 우선 적용)")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("confirm", "확인 알림형 (알림 표시 후 즉시 개시)")
+					.addOption("auto", "자동형 (알림 없이 즉시 개시)")
+					.addOption("manual", "수동형 (자동 시작 안 함)")
+					.setValue(vaultSettings.recordStartMode)
+					.onChange((value) => {
+						if (value === "confirm" || value === "auto" || value === "manual") {
+							void this.updateVaultSettings({ recordStartMode: value });
+						}
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("녹음 자동 시작 대상 폴더")
+			.setDesc("지정한 폴더 하위의 새 노트에만 녹음 시작 방식을 적용합니다. 비워두면 볼트 내 모든 새 노트에 적용됩니다.")
+			.addText((text) =>
+				text
+					.setValue(vaultSettings.autoRecordFolder)
+					.setPlaceholder("예: Meetings 또는 회의록")
+					.onChange((value) => {
+						void this.updateVaultSettings({ autoRecordFolder: value.trim() });
+					}),
+			);
+
+		new Setting(containerEl).setName("음성 전사").setHeading();
 		new Setting(containerEl)
 			.setName("녹음 파일 감지")
 			.setDesc("새 오디오 파일을 감지합니다.")

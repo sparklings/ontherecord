@@ -29,6 +29,27 @@ import { applyAudioEmbedInsertion, hasExistingResult, prioritizeAudioEmbeds } fr
 import type { ExistingResultChoice } from "./resultPreview.ts";
 import type { TranscriptionResult } from "./provider.ts";
 import type { CpuSmokeTestStage } from "./whisperCppCpu.ts";
+import {
+	calculateNextRecordingSeq,
+	RecordingSessionManager,
+	resolveRecordStartMode,
+} from "./recordingSession.ts";
+import type { CoreAudioRecorder, SessionStorageAdapter } from "./recordingSession.ts";
+
+interface ObsidianAudioRecorderPlugin {
+	instance?: {
+		recording?: boolean;
+	};
+}
+
+interface ObsidianAppWithAudioRecorder {
+	commands?: {
+		executeCommandById?: (id: string) => boolean | undefined;
+	};
+	internalPlugins?: {
+		plugins?: Record<string, ObsidianAudioRecorderPlugin | undefined>;
+	};
+}
 
 const SAMPLE_RESULT: TranscriptionResult = {
 	language: "ko",
@@ -135,8 +156,16 @@ export default class OnTheRecordPlugin extends Plugin {
 	private localSaveQueue: Promise<void> = Promise.resolve();
 	private readonly pendingManualSelections = new Map<string, AbortController>();
 	private cpuDiscoveryInProgress = false;
+	private sessionManager!: RecordingSessionManager;
 
 	async onload(): Promise<void> {
+		this.setupSessionManager();
+		try {
+			await this.sessionManager.restore();
+		} catch (error) {
+			this.reportError("이전 녹음 세션을 복원하지 못했습니다.", error);
+		}
+
 		try {
 			this.vaultSettings = normalizeVaultSettings(await this.loadData());
 		} catch (error) {
@@ -173,6 +202,42 @@ export default class OnTheRecordPlugin extends Plugin {
 			),
 		);
 
+		this.addCommand({
+			id: "start-recording",
+			name: "현재 활성 노트에서 음성 녹음 시작",
+			callback: () => {
+				const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+				const note = view?.file;
+				if (!view || !note) {
+					new Notice("녹음을 시작할 Markdown 노트를 먼저 여세요.");
+					return;
+				}
+				const existingEmbeds = this.app.metadataCache.getFileCache(note)?.embeds?.length ?? 0;
+				const seq = calculateNextRecordingSeq(existingEmbeds);
+				void this.sessionManager.startManualSession({
+					notePath: note.path,
+					seq,
+					notify: (msg) => new Notice(msg, 4000),
+				});
+			},
+		});
+		this.addCommand({
+			id: "stop-recording",
+			name: "음성 녹음 중지",
+			callback: () => {
+				if (!this.sessionManager.isRecording()) {
+					new Notice("현재 진행 중인 음성 녹음이 없습니다.");
+					return;
+				}
+				void this.sessionManager.stopSession().then((session) => {
+					if (session) {
+						new Notice(`${session.notePath}의 음성 녹음을 중지했습니다.`);
+					} else {
+						new Notice("음성 녹음을 중지했습니다.");
+					}
+				});
+			},
+		});
 		this.addCommand({
 			id: "select-audio-file",
 			name: "전사할 오디오 파일 선택",
@@ -211,6 +276,11 @@ export default class OnTheRecordPlugin extends Plugin {
 		this.app.workspace.onLayoutReady(() => {
 			this.registerEvent(
 				this.app.vault.on("create", (file) => {
+					if (file instanceof TFile && file.extension.toLowerCase() === "md") {
+						window.setTimeout(() => {
+							void this.handleMarkdownNoteCreated(file);
+						}, 300);
+					}
 					if (this.vaultSettings.autoDetectRecording) watcher.handleCreate(file);
 				}),
 			);
@@ -240,6 +310,100 @@ export default class OnTheRecordPlugin extends Plugin {
 		this.watcher = null;
 		for (const controller of this.pendingManualSelections.values()) controller.abort();
 		this.pendingManualSelections.clear();
+	}
+
+	private setupSessionManager(): void {
+		const sessionFilePath = `${this.app.vault.configDir}/plugins/${this.manifest.id}/active-session.json`;
+		const storage: SessionStorageAdapter = {
+			read: async () => {
+				try {
+					if (await this.app.vault.adapter.exists(sessionFilePath)) {
+						return await this.app.vault.adapter.read(sessionFilePath);
+					}
+					return null;
+				} catch {
+					return null;
+				}
+			},
+			write: async (data: string) => {
+				try {
+					await this.app.vault.adapter.write(sessionFilePath, data);
+				} catch (error) {
+					console.error("[on-the-record] 활성 세션 디스크 저장 실패:", error);
+				}
+			},
+			delete: async () => {
+				try {
+					if (await this.app.vault.adapter.exists(sessionFilePath)) {
+						await this.app.vault.adapter.remove(sessionFilePath);
+					}
+				} catch {
+					// ignore
+				}
+			},
+		};
+
+		const recorder: CoreAudioRecorder = {
+			isRecording: () => {
+				const app = this.app as unknown as ObsidianAppWithAudioRecorder;
+				const internalPlugin = app.internalPlugins?.plugins?.["audio-recorder"];
+				return Boolean(internalPlugin?.instance?.recording);
+			},
+			start: async () => {
+				const app = this.app as unknown as ObsidianAppWithAudioRecorder;
+				const executed = app.commands?.executeCommandById?.("audio-recorder:start");
+				return executed !== false;
+			},
+			stop: async () => {
+				const app = this.app as unknown as ObsidianAppWithAudioRecorder;
+				const executed = app.commands?.executeCommandById?.("audio-recorder:stop");
+				return executed !== false;
+			},
+		};
+
+		this.sessionManager = new RecordingSessionManager(storage, recorder);
+	}
+
+	private async handleMarkdownNoteCreated(file: TFile): Promise<void> {
+		if (file.extension.toLowerCase() !== "md") return;
+
+		if (this.vaultSettings.autoRecordFolder) {
+			const folder = this.vaultSettings.autoRecordFolder.replace(/^\/+|\/+$/g, "");
+			if (folder && !file.path.startsWith(`${folder}/`)) return;
+		}
+
+		let frontmatterRecorder: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter?.recorder;
+		if (frontmatterRecorder === undefined) {
+			try {
+				const content = await this.app.vault.cachedRead(file);
+				const match = /^---\r?\n([\s\S]*?)\r?\n---/.exec(content);
+				if (match) {
+					const lines = match[1].split(/\r?\n/);
+					for (const line of lines) {
+						const parts = line.split(":");
+						if (parts[0]?.trim() === "recorder" && parts[1]) {
+							frontmatterRecorder = parts[1].trim();
+							break;
+						}
+					}
+				}
+			} catch {
+				// ignore
+			}
+		}
+
+		const mode = resolveRecordStartMode(frontmatterRecorder, this.vaultSettings.recordStartMode);
+		if (!mode || mode === "manual") return;
+
+		const existingEmbeds = this.app.metadataCache.getFileCache(file)?.embeds?.length ?? 0;
+		const seq = calculateNextRecordingSeq(existingEmbeds);
+
+		await this.sessionManager.startSession({
+			notePath: file.path,
+			seq,
+			mode,
+			notify: (msg) => new Notice(msg, 4000),
+		});
 	}
 
 	private async updateVaultSettings(patch: Partial<VaultSettings>): Promise<void> {

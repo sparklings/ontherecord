@@ -169,7 +169,16 @@
 #### 1. 음성 녹음 라이프사이클 및 노트 연동 (REC)
 > 기존 파일 생성 후 수동 탐색 방식(`linkWaiter.ts`)의 불확실성을 해소하고, 노트 기반 단일 세션 모델로 녹음 시작부터 탭 닫힘 시 안전 연결까지 전 과정을 자동화한다.
 
-- [ ] `3-REC-01` 코어 Audio recorder 제어 및 노트 기반 녹음 세션 시작 (`F-01`, `F-02`, `F-03`, `C-01`, `C-03`) → 새 노트 생성 시 frontmatter 마커(`recorder: auto | confirm | manual`) 또는 설정된 폴더 규칙을 감지해 녹음 흐름을 개시한다. 시작 방식 3종(확인 알림형 `confirm`(기본), 자동 `auto`, 수동 `manual`)을 지원하고, Obsidian 코어 Audio recorder(`audio-recorder:start`, `stop`) 실행 및 단일 활성 세션을 관리하며 세션 상태를 디스크에 영속화한다(`{ notePath, startedAt, seq }`).
+- [x] `3-REC-01` 코어 Audio recorder 제어 및 노트 기반 녹음 세션 시작 (`F-01`, `F-02`, `F-03`, `C-01`, `C-03`) → 완료(2026-11-07):
+  - 환경 설정(`recordStartMode`, 기본값 `confirm`) 및 대상 폴더 필터(`autoRecordFolder`) 추가.
+  - 노트 frontmatter 우선 판별(`recorder: confirm | auto | manual | false/off`) 지원(`resolveRecordStartMode`).
+  - 시작 방식 3종 구현:
+    - **확인 알림형 `confirm`(기본값)**: Confirm 대화상자로 묻지 않고 우측 상단 토스트 알림(`Notice("음성 녹음을 시작합니다.", 4000)`) 표시 후 즉시 코어 recorder 개시.
+    - **자동형 `auto`**: 알림 없이 즉시 개시.
+    - **수동형 `manual`**: 자동 시작을 방지하고 명시적 명령 실행 시에만 개시.
+  - 세션 모델 및 디스크 영속화: 단일 활성 세션(`{ notePath, startedAt, seq }`) 관리, Obsidian 플러그인 디렉터리 내 `active-session.json` 디스크 영속화 및 앱 재시작 시 자동 복원(`restore`) 구현.
+  - 명령 추가: "현재 활성 노트에서 음성 녹음 시작"(`start-recording`), "음성 녹음 중지"(`stop-recording`).
+  - 단위 테스트: `test/recordingSession.test.ts`(10개 항목) 및 `test/settings.test.ts` 확장 완료 (전체 55개 테스트 통과).
 - [ ] `3-REC-02` 탭 닫힘 감지 및 녹음 자동 안전 중지·연결 (`F-04`, `F-05`, `C-02`) → 녹음 중인 노트 탭이 닫힐 때(`WorkspaceLeaf.prototype.detach` 래핑 또는 닫힘 이벤트 감지) 녹음을 자동 중지하고 생성된 오디오를 해당 노트에 안전하게 연결(attach)한다. 코어가 새 탭으로 오디오 파일을 여는 동작 자동 닫기(`S-09`) 및 에디터 내 임베드 중복 삽입 정리(`S-10`)를 처리하고, 닫힘 시 동작 옵션(중지·연결/확인/무시)을 제공한다.
 - [ ] `3-REC-03` 단일 문서 내 다중 녹음 파일 지원 및 세션 격리 매핑 (`F-08`, 다중 세션 확장) → 마크다운 문서 하나에 여러 개의 녹음 파일/임베드가 순차 누적(`seq = recording_count + 1`)될 수 있도록 확장한다. 각 세션별 고유 마커(`<!-- on-the-record:start audio="..." seq="..." -->`)를 부여하여, 다중 녹음의 전사 결과가 서로 덮어쓰지 않고 독립적으로 삽입·교체·관리되도록 격리한다.
 - [ ] `3-REC-04` Frontmatter 집계 속성 및 본문 녹음 블록 2중 기록 (`F-06`, `F-07`) → Bases 및 Dataview 친화적인 Frontmatter 평면 메타데이터(`recording_state`, `recordings` 링크 배열, `recording_count`, `recording_total_seconds`, `recording_total_size_mb`, `recording_first_start`, `recording_last_end`)와 본문 섹션(기본 `## 녹음 기록`) 아래 세션별 상세 블록(`### 녹음 N · 시각 (소요)`, 임베드, 파일 경로, 용량 등)을 `vault.process` 단일 트랜잭션으로 안전하게 동시 기록한다.

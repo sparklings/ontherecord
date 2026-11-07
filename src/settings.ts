@@ -1,4 +1,5 @@
 export type DevicePreference = "auto" | "cpu" | "accelerator";
+export type RecordStartMode = "confirm" | "auto" | "manual";
 
 export interface VaultSettings {
 	schemaVersion: 1;
@@ -9,6 +10,8 @@ export interface VaultSettings {
 	autoTranscribe: boolean;
 	stabilizationSeconds: number;
 	transcriptSearchTerms: string[];
+	recordStartMode: RecordStartMode;
+	autoRecordFolder: string;
 }
 
 export interface LocalSettings {
@@ -27,6 +30,8 @@ export const DEFAULT_VAULT_SETTINGS: VaultSettings = {
 	autoTranscribe: true,
 	stabilizationSeconds: 5,
 	transcriptSearchTerms: [],
+	recordStartMode: "confirm",
+	autoRecordFolder: "",
 };
 
 export const DEFAULT_LOCAL_SETTINGS: LocalSettings = {
@@ -102,6 +107,18 @@ export function normalizeVaultSettings(value: unknown): VaultSettings {
 		result.transcriptSearchTerms = value.transcriptSearchTerms
 			.map((term) => term.trim())
 			.filter((term, index, terms) => term.length > 0 && terms.indexOf(term) === index);
+	}
+	if (value.recordStartMode !== undefined) {
+		if (value.recordStartMode !== "confirm" && value.recordStartMode !== "auto" && value.recordStartMode !== "manual") {
+			throw new Error("recordStartMode 설정이 올바르지 않습니다.");
+		}
+		result.recordStartMode = value.recordStartMode;
+	}
+	if (value.autoRecordFolder !== undefined) {
+		if (typeof value.autoRecordFolder !== "string") {
+			throw new Error("autoRecordFolder 설정이 올바르지 않습니다.");
+		}
+		result.autoRecordFolder = value.autoRecordFolder.trim();
 	}
 	return result;
 }
