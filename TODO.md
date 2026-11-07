@@ -64,6 +64,9 @@
   - 최종 결정: **기본 권장 모델 `medium-q5_0` 확정**, **경량/초고속 옵션 `small-q5_1`**, **고정밀 옵션 `large-v3-q5_0`(향후 GPU 연계 권장)**.
   - 1시간 회의 처리 시간 목표 확정: 기본 모델 기준 **70분 이내** 완료 (1:1 준실시간 허용).
   - [BASE-08_MODEL_SELECTION_2026-11-07.md](./docs/baselines/BASE-08_MODEL_SELECTION_2026-11-07.md) 작성 완료.
+- [x] `0-ENV-16` 실제 배포 구성요소 라이선스 확정 및 프로젝트 소유권 정리 완료:
+  - 배포 아티팩트 라이선스 검증: 플러그인이 외부 런타임/모델을 번들링 배포하지 않기로 확정(`0-ENV-08`)함에 따라 제3자 바이너리 재배포 SBOM 의무가 소멸되었고, 실제 플러그인 배포물(`main.js`)은 npm 런타임 의존성 0개의 순수 자체 개발 MIT 코드임을 확인하여 완료 종결.
+  - 프로젝트 소유권 및 저작권자 갱신: 본 프로젝트는 회사 지시나 업무상 위탁이 아닌, 업무 중 개인적 필요에 의해 착수한 **박성원(SUNGWON PARK) 개인의 독립 오픈소스 프로젝트(MIT)**로 확정. 기존 회사(에스넷시스템) 관련 표기 및 사내 혜택 계획을 공식 폐기하고 `LICENSE`, `README.md`, `SUPPORT.md`를 개인 오픈소스 프로젝트 기준으로 전면 갱신.
 
 #### 추가 등록 과제 (3단계: GPU Provider 평가 - 레노버 특화: GTX 1650 Ti 4GB VRAM)
 - [ ] `3-GPU-01` whisper.cpp cuBLAS/CUDA 가속 빌드 성능 실측 및 CPU 대비 가속 배율 검증: 레노버 노트북의 외장 GPU(NVIDIA GeForce GTX 1650 Ti, CUDA 13.0)를 활용한 whisper.cpp cuBLAS/CUDA 가속 빌드 성능 실측 및 CPU 대비 가속 배율 검증.
@@ -73,8 +76,8 @@
 
 ### 라이선스 및 공개 준비
 
-- [ ] `0-ENV-16` 실제 배포 구성요소의 라이선스·고지·재배포 조건을 artifact 단위로 확정 → 런타임, 모델, 디코더, 선택 분석 기능 각각의 출처·정확한 버전/revision·SHA-256·라이선스 원문·빌드 옵션·고지·소스 제공 의무를 기록하고 SBOM을 작성한다. `0-ENV-10`은 upstream/설계 후보 예비 검토로만 간주한다. 의무를 충족할 수 없거나 권리 근거가 불명확한 구성요소는 배포 대상에서 제외한다. 실제 산출물과 고지 검토가 끝나기 전에는 공개 릴리스를 하지 않는다.
-- 프로젝트 자체 코드에 MIT 정책을 적용한다. 저작권자 `에스넷시스템`과 권리 귀속·공개 승인은 2026-11-05 사용자 확인을 받았고 `LICENSE`에 반영했다. 공개 릴리스는 실제 배포 구성요소 검토(`0-ENV-16`) 및 제출 직전 Directory 체크리스트 완료 전까지 보류한다.
+- [x] `0-ENV-16` 실제 배포 구성요소의 라이선스·고지 확정 → 완료(2026-11-07): 외부 런타임/모델 번들링 배포를 제외(`0-ENV-08`)함에 따라 제3자 바이너리 SBOM 의무가 소멸되었고, 플러그인 배포물(`main.js`)은 npm 런타임 의존성 0개의 순수 자체 MIT 코드임을 확인하여 종료.
+- 프로젝트 자체 코드에 MIT 정책을 적용한다. 본 프로젝트는 **박성원 개인의 오픈소스 프로젝트**이며 회사와는 아무런 관련이 없다(업무 중 개인적 필요에 의해 착수한 자발적 프로젝트). 저작권자는 `SUNGWON PARK (박성원)`이며 `LICENSE`에 반영했다.
 
 ## 2026-11-01
 
@@ -90,17 +93,15 @@
 - [x] `0-ENV-05` 플러그인 id, 이름 결정 → **결정(2026-11-01): 이름 `On the Record`, id `on-the-record`, 부제 `Local minutes for Obsidian`, 저자 `SUNGWON PARK`(변경: 기존 `Sungwon Park (SG)`), 저장소명 `ontherecord`(접근성 우선, 보고서의 기존 `obsidian-on-the-record`에서 변경).** 근거: [네이밍 보고서](./docs/research/OntheRecord_사업보고서_네이밍.md). id 규칙(소문자·하이픈, `obsidian` 미포함, `plugin` 미종료)과 커뮤니티 목록 중복 없음은 보고서 기준 확인됨(2026-11-01 목록 9,755개). 미확인: 국내·USPTO 상표 검색(9·42류), 도메인 확보. 상표 결과에 따라 이름이 바뀔 수 있으며, 그 경우 id는 공개 전까지만 변경 가능하다
 - [x] `0-ENV-02` Git 저장소 생성 및 GitHub 원격 연결 → 완료(2026-11-01). 로컬 저장소(`main`, `.gitignore` 동작 확인) 첫 커밋 후 private 저장소 `https://github.com/sparklings/ontherecord` 생성·push. 공개 범위는 라이선스·회사 규정 확인(`0-ENV-06`~`09`) 후 재결정. Git 사용자 정보는 전역 설정, `gh` 2.103.3 설치·로그인(`sparklings`)
 
-#### 보류: 남은 출시 준비 확인 후 진행
+#### 출시 준비 확인
 
-MIT 라이선스 정책과 프로젝트 권리자·공개 승인, Obsidian 디렉터리 정책 검토는 완료됐다. 실제 배포 구성요소 검토(`0-ENV-16`)와 최종 제출 점검이 끝나기 전까지 공개·배포를 진행하지 않는다.
-
-- [x] `0-ENV-11` 플러그인 프로젝트 초기화(AssistantEmily 구조 참조) → 완료(2026-11-01). 저장소 루트에 `manifest.json`(id `on-the-record`, `isDesktopOnly: true`), `versions.json`, `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `eslint.config.mjs`, `src/main.ts` 생성. 초기화 당시 `package.json`은 `private: true`, `license: UNLICENSED`였으나 `0-ENV-09`에서 MIT 정책에 맞게 `private: false`, `license: MIT`로 갱신했다. 이 메타데이터는 저장소 공개 승인이나 제3자 artifact의 재배포 허가를 의미하지 않는다. 잠정값: `minAppVersion` 1.7.2(AssistantEmily 값, 이 플러그인 요구 API로 검증하지 않음 → `0-OBS` 검증 후 확정), 버전 0.0.0. `npm install`에서 `npm audit` 경고가 출력됨(내용 미확인)
-- [x] `0-ENV-12` PlugVaults 배포 절차 작성(빌드 결과를 `.obsidian\plugins\<id>\`에 복사) → 완료(2026-11-01). [scripts/deploy.mjs](./scripts/deploy.mjs)와 `npm run deploy` 추가. 절차: (1) 프로덕션 빌드 (2) `main.js`, `manifest.json`, `styles.css`(있을 때만)를 `<vault>\.obsidian\plugins\on-the-record\`에 복사 (3) Obsidian에서 플러그인 활성화(최초 1회) 또는 재활성화. 대상 vault는 환경 변수 `OTR_TEST_VAULT`, 없으면 `%USERPROFILE%\OneDrive\PlugVaults`. 안전장치: 경로에 `ObsidianVaults`가 있으면 거부, `.obsidian`이 없는 폴더는 거부(두 경우 종료 코드 1 확인). 활성화 목록(`community-plugins.json`)은 수정하지 않음. 실제 실행으로 `main.js`, `manifest.json` 복사 확인. Obsidian 로드 확인 완료(2026-11-01, 사용자 확인): 커뮤니티 플러그인 목록에서 활성화되고 오류 없음. 빈 `onload()`라 리본·명령·설정 탭은 없음
-- [x] `0-ENV-06` 라이선스 정책 확정 → **결정(2026-11-01): 프로젝트 자체 코드는 MIT, 소속 회사 구성원 혜택은 라이선스 제한이 아닌 사내 혜택(지원·반입 심의 패키지·프리셋·교육)으로 제공.** 근거: [라이선스 정책 보고서](./docs/research/OntheRecord_라이선스정책_에스넷그룹_명세_및_체계검토.md). 이전 계획("구성원에게만 무료인 라이선스")에서 변경됨. 권리자 `에스넷시스템`과 공개 승인은 2026-11-05 확인 및 반영했다. 제3자 구성요소 검토는 `0-ENV-16`에서 별도 처리한다. 대상 조직 명세는 보고서 §6.1을 참조한다.
-- [x] `0-ENV-07` 회사의 소프트웨어 권리 귀속·공개 규정 확인(공개 GitHub 저장소 게시 가능 여부 포함) → 2026-11-05 사용자 확인: 저작권자 `에스넷시스템`, 권리 귀속 및 공개 승인 완료. `LICENSE` 저작권자 표기를 반영했다. 관련 확인은 사용자 제공 정보에 근거하며, 제3자 artifact별 권리 검토는 `0-ENV-16`에서 별도 수행한다.
-- [x] `0-ENV-08` 공개 GitHub 저장소와 Obsidian 커뮤니티 플러그인 등록 정책 확인 → 공식 정책·제출 요건·FAQ·제출/관리 절차·조직 문서를 2026-11-05 대조하고 [정책 검토 문서](./docs/research/Obsidian_디렉터리정책_상충검토.md), README, 개발계획서 및 라이선스 보고서에 반영. 플러그인·의존성 설치/업데이트 금지에 런타임·모델을 보수적으로 포함해 플러그인 자동 다운로드·설치·업데이트·삭제를 제외한다. README에 네트워크 미사용과 vault 밖 파일 접근 이유를 공개한다. 남은 출시 전 작업: `0-ENV-16`, 최종 저장소·Owner 결정, manifest·릴리스 자산·자동 검사 체크리스트. 정책상 허용 여부를 미확인한 설치 방식에 의존하지 않는다.
-- [x] `0-ENV-10` 의존 구성 요소(`whisper.cpp`, 모델, 오디오 변환기)의 예비 라이선스 조사 → 설계 후보 수준 조사 완료(2026-11-01, FFmpeg 후보 추가 검토 2026-11-02): `whisper.cpp`·`ggml` upstream은 MIT로 확인했으나 실제 배포 바이너리/옵션의 포함물은 별도 확인이 필요하다. 모델은 실제 출처·revision별 확인이 필요하다. FFmpeg GPLv3 시험 바이너리는 제품 후보에서 제외하고 LGPL 후보도 정확한 빌드와 의무 확인 전에는 승인하지 않는다. 이 결과는 배포 승인이나 충돌 없음의 포괄적 보증이 아니다. 실제 artifact 검토와 SBOM은 `0-ENV-16`에서 완료한다. 자세한 내용: [라이선스 정책 보고서](./docs/research/OntheRecord_라이선스정책_에스넷그룹_명세_및_체계검토.md) 및 [0-BASE-05 기록](./docs/baselines/BASE-05_AUDIO_DECODER_2026-11-02.md)
-- [x] `0-ENV-09` MIT 정책 표기, `LICENSE` 파일, README 및 패키지 메타데이터 반영, 사내 혜택 안내 문서(`SUPPORT.md`) 작성 → 정책 표기·문서 반영 완료. 2026-11-05 사용자 확인에 따라 저작권자를 `에스넷시스템`으로 기재했다. 실제 배포 구성요소 검토는 `0-ENV-16`에서 계속한다. `SUPPORT.md`의 연락처/채널, 임직원 확인 절차, 사내 배포·자료 위치는 미정이다.
+- [x] `0-ENV-11` 플러그인 프로젝트 초기화(AssistantEmily 구조 참조) → 완료(2026-11-01). 저장소 루트에 `manifest.json`(id `on-the-record`, `isDesktopOnly: true`), `versions.json`, `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `eslint.config.mjs`, `src/main.ts` 생성. `package.json`은 `private: false`, `license: MIT`. 잠정값: `minAppVersion` 1.7.2, 버전 0.0.0.
+- [x] `0-ENV-12` PlugVaults 배포 절차 작성(빌드 결과를 `.obsidian\plugins\<id>\`에 복사) → 완료(2026-11-01). [scripts/deploy.mjs](./scripts/deploy.mjs)와 `npm run deploy` 추가. 절차: (1) 프로덕션 빌드 (2) `main.js`, `manifest.json`, `styles.css`(있을 때만)를 `<vault>\.obsidian\plugins\on-the-record\`에 복사 (3) Obsidian에서 플러그인 활성화(최초 1회) 또는 재활성화. 대상 vault는 환경 변수 `OTR_TEST_VAULT`, 없으면 `%USERPROFILE%\OneDrive\PlugVaults`.
+- [x] `0-ENV-06` 라이선스 정책 확정 → **결정: 프로젝트 자체 코드는 완전한 MIT 라이선스 적용.** 박성원 개인의 오픈소스 프로젝트이며 회사와는 아무런 관련이 없다(기존 사내 혜택 계획은 공식 폐기).
+- [x] `0-ENV-07` 소프트웨어 권리 귀속 확인 → 회사 지시나 직무발명이 아닌, 개인적 필요에 의해 착수한 **박성원 개인의 독립 프로젝트**임을 확인 완료. 저작권자 `SUNGWON PARK (박성원)` 표기를 `LICENSE`에 반영.
+- [x] `0-ENV-08` 공개 GitHub 저장소와 Obsidian 커뮤니티 플러그인 등록 정책 확인 → 공식 정책·제출 요건·FAQ·제출/관리 절차를 2026-11-05 대조하고 [정책 검토 문서](./docs/research/Obsidian_디렉터리정책_상충검토.md), README에 반영. 플러그인·의존성 설치/업데이트 금지에 따라 런타임·모델 자동 다운로드·설치를 배제하고 사용자 직접 관리로 확정.
+- [x] `0-ENV-10` 의존 구성 요소(`whisper.cpp`, 모델, 오디오 변환기)의 예비 라이선스 조사 → 플러그인이 바이너리/모델을 번들링 배포하지 않기로 확정함에 따라, 로컬 사용자 설치 소프트웨어로서 각각의 라이선스(whisper.cpp MIT, FFmpeg LGPL/GPL)를 따름을 확인.
+- [x] `0-ENV-09` MIT 정책 표기, `LICENSE` 파일 저작권자(`SUNGWON PARK`) 반영, README 및 패키지 메타데이터 갱신, 오픈소스 프로젝트 지원 안내 문서(`SUPPORT.md`) 작성 완료.
 
 #### 보류: 장소·장비 사유
 
