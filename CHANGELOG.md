@@ -11,7 +11,7 @@
 - 레노버 노트북에서 `real-sample-01` 5개 모델 전수(`base`, `small`, `medium`, `large-v3-turbo`, `large-v3`) 및 `real-sample-02` `medium` 모델의 CPU 음성전사 성능 실측 완료. 두 PC 간 세그먼트 수 100% 일치 확인 및 집계표 갱신 (`0-BASE-06`, `0-BASE-09` 완료)
 - Hugging Face `ggerganov/whisper.cpp` 커밋 `5359861`에서 상위 모델 3종(`medium-q5_0`, `large-v3-turbo-q5_0`, `large-v3-q5_0`)을 다운로드하고 SHA-256 검증 완료 (5대 기준 모델 전수 구비)
 - `0-BASE-08` 모델별 전사 결과 정량/품질 검증 보고서([BASE-08_MODEL_SELECTION_2026-11-07.md](./docs/baselines/BASE-08_MODEL_SELECTION_2026-11-07.md)) 작성 완료
-- `TODO.md`에 식별코드 `GPU`(GPU 전사 기능 및 하드웨어 가속 평가) 분류 신설 및 `3-GPU-01`(cuBLAS/CUDA 가속 성능 실측), `3-GPU-02`(VRAM 4GB 모델 오프로딩 및 인터페이스 검토) 과제 추가 등록
+- `TODO.md` 3단계 과제 통합 재편: 분산되어 있던 3단계 이후, 상용성·제품화, 녹음 노트 기획 과제를 현행 구현 현황과 상충 요소를 반영해 5대 영역 단일 3단계(제품 완성 및 녹음·전사 워크플로 통합)로 일원화 (`3-REC-01~07`, `3-PIPE-01~04`, `3-GPU-01~03` & `3-CPU-01`, `3-UX-01~03`, `3-POST-01`)
 
 ### 결정
 - **프로젝트 소유권 및 라이선스 귀속 확정**: 본 프로젝트는 회사 지시나 업무상 위탁이 아닌, 업무 중 개인적 필요에 의해 착수한 **박성원(SUNGWON PARK) 개인의 독립 오픈소스 프로젝트(MIT)**임을 확정. 저작권자를 `SUNGWON PARK`으로 변경하고 `LICENSE`, `README.md`, `SUPPORT.md`를 개인 오픈소스 프로젝트 기준으로 전면 갱신 (기존 회사 관련 사내 혜택 계획 공식 폐기)
