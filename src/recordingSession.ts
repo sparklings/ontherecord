@@ -22,32 +22,52 @@ export interface StartSessionOptions {
 	notePath: string;
 	seq: number;
 	mode: RecordStartMode;
-	notify?: (message: string) => void;
+	showNotice?: boolean;
+	onNotice?: (message: string) => void;
 }
 
 export function resolveRecordStartMode(
 	frontmatterRecorder: unknown,
 	defaultMode: RecordStartMode,
-): RecordStartMode | null {
+): RecordStartMode {
 	if (frontmatterRecorder === undefined || frontmatterRecorder === null || frontmatterRecorder === "") {
 		return defaultMode;
 	}
 
 	if (typeof frontmatterRecorder === "boolean") {
-		return frontmatterRecorder ? defaultMode : null;
+		return frontmatterRecorder ? defaultMode : "manual";
 	}
 
 	if (typeof frontmatterRecorder === "string") {
 		const normalized = frontmatterRecorder.trim().toLowerCase();
-		if (normalized === "confirm" || normalized === "auto" || normalized === "manual") {
-			return normalized;
+		if (normalized === "auto" || normalized === "confirm") {
+			return "auto";
 		}
-		if (normalized === "false" || normalized === "off" || normalized === "none" || normalized === "no" || normalized === "disabled") {
-			return null;
+		if (
+			normalized === "manual" ||
+			normalized === "false" ||
+			normalized === "off" ||
+			normalized === "none" ||
+			normalized === "no" ||
+			normalized === "disabled"
+		) {
+			return "manual";
 		}
 	}
 
 	return defaultMode;
+}
+
+export function resolveRecordStartNotice(
+	frontmatterRecorder: unknown,
+	defaultShowNotice: boolean,
+): boolean {
+	if (typeof frontmatterRecorder === "string") {
+		const normalized = frontmatterRecorder.trim().toLowerCase();
+		if (normalized === "silent") return false;
+		if (normalized === "confirm" || normalized === "notice") return true;
+	}
+	return defaultShowNotice;
 }
 
 export function calculateNextRecordingSeq(existingEmbedCount: number): number {
@@ -111,7 +131,7 @@ export class RecordingSessionManager {
 
 	async startSession(options: StartSessionOptions): Promise<ActiveRecordingSession | null> {
 		if (this.isRecording()) {
-			options.notify?.("이미 녹음이 진행 중입니다.");
+			options.onNotice?.("이미 녹음이 진행 중입니다.");
 			return null;
 		}
 
@@ -119,8 +139,8 @@ export class RecordingSessionManager {
 			return null;
 		}
 
-		if (options.mode === "confirm") {
-			options.notify?.("음성 녹음을 시작합니다.");
+		if (options.showNotice !== false) {
+			options.onNotice?.("음성 녹음을 시작합니다.");
 		}
 
 		let started = false;
@@ -131,7 +151,7 @@ export class RecordingSessionManager {
 		}
 
 		if (!started) {
-			options.notify?.("코어 Audio recorder를 시작하지 못했습니다. 코어 플러그인이 활성화되어 있는지 확인하세요.");
+			options.onNotice?.("코어 Audio recorder를 시작하지 못했습니다. 코어 플러그인이 활성화되어 있는지 확인하세요.");
 			return null;
 		}
 
@@ -154,13 +174,14 @@ export class RecordingSessionManager {
 	async startManualSession(options: {
 		notePath: string;
 		seq: number;
-		notify?: (message: string) => void;
+		onNotice?: (message: string) => void;
 	}): Promise<ActiveRecordingSession | null> {
 		return this.startSession({
 			notePath: options.notePath,
 			seq: options.seq,
-			mode: "confirm",
-			notify: options.notify,
+			mode: "auto",
+			showNotice: true,
+			onNotice: options.onNotice,
 		});
 	}
 

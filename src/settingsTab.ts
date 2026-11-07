@@ -31,14 +31,24 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			.setDesc("새 마크다운 노트 생성 시 녹음 개시 방식입니다. (노트 frontmatter에 recorder가 있으면 우선 적용)")
 			.addDropdown((dropdown) =>
 				dropdown
-					.addOption("confirm", "확인 알림형 (알림 표시 후 즉시 개시)")
-					.addOption("auto", "자동형 (알림 없이 즉시 개시)")
-					.addOption("manual", "수동형 (자동 시작 안 함)")
+					.addOption("auto", "자동 시작 (새 노트 생성 시 즉시 녹음)")
+					.addOption("manual", "수동 시작 (자동 시작 안 함)")
 					.setValue(vaultSettings.recordStartMode)
 					.onChange((value) => {
-						if (value === "confirm" || value === "auto" || value === "manual") {
+						if (value === "auto" || value === "manual") {
 							void this.updateVaultSettings({ recordStartMode: value });
 						}
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("자동 시작 시 알림 표시")
+			.setDesc("자동 녹음 시작 시 우측 상단에 알림 메시지를 표시합니다. 끄면 알림 없이 조용히 녹음을 시작합니다.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(vaultSettings.recordStartNotification)
+					.onChange((value) => {
+						void this.updateVaultSettings({ recordStartNotification: value });
 					}),
 			);
 

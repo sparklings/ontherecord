@@ -1,5 +1,5 @@
 export type DevicePreference = "auto" | "cpu" | "accelerator";
-export type RecordStartMode = "confirm" | "auto" | "manual";
+export type RecordStartMode = "auto" | "manual";
 
 export interface VaultSettings {
 	schemaVersion: 1;
@@ -11,6 +11,7 @@ export interface VaultSettings {
 	stabilizationSeconds: number;
 	transcriptSearchTerms: string[];
 	recordStartMode: RecordStartMode;
+	recordStartNotification: boolean;
 	autoRecordFolder: string;
 }
 
@@ -30,7 +31,8 @@ export const DEFAULT_VAULT_SETTINGS: VaultSettings = {
 	autoTranscribe: true,
 	stabilizationSeconds: 5,
 	transcriptSearchTerms: [],
-	recordStartMode: "confirm",
+	recordStartMode: "auto",
+	recordStartNotification: true,
 	autoRecordFolder: "",
 };
 
@@ -109,10 +111,20 @@ export function normalizeVaultSettings(value: unknown): VaultSettings {
 			.filter((term, index, terms) => term.length > 0 && terms.indexOf(term) === index);
 	}
 	if (value.recordStartMode !== undefined) {
-		if (value.recordStartMode !== "confirm" && value.recordStartMode !== "auto" && value.recordStartMode !== "manual") {
+		if (value.recordStartMode === "confirm") {
+			result.recordStartMode = "auto";
+			result.recordStartNotification = true;
+		} else if (value.recordStartMode === "auto" || value.recordStartMode === "manual") {
+			result.recordStartMode = value.recordStartMode;
+		} else {
 			throw new Error("recordStartMode 설정이 올바르지 않습니다.");
 		}
-		result.recordStartMode = value.recordStartMode;
+	}
+	if (value.recordStartNotification !== undefined) {
+		if (typeof value.recordStartNotification !== "boolean") {
+			throw new Error("recordStartNotification 설정이 올바르지 않습니다.");
+		}
+		result.recordStartNotification = value.recordStartNotification;
 	}
 	if (value.autoRecordFolder !== undefined) {
 		if (typeof value.autoRecordFolder !== "string") {

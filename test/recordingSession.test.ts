@@ -4,6 +4,7 @@ import {
 	calculateNextRecordingSeq,
 	RecordingSessionManager,
 	resolveRecordStartMode,
+	resolveRecordStartNotice,
 } from "../src/recordingSession.ts";
 import type {
 	ActiveRecordingSession,
@@ -51,28 +52,33 @@ class MockAudioRecorder implements CoreAudioRecorder {
 	}
 }
 
-test("resolveRecordStartMode: frontmatter와 기본 시작 방식을 올바르게 해결한다", () => {
+test("resolveRecordStartMode: 시작 방식 2종(auto/manual)을 올바르게 판정한다", () => {
 	// frontmatter에 설정이 없으면 defaultMode 반환
-	assert.equal(resolveRecordStartMode(undefined, "confirm"), "confirm");
-	assert.equal(resolveRecordStartMode(null, "confirm"), "confirm");
-	assert.equal(resolveRecordStartMode("", "confirm"), "confirm");
+	assert.equal(resolveRecordStartMode(undefined, "auto"), "auto");
+	assert.equal(resolveRecordStartMode(null, "auto"), "auto");
+	assert.equal(resolveRecordStartMode("", "manual"), "manual");
 
-	// frontmatter에 유효한 모드가 있으면 우선 적용
-	assert.equal(resolveRecordStartMode("auto", "confirm"), "auto");
-	assert.equal(resolveRecordStartMode("manual", "confirm"), "manual");
-	assert.equal(resolveRecordStartMode("CONFIRM", "auto"), "confirm");
-	assert.equal(resolveRecordStartMode("  auto  ", "manual"), "auto");
+	// frontmatter에 명시된 모드 우선 판정
+	assert.equal(resolveRecordStartMode("auto", "manual"), "auto");
+	assert.equal(resolveRecordStartMode("manual", "auto"), "manual");
+	assert.equal(resolveRecordStartMode("  MANUAL  ", "auto"), "manual");
+	assert.equal(resolveRecordStartMode("confirm", "manual"), "auto"); // confirm은 auto로 흡수
 
-	// 비활성화 키워드인 경우 null 반환
-	assert.equal(resolveRecordStartMode(false, "confirm"), null);
-	assert.equal(resolveRecordStartMode("false", "confirm"), null);
-	assert.equal(resolveRecordStartMode("off", "confirm"), null);
-	assert.equal(resolveRecordStartMode("none", "confirm"), null);
-	assert.equal(resolveRecordStartMode("disabled", "confirm"), null);
+	// 비활성화 키워드는 manual로 해석
+	assert.equal(resolveRecordStartMode(false, "auto"), "manual");
+	assert.equal(resolveRecordStartMode("false", "auto"), "manual");
+	assert.equal(resolveRecordStartMode("off", "auto"), "manual");
+	assert.equal(resolveRecordStartMode("none", "auto"), "manual");
+	assert.equal(resolveRecordStartMode("disabled", "auto"), "manual");
+});
 
-	// 알 수 없는 문자열이나 boolean true는 defaultMode로 폴백
-	assert.equal(resolveRecordStartMode("custom-unknown", "confirm"), "confirm");
-	assert.equal(resolveRecordStartMode(true, "auto"), "auto");
+test("resolveRecordStartNotice: 자동 시작 시 알림 여부를 올바르게 판정한다", () => {
+	assert.equal(resolveRecordStartNotice(undefined, true), true);
+	assert.equal(resolveRecordStartNotice(undefined, false), false);
+	assert.equal(resolveRecordStartNotice("silent", true), false);
+	assert.equal(resolveRecordStartNotice("SILENT", true), false);
+	assert.equal(resolveRecordStartNotice("notice", false), true);
+	assert.equal(resolveRecordStartNotice("confirm", false), true);
 });
 
 test("calculateNextRecordingSeq: 기존 오디오 임베드 수에 따라 1부터 증가한다", () => {
@@ -82,7 +88,7 @@ test("calculateNextRecordingSeq: 기존 오디오 임베드 수에 따라 1부�
 	assert.equal(calculateNextRecordingSeq(-1), 1);
 });
 
-test("RecordingSessionManager: confirm 모드는 알림 출력 후 코어 레코더를 즉시 시작하고 영속화한다", async () => {
+test("RecordingSessionManager: auto 모드 + 알림 켬은 토스트 알림 후 즉시 개시하고 영속화한다", async () => {
 	const storage = new InMemorySessionStorage();
 	const recorder = new MockAudioRecorder();
 	const fixedTime = 1700000000000;
@@ -92,8 +98,9 @@ test("RecordingSessionManager: confirm 모드는 알림 출력 후 코어 레코
 	const session = await manager.startSession({
 		notePath: "Meetings/2026-11-07 회의록.md",
 		seq: 1,
-		mode: "confirm",
-		notify: (msg) => notifications.push(msg),
+		mode: "auto",
+		showNotice: true,
+		onNotice: (msg) => notifications.push(msg),
 	});
 
 	assert.ok(session);
@@ -101,7 +108,7 @@ test("RecordingSessionManager: confirm 모드는 알림 출력 후 코어 레코
 	assert.equal(session.seq, 1);
 	assert.equal(session.startedAt, fixedTime);
 
-	// 사용자 요구조건: confirm 대화상자로 묻지 않고 우측 상단 알림 메시지 출력
+	// 토스트 알림 출력 확인
 	assert.deepEqual(notifications, ["음성 녹음을 시작합니다."]);
 	assert.equal(recorder.startCallCount, 1);
 	assert.equal(recorder.isRecording(), true);
@@ -112,7 +119,7 @@ test("RecordingSessionManager: confirm 모드는 알림 출력 후 코어 레코
 	assert.deepEqual(persisted, session);
 });
 
-test("RecordingSessionManager: auto 모드는 알림 없이 조용히 즉시 시작한다", async () => {
+test("RecordingSessionManager: auto 모드 + 알림 끔(무음)은 알림 없이 조용히 즉시 개시한다", async () => {
 	const storage = new InMemorySessionStorage();
 	const recorder = new MockAudioRecorder();
 	const manager = new RecordingSessionManager(storage, recorder, () => 1000);
@@ -122,7 +129,8 @@ test("RecordingSessionManager: auto 모드는 알림 없이 조용히 즉시 시
 		notePath: "Notes/AutoNote.md",
 		seq: 2,
 		mode: "auto",
-		notify: (msg) => notifications.push(msg),
+		showNotice: false,
+		onNotice: (msg) => notifications.push(msg),
 	});
 
 	assert.ok(session);
@@ -158,7 +166,7 @@ test("RecordingSessionManager: startManualSession은 명시적 수동 시작을 
 	const session = await manager.startManualSession({
 		notePath: "Notes/ManualNote.md",
 		seq: 3,
-		notify: (msg) => notifications.push(msg),
+		onNotice: (msg) => notifications.push(msg),
 	});
 
 	assert.ok(session);
@@ -183,8 +191,8 @@ test("RecordingSessionManager: 이미 녹음 중인 경우 중복 시작을 거�
 	const second = await manager.startSession({
 		notePath: "Notes/Second.md",
 		seq: 1,
-		mode: "confirm",
-		notify: (msg) => notifications.push(msg),
+		mode: "auto",
+		onNotice: (msg) => notifications.push(msg),
 	});
 
 	assert.equal(second, null);

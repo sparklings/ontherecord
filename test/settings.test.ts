@@ -13,11 +13,28 @@ import {
 
 test("vault 설정은 기본값으로 초기화하고 저장된 값은 기본값과 병합한다", () => {
 	assert.deepEqual(normalizeVaultSettings(null), DEFAULT_VAULT_SETTINGS);
-	assert.equal(DEFAULT_VAULT_SETTINGS.recordStartMode, "confirm");
+	assert.equal(DEFAULT_VAULT_SETTINGS.recordStartMode, "auto");
+	assert.equal(DEFAULT_VAULT_SETTINGS.recordStartNotification, true);
 	assert.equal(DEFAULT_VAULT_SETTINGS.autoRecordFolder, "");
 	assert.deepEqual(
-		normalizeVaultSettings({ autoTranscribe: false, recordStartMode: "auto", autoRecordFolder: "Meetings" }),
-		{ ...DEFAULT_VAULT_SETTINGS, autoTranscribe: false, recordStartMode: "auto", autoRecordFolder: "Meetings" },
+		normalizeVaultSettings({
+			autoTranscribe: false,
+			recordStartMode: "manual",
+			recordStartNotification: false,
+			autoRecordFolder: "Meetings",
+		}),
+		{
+			...DEFAULT_VAULT_SETTINGS,
+			autoTranscribe: false,
+			recordStartMode: "manual",
+			recordStartNotification: false,
+			autoRecordFolder: "Meetings",
+		},
+	);
+	// 하위 호환: confirm 모드는 auto + notification true로 변환
+	assert.deepEqual(
+		normalizeVaultSettings({ recordStartMode: "confirm" }),
+		{ ...DEFAULT_VAULT_SETTINGS, recordStartMode: "auto", recordStartNotification: true },
 	);
 	assert.deepEqual(
 		normalizeVaultSettings({ transcriptSearchTerms: [" 결정 ", "", "결정", "담당자"] }).transcriptSearchTerms,
@@ -29,6 +46,7 @@ test("지원하지 않는 vault 설정 값과 미래 스키마를 거부한다",
 	assert.throws(() => normalizeVaultSettings({ stabilizationSeconds: 0 }));
 	assert.throws(() => normalizeVaultSettings({ transcriptSearchTerms: "결정" }));
 	assert.throws(() => normalizeVaultSettings({ recordStartMode: "invalid-mode" }));
+	assert.throws(() => normalizeVaultSettings({ recordStartNotification: "yes" }));
 	assert.throws(() => normalizeVaultSettings({ autoRecordFolder: 123 }));
 	assert.throws(() => normalizeVaultSettings({ schemaVersion: 2 }));
 });

@@ -8,11 +8,13 @@
 
 ### 추가
 - `3-REC-01` 코어 Audio recorder 제어 및 노트 기반 녹음 세션 시작 구현:
-  - 시작 방식 3종 지원: `confirm`(기본값, 확인 대화상자 없이 우측 상단 토스트 알림 표시 후 즉시 개시), `auto`(알림 없이 즉시 개시), `manual`(자동 시작 방지, 수동 명령 시 개시)
-  - 노트 Frontmatter(`recorder: confirm | auto | manual | false/off`) 우선 판별 및 대상 폴더 필터(`autoRecordFolder`) 설정 지원
+  - 시작 방식 2종(자동 `auto` / 수동 `manual`) 및 알림 피드백(`recordStartNotification`)으로 재정의:
+    - 자동 시작형 `auto`(기본값): 새 노트 생성 시 즉시 개시. 알림 설정(켬 기본값)에 따라 우측 상단 토스트 알림(`Notice("음성 녹음을 시작합니다.", 4000)`) 표시 후 즉시 개시하거나 무음 개시.
+    - 수동 시작형 `manual`: 새 노트 생성 시 자동 개시를 방지하고 명시적 사용자 명령 실행 시에만 개시.
+  - 노트 Frontmatter(`recorder: auto | manual | silent | confirm | false/off`) 우선 판별 및 대상 폴더 필터(`autoRecordFolder`) 설정 지원
   - 단일 활성 녹음 세션 관리(`RecordingSessionManager`) 및 Obsidian 플러그인 폴더 내 `active-session.json` 디스크 영속화/앱 재시작 시 자동 복원
   - 수동 녹음 제어 명령 등록: "현재 활성 노트에서 음성 녹음 시작"(`start-recording`), "음성 녹음 중지"(`stop-recording`)
-  - 단위 테스트 10개 항목(`test/recordingSession.test.ts`) 및 설정 검증 테스트 추가 (전체 55개 단위 테스트 통과)
+  - 단위 테스트 11개 항목(`test/recordingSession.test.ts`) 및 설정 검증 테스트 추가 (전체 56개 단위 테스트 통과)
 - 레노버 노트북(다산동, Lenovo IdeaPad Gaming 3 15IMH05)의 `%LOCALAPPDATA%\on-the-record\local-settings.json`을 초기화하고 whisper-cli b5454, base 모델, Chocolatey FFmpeg 경로를 저장 및 검증
 - 레노버 노트북에서 `real-sample-01` 5개 모델 전수(`base`, `small`, `medium`, `large-v3-turbo`, `large-v3`) 및 `real-sample-02` `medium` 모델의 CPU 음성전사 성능 실측 완료. 두 PC 간 세그먼트 수 100% 일치 확인 및 집계표 갱신 (`0-BASE-06`, `0-BASE-09` 완료)
 - Hugging Face `ggerganov/whisper.cpp` 커밋 `5359861`에서 상위 모델 3종(`medium-q5_0`, `large-v3-turbo-q5_0`, `large-v3-q5_0`)을 다운로드하고 SHA-256 검증 완료 (5대 기준 모델 전수 구비)

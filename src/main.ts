@@ -33,6 +33,7 @@ import {
 	calculateNextRecordingSeq,
 	RecordingSessionManager,
 	resolveRecordStartMode,
+	resolveRecordStartNotice,
 } from "./recordingSession.ts";
 import type { CoreAudioRecorder, SessionStorageAdapter } from "./recordingSession.ts";
 
@@ -217,7 +218,7 @@ export default class OnTheRecordPlugin extends Plugin {
 				void this.sessionManager.startManualSession({
 					notePath: note.path,
 					seq,
-					notify: (msg) => new Notice(msg, 4000),
+					onNotice: (msg) => new Notice(msg, 4000),
 				});
 			},
 		});
@@ -393,8 +394,9 @@ export default class OnTheRecordPlugin extends Plugin {
 		}
 
 		const mode = resolveRecordStartMode(frontmatterRecorder, this.vaultSettings.recordStartMode);
-		if (!mode || mode === "manual") return;
+		if (mode === "manual") return;
 
+		const showNotice = resolveRecordStartNotice(frontmatterRecorder, this.vaultSettings.recordStartNotification);
 		const existingEmbeds = this.app.metadataCache.getFileCache(file)?.embeds?.length ?? 0;
 		const seq = calculateNextRecordingSeq(existingEmbeds);
 
@@ -402,7 +404,8 @@ export default class OnTheRecordPlugin extends Plugin {
 			notePath: file.path,
 			seq,
 			mode,
-			notify: (msg) => new Notice(msg, 4000),
+			showNotice,
+			onNotice: (msg) => new Notice(msg, 4000),
 		});
 	}
 
