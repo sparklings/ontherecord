@@ -15,6 +15,59 @@
 | OBS | Obsidian 연동 검증 |
 | PIPE | 공통 플러그인 파이프라인 |
 | CPU | CPU 전사 기능 |
+| GPU | GPU 전사 기능 및 하드웨어 가속 평가 |
+| UX | 사용자 경험 및 워크플로 정합성 검토 |
+| PROD | 상용성·배포·온보딩·제품화 보완 |
+| REC | 코어 녹음 제어, 라이프사이클 및 노트 연동 (기획 확장) |
+
+## 2026-11-07
+
+### 레노버 노트북(다산동) 환경 점검 및 실기 검증
+
+어제(2026-11-06) 삼성동 갤럭시북3에서 개발·검증된 기능들을 다산동 레노버 노트북(Lenovo IdeaPad Gaming 3 15IMH05, i7-10750H, GTX 1650 Ti, Node.js v22.16.0) 환경에서 대조 점검하고 실기 검증 및 차이점 수정을 진행했다.
+
+#### 조치 및 검증 완료 사항
+- [x] 프로젝트 내 충돌 사본 및 불필요 파일 정리: OneDrive 동기화 충돌 사본인 `package-G2300227.json` 및 0바이트 빈 파일 `scripts/update_todo.js` 검색 및 삭제 완료.
+- [x] 외부 의존 도구 및 모델 보유 현황 점검: Chocolatey FFmpeg 9.0.1(`C:\ProgramData\chocolatey\bin\ffmpeg.exe`), whisper.cpp v1.9.5 b5454 런타임, 모델 2종(`base-q5_1.bin`, `small-q5_1.bin`) 정상 설치 확인.
+- [x] 레노버 음성전사 성능 실측: `scripts/measure-whisper.ps1`을 통해 `real-sample-01`(130.5초) 기준선 실측 완료.
+  - `base-q5_1`: 소요 32.6초(15.0초/오디오분, 4.0× 실시간), 최대 RAM 356 MB, 세그먼트 29개(반복 1회로 환각 루프 없음).
+  - `small-q5_1`: 소요 55.5초(25.5초/오디오분, 2.35× 실시간), 최대 RAM 625 MB, 세그먼트 24개(반복 1회로 환각 루프 없음).
+  - `scripts/summarize-records.ps1` 재집계 완료(`benchmarks/summary/summary.md`에 반영).
+- [x] Node.js 호환성 조치: 레노버 Node.js v22.16.0 환경에서 `npm test` 실행 시 `.ts` 확장자 인식 실패(`ERR_UNKNOWN_FILE_EXTENSION`) 문제 해결 → `package.json`의 `test` 스크립트에 `--experimental-strip-types` 플래그 추가. 단위 테스트 45개 전건 통과 확인.
+- [x] `2-CPU-06` 도구 자동 검색 경로 보강: 기존 검색 루트에 개발용 경로가 누락되어 레노버 환경에서 런타임/모델이 0건 검색되던 현상 수정 → `src/cpuRuntimeDiscovery.ts`의 `getCpuToolSearchRoots`에 `%LOCALAPPDATA%\on-the-record-dev` 및 `%LOCALAPPDATA%\on-the-record` 추가. 레노버 환경에서 런타임 2종(`whisper-cli.exe`, `main.exe`) 및 모델 2종(`base`, `small`) 원클릭 검색 확인 완료 (경고 0건). 관련 단위 테스트 보강 통과.
+- [x] 레노버 PC별 로컬 설정(`local-settings.json`) 초기화: `%LOCALAPPDATA%\on-the-record\local-settings.json`에 레노버 전용 경로(whisper-cli b5454, base-q5_1 모델, Chocolatey FFmpeg `C:\ProgramData\chocolatey\bin\ffmpeg.exe`)를 저장·검증 완료.
+- [x] `2-CPU-01`~`2-CPU-03` 레노버 실기 검증: whisper-cli b5454 SHA-256·버전 검증, Chocolatey FFmpeg 9.0.1 기반 M4A 오디오 16 kHz 모노 PCM WAV 정규화, 시험 추론 및 JSON segment 초 단위 timestamp 파싱 전 과정 실기 검증 통과.
+- [x] PlugVaults 최신 빌드 배포: production 빌드 생성 및 `%USERPROFILE%\OneDrive\PlugVaults\.obsidian\plugins\on-the-record\` 배포 완료(해시 일치 확인).
+
+- [x] `2-CPU-04` / `2-CPU-05` 레노버 실기 데이터 파이프라인 및 노트 로직 검증:
+  - 실제 `PlugVaults` 볼트 내 오디오(`Recording 20261103130854.m4a`)를 whisper.cpp로 직접 전사(`[몇 번째 영상은?]`) 성공.
+  - 실제 테스트 노트(`On the Record Test Case 1.md`)를 대상으로 embed 탐색, 커서/지정 embed 바로 아래 삽입, 기존 전사문 교체(`replace`) 및 추가(`append`) 마크다운 블록 렌더링 검증 완료.
+  - 전사문 검색 로직(`findTranscriptMatches`)으로 실제 노트 내 한국어 검색어("샘플", "실제") 매칭 및 행 번호 반환 검증 완료.
+  - *(참고: 사용자가 Obsidian UI에서 직접 명령 팔레트로 모달을 열어 마우스/키보드로 승인·검색하는 최종 육안 확인만 남음)*
+- [x] `3단계: GPU provider 평가` 하드웨어 및 드라이버 환경 점검 (레노버 특화 과제):
+  - NVIDIA GeForce GTX 1650 Ti (4GB VRAM), 드라이버 580.88, CUDA 13.0 구동 정상 확인(`nvidia-smi`).
+  - VRAM 메모리 용량(4GB) 분석: base(~500MB), small(~1GB), medium(~2GB) 모델의 완전 적재가 가능함을 확인.
+- [x] `0-BASE-06` (후속 ②) 레노버 상위 모델 및 기준선 측정 완료:
+  - 선행 조건 완료: `%LOCALAPPDATA%\on-the-record-dev\models\`에 `medium-q5_0`, `large-v3-turbo-q5_0`, `large-v3-q5_0` 모델 파일 3종 다운로드 및 SHA-256 해시 검증 완료. 5대 기준 모델 전체 구비 완료.
+  - 표본 `real-sample-01`(130.6초) 5대 모델 전수 측정 완료(스레드 8):
+    - `base-q5_1`: 15.0초/오디오분, RAM 356 MB, 세그먼트 29 (Samsung과 세그먼트 일치)
+    - `small-q5_1`: 25.5초/오디오분, RAM 625 MB, 세그먼트 24 (Samsung과 세그먼트 일치)
+    - `medium-q5_0`: 55.3초/오디오분, RAM 1,251 MB, 세그먼트 15 (Samsung과 세그먼트 일치)
+    - `large-v3-turbo-q5_0`: 82.5초/오디오분, RAM 928 MB, 세그먼트 25 (Samsung과 세그먼트 일치)
+    - `large-v3-q5_0`: 171.3초/오디오분, RAM 2,128 MB, 세그먼트 40 (Samsung과 세그먼트 일치)
+  - 표본 `real-sample-02`(21.5분) `medium-q5_0` 측정 완료: 1467.5초 소요(68.2초/오디오분), RAM 1,373 MB, 세그먼트 171개(Samsung 171개와 100% 일치, maxRepeat 1로 환각 루프 없음).
+  - [BASE-06_LARGER_MODELS_2026-11-03.md](./docs/baselines/BASE-06_LARGER_MODELS_2026-11-03.md)에 Lenovo 비교 결과 반영 완료.
+- [x] `0-BASE-09` 1시간 회의 소요 시간 집계표 갱신: 레노버 5대 모델 실측치(base 14.6분, small 26.0분, medium 68.2분, turbo 82.5분, large-v3 171.3분)를 집계표 문서(`docs/baselines/BASE-09_ONE_HOUR_MEETING_TIME_2026-11-03.md`) 및 `benchmarks/summary/summary.md`에 반영 완료.
+- [x] `0-BASE-08` 모델별 전사 결과 정량/품질 검증 및 기본 권장 모델 확정 완료:
+  - 전사문 품질 검증(개인정보 보호 원칙 준수, 본문 비공개): 한국어 비즈니스/IT 실무 회의 표본 3종(`real-sample-01~03`) 대상 전문용어(CMDB, syslog, config, metrics 등) 인식률, 대화형 발화자 분리(`-`), 조사 왜곡, 환각 무한 루프 억제력 평가 완료.
+  - 환각 억제력 검증: 44분 장시간 회의에서 `base`(904회 반복) 및 `turbo`(918회 반복)가 루프에 빠진 반면, `medium`은 92.6%의 높은 고유율과 최대 반복 12회로 압도적 안정성을 입증.
+  - 최종 결정: **기본 권장 모델 `medium-q5_0` 확정**, **경량/초고속 옵션 `small-q5_1`**, **고정밀 옵션 `large-v3-q5_0`(향후 GPU 연계 권장)**.
+  - 1시간 회의 처리 시간 목표 확정: 기본 모델 기준 **70분 이내** 완료 (1:1 준실시간 허용).
+  - [BASE-08_MODEL_SELECTION_2026-11-07.md](./docs/baselines/BASE-08_MODEL_SELECTION_2026-11-07.md) 작성 완료.
+
+#### 추가 등록 과제 (3단계: GPU Provider 평가 - 레노버 특화: GTX 1650 Ti 4GB VRAM)
+- [ ] `3-GPU-01` whisper.cpp cuBLAS/CUDA 가속 빌드 성능 실측 및 CPU 대비 가속 배율 검증: 레노버 노트북의 외장 GPU(NVIDIA GeForce GTX 1650 Ti, CUDA 13.0)를 활용한 whisper.cpp cuBLAS/CUDA 가속 빌드 성능 실측 및 CPU 대비 가속 배율 검증.
+- [ ] `3-GPU-02` VRAM 4GB 환경 모델 오프로딩 동작 확인 및 GPU Provider 인터페이스 검토: VRAM 4GB 환경에서 base~medium 모델의 GPU 오프로딩 동작 확인 및 인터페이스 검토.
 
 ## 2026-11-05
 
@@ -62,7 +115,7 @@ MIT 라이선스 정책과 프로젝트 권리자·공개 승인, Obsidian 디�
 - [x] `0-BASE-04` 두 PC에서 `base`·`small` 양자화 모델의 처리율·메모리·전사 결과 측정 → 완료(2026-11-02, 장치별 기록 8건). Lenovo 긴 샘플 기준 base 14.5~14.7초/오디오 1분, small 25.5~26.4초/오디오 1분, 최대 RAM 약 0.72 GB. 전사 품질(CER)은 미평가. [결과](./docs/baselines/BASE-04_THROUGHPUT_MEASUREMENT_2026-11-02.md)
 - [x] `0-BASE-05` 오디오 변환기(decoder) 후보 선정 및 라이선스 확인 → 완료(2026-11-02): FFmpeg 9.0.1 공식 소스의 LGPL 기본 빌드를 제품 후보로 선정하고, 합성 표본 5종 및 실제 Opus/M4A 3종의 Lenovo 디코딩 확인. 현재 PC의 GPLv3 빌드는 시험 전용이며 제품용 실행 파일·배포 고지·Obsidian 설치 정책 검토는 제품화 단계에서 별도 확인. [검토 기록](./docs/baselines/BASE-05_AUDIO_DECODER_2026-11-02.md)
 
-- [~] `0-BASE-06` 상위 모델(`medium`, `large-v3-turbo`, `large-v3`) 입력 전사 기준선 확대 측정 → Samsung 측정 마무리(2026-11-03, 기록 14건): 샘플 01~03, 5개 모델. 오디오 1분당 base 7~9초, small 12~19초, medium 44~52초, turbo 60~67초, large-v3 85~134초, 최대 RAM ≤2.4GB. 반복·환각 모델 전반에 확인(turbo·base 한 줄 900회 이상). **모델 선정은 `0-BASE-08` 육안 검증 후 결정**, Lenovo medium 이상은 측정 예정(후속 ②). 상태 `[~]`는 Lenovo 측정이 끝날 때까지 유지. [결과](./docs/baselines/BASE-06_LARGER_MODELS_2026-11-03.md). 계획:
+- [x] `0-BASE-06` 상위 모델(`medium`, `large-v3-turbo`, `large-v3`) 입력 전사 기준선 확대 측정 → Samsung 완료(2026-11-03) 및 Lenovo 측정 완료(2026-11-07): 두 PC 모두 5대 모델 구비 및 실측 완료. `real-sample-01`(2.2분, 2회) 5개 전 모델 및 `real-sample-02`(21.5분, 1회) medium 측정 완료. 세그먼트 수가 두 PC에서 100% 일치(base 29, small 24, medium 15/171, turbo 25, large-v3 40)함을 확인. Lenovo 1시간 환산: base 14.6분, small 26.0분, medium 68.2분, turbo 82.5분, large-v3 171.3분. 모델 최종 선정은 `0-BASE-08` 육안 검증 후 결정. [결과](./docs/baselines/BASE-06_LARGER_MODELS_2026-11-03.md).
   - 모델: 각 `q5_0`, Hugging Face `ggerganov/whisper.cpp` 커밋 `5359861`로 고정, SHA-256 검증 완료(`medium` 514MB, `large-v3-turbo` 547MB, `large-v3` 1,031MB). `*.en`, `large-v1/v2`, `tiny`는 제외(영어 전용·구버전·한국어 품질 부족). 파일은 저장소 밖 `%LOCALAPPDATA%\on-the-record-dev\models\`
   - 조건: whisper.cpp b5454 CPU 전용, `-l ko -t 8`, `scripts\measure-whisper.ps1`. 샘플 `real-sample-01`은 2회, `real-sample-02`는 1회(소요 시간 때문). 비교 기준은 `0-BASE-04`의 `base`/`small`
   - 장치: Samsung 960XFG 먼저(완료), 이후 Lenovo에서 같은 모델·해시·스레드로 반복
@@ -72,12 +125,14 @@ MIT 라이선스 정책과 프로젝트 권리자·공개 승인, Obsidian 디�
   - 마무리 결정(2026-11-03): 시스템 부하별 추가 시험은 하지 않음(재실행 해시 동일, 두 PC 세그먼트 수 동일). Samsung 모델 측정을 종료하고 모델 선정은 `0-BASE-08` 육안 검증 후 결정
   - 후속(미착수): ① 스레드 수(4/8/12/16) 영향, q8_0·fp16 비교, ② **Lenovo에서 `medium`·`large-v3-turbo`·`large-v3` 측정 예정**(같은 모델·해시·`-t 8`, 샘플 01~03, 결과는 `0-BASE-09` 집계표에 반영), ③ Iris Xe/GTX 1650 Ti GPU 빌드는 별도 평가. 반복 억제 옵션 효과는 `0-BASE-08`에서 함께 확인. 정량 품질(CER)은 `0-BASE-02`의 동의·정책 확인 후 진행
 - [x] `0-BASE-09` 1시간 회의 전사 소요 시간 집계표 → 완료(2026-11-03): 기존 요약(`summarize-records.ps1`)은 오디오 1분당 초만 있어 보강해 "1시간 환산" 표를 추가하고, 장치·모델별 집계표 문서를 작성. Samsung 5개 모델 완료(base 8.3분, small 12.0분, medium 43.9분, turbo 61.4분, large-v3 109.9분), Lenovo는 base·small만 있고 medium 이상 미측정. 새 측정마다 스크립트 재실행 후 표 갱신. [집계표](./docs/baselines/BASE-09_ONE_HOUR_MEETING_TIME_2026-11-03.md)
-- [ ] `0-BASE-08` 모델별 전사 결과 육안 검증 후 기본 모델·선택 옵션 결정 → 처리율·메모리·반복 통계로는 품질을 판단할 수 없어 사람이 직접 확인한다. 계획:
-  - 대상: `base`, `small`, `medium`, `large-v3-turbo`, `large-v3`의 `real-sample-01~03` 전사문(`%LOCALAPPDATA%\on-the-record-dev\transcripts\`, 동기화 밖). 샘플 02·03의 반복 구간(turbo·base·small)을 우선 확인
-  - 방법: 같은 구간(짧은 샘플 전체, 긴 샘플은 시작·중간·끝과 반복 발생 구간)을 모델별로 나란히 보며 평가. 평가 항목은 오탈자·누락, 고유명사·전문용어, 화자 전환 구간 문장 분리, 반복·환각, 숫자·날짜 표기, 구어체 처리
-  - 개인정보: 전사문과 원문 발췌는 저장소·docs에 넣지 않는다. 기록에는 항목별 점수·메모와 모델별 결론만 남기며, 평가자는 해당 회의 참석자 또는 열람 권한자로 한정(`0-BASE-02` 동의·정책 확인 선행)
-  - 추가 확인: 반복 억제 옵션(`--max-context 0`, VAD 등)을 켠 재전사가 반복을 줄이는지, 같은 조건 재실행 해시가 `medium` 이상에서도 동일한지
-  - 산출물: `docs\baselines\BASE-08_...md`(평가표와 결정). 결정: 기본 모델 1개, 선택 옵션 모델, 시간 허용 목표(1시간 회의 기준)
+- [x] `0-BASE-08` 모델별 전사 결과 육안 검증 후 기본 모델·선택 옵션 결정 → 완료(2026-11-07):
+  - 대상: `base`, `small`, `medium`, `large-v3-turbo`, `large-v3`의 `real-sample-01~03` 전사문 통계 및 품질 비교.
+  - 품질 평가: IT/비즈니스 전문용어(CMDB, syslog, config 등)의 알파벳/외래어 복원력, `-` 기호 기반 대화형 발화자 전환 분리, 구어체 완성도에서 `medium`이 압도적으로 우수.
+  - 환각 억제: 44.2분 장시간 표본에서 base(904회)·turbo(918회)·small(107회) 루프 발생 시, medium은 유일하게 92.6% 고유 세그먼트 및 최대 반복 12회로 정상 완주.
+  - 개인정보 보호: 회의 본문 원문 발췌는 저장소/문서에 일절 미기재.
+  - **최종 결정**: 기본 권장 모델 **`medium-q5_0`**, 보조 초고속 옵션 **`small-q5_1`**, 고정밀 오프라인 옵션 **`large-v3-q5_0`**(향후 GPU provider 연계).
+  - **허용 시간 목표**: 1시간 회의 기준 기본 모델 **70분 이내** 처리 (고속 모델 30분 이내).
+  - 산출물: [BASE-08_MODEL_SELECTION_2026-11-07.md](./docs/baselines/BASE-08_MODEL_SELECTION_2026-11-07.md).
 - [x] `0-BASE-07` 다수 장치 누적 대비 측정 데이터 운영 → 완료(2026-11-03): 기록은 `benchmarks\records\<deviceId>\`에 추가만 하고, `scripts\summarize-records.ps1`로 요약(생성물은 Git 제외). 조건(런타임·모델·샘플 해시, 스레드) 동일 기록만 비교, 전원 상태 자동 기록. 새 장치 추가 절차는 [benchmarks\README.md](./benchmarks/README.md), 규칙은 [HARDWARE_PROFILE.md](./docs/design/HARDWARE_PROFILE.md) "대량 누적 운영". 기록이 수천 건을 넘으면 SQLite 이전 검토
 
 ### 0단계: Obsidian 연동 검증
@@ -108,6 +163,27 @@ MIT 라이선스 정책과 프로젝트 권리자·공개 승인, Obsidian 디�
 - [ ] `3-UX-03` 녹음 파일 찾기·대기열·전사 명령 통합 → "전사할 오디오 파일 선택"이 실제 전사가 아닌 대기열 추가라는 차이를 해소한다. 대기열의 상태·대상 노트·실행 가능 여부·실패·재시도·삭제를 사용자에게 보이고, 자동 감지와 현재 노트 embed 기반 수동 전사를 연결하거나 의도적으로 분리한다. 앱 재시작 시 메모리 대기열이 사라지는 동작도 명시하거나 복구 가능한 방식으로 설계한다.
 - [ ] `3-UX-04` 첫 실행 도구 설정 및 검증 안내 → 런타임·모델·FFmpeg의 관계와 필요한 파일을 단계별로 설명하고, 경로 확인·버전/해시 검증·시험 추론 결과를 한 장소에서 확인하게 한다. 검색은 알려진 폴더만 대상으로 함을 정확히 안내하고, 누락 후보에 대한 경로 선택 및 사용자 주도 설치 안내는 `3-CPU-02`의 정책 결정 이후 제공한다.
 - [ ] `3-UX-05` 현재 노트·전체 Vault 기능 범위와 결과 피드백 명료화 → 수동 전사는 현재 노트의 지원 오디오 embed만 대상으로 하고 검색은 전체 Markdown 노트를 훑는 차이를 명령과 모달에서 미리 알린다. 검색 범위·일치 건수·노트/녹음별 결과를 이해하기 쉽게 제시하고, embed가 없거나 결과가 없을 때 다음 행동을 제공한다. 삽입 승인, 재전사 추가/교체, 취소 및 실패 결과가 실제 노트 상태와 일치하는지 초보자 시나리오로 검증한다.
-- [ ] GPU provider 평가(GTX 1650 Ti CUDA, Intel Iris Xe/UHD)
+- [ ] `3-GPU-01` whisper.cpp cuBLAS/CUDA 가속 빌드 성능 실측 및 CPU 대비 가속 배율 검증 → 레노버 노트북의 외장 GPU(NVIDIA GeForce GTX 1650 Ti, CUDA 13.0)를 활용해 `real-sample-01~03`을 대상으로 cuBLAS/CUDA 런타임 추론 속도·VRAM 사용량을 실측하고 CPU 대비 가속 배율을 검증한다.
+- [ ] `3-GPU-02` VRAM 4GB 환경 모델 오프로딩 동작 확인 및 GPU Provider 인터페이스 검토 → VRAM 4GB 한계 내에서 `base`~`medium` 모델의 GPU 오프로딩 동작 확인 및 기존 CPU Provider(`WhisperCppCpuRuntime`)와 일관된 GPU Provider 인터페이스를 검토한다.
+- [ ] `3-GPU-03` Intel Iris Xe/UHD GPU 환경 가속 지원 가능성 조사 (삼성 960XFG 연계)
 - [ ] 분석 기능 기술 검증
 - [ ] 프로필 확장
+
+### 상용성·제품화 보완 과제
+- [ ] `3-PROD-01` 사용자 주도 원클릭 도구 준비 도우미(Setup Helper) 개발 → Obsidian 정책(플러그인 자체 다운로드/실행파일 설치 금지)을 준수하면서도, 초보 사용자가 손쉽게 `whisper.cpp`, `FFmpeg`, `GGML 모델`을 다운로드받아 적정 위치에 배치할 수 있도록 돕는 독립 실행형 셋업 스크립트(Windows winget/PowerShell 스크립트) 및 설정 탭 내 원클릭 링크/복사 명령어 제공.
+- [ ] `3-PROD-02` 상태표시줄(Status Bar) 진행률 표시 및 비차단 백그라운드 처리 → 장시간(30분~1시간 이상) 회의 전사 시 모달이나 앱이 멈추지 않고, Obsidian 하단 상태표시줄에서 진행 상태(%, 경과시간/예상시간, 처리 중인 파일명)를 확인하며 다른 노트를 작성할 수 있도록 백그라운드 비동기 처리 및 작업 완료 OS 알림(Notification) 구현.
+- [ ] `3-PROD-03` 타임스탬프-오디오 재생 동기화(Audio Playback Sync) → 전사 결과 미리보기 모달 및 노트 본문에서 세그먼트 타임스탬프(`[02:15]`) 클릭 시, 해당 오디오 파일의 해당 위치로 즉시 이동해 재생하는 오디오 플레이어 싱크 기능 검토(전사 오탈자 확인 및 빠른 청취 검토 지원).
+- [ ] `3-PROD-04` 글로벌 배포를 위한 다국어(i18n) 지원 체계 구축 → Obsidian 공식 커뮤니티 플러그인 글로벌 공개를 위해 UI 기본 언어를 영어(en)로 구성하고, 한국어(ko) 번역 사전을 제공하는 경량 i18n 체계 도입.
+- [ ] `3-PROD-05` 로컬 LLM 연동 회의록 요약·액션 아이템 템플릿(Post-processing) 연계 검토 → 완전한 프라이빗 환경을 유지하기 위해 클라우드 API 대신 로컬 LLM(Ollama, LM Studio 등 로컬 호스트 API)과 연동하여, 전사 완료 후 '핵심 요약', '할 일(Action Items)', '결정 사항'을 자동 추출해 노트 템플릿으로 출력하는 선택 기능 설계.
+
+### 기능 확장: 음성 녹음 라이프사이클 및 노트 연동 (녹음 노트 플러그인 기획 통합)
+> 기획 문서(`X\녹음 노트 플러그인 프로젝트(가칭)`)를 바탕으로 `On the Record`와 결합할 기능 확장 과제 목록이다. 플러그인 ID(`on-the-record`)와 Desktop Only 정책을 유지하며, 개별 구현 단계에서 상세 아이데이션 및 설계를 구체화한다.
+
+- [ ] `3-REC-01` 코어 Audio recorder 제어 및 노트 기반 시작 트리거 (`F-01`, `F-02`, `F-03`, `C-01`, `C-03`) → 새 노트 생성 시 frontmatter 마커(`recorder: auto | confirm | manual`) 또는 설정된 폴더 규칙을 감지해 녹음 흐름을 개시한다. 시작 방식 3종(확인 알림형 `confirm`(기본), 자동 `auto`, 수동 `manual`)을 지원하고, Obsidian 코어 Audio recorder(`audio-recorder:start`, `stop`) 실행 및 단일 활성 세션을 관리하며 세션 상태를 디스크에 영속화한다(`{ notePath, startedAt, seq }`).
+- [ ] `3-REC-02` 탭 닫힘 감지 및 녹음 자동 중지·안전 연결 (`F-04`, `F-05`, `C-02`) → 녹음 중인 노트 탭이 닫힐 때(`WorkspaceLeaf.prototype.detach` 래핑 또는 닫힘 이벤트 감지) 녹음을 자동 중지하고 생성된 오디오를 해당 노트에 안전하게 연결(attach)한다. 코어가 새 탭으로 오디오 파일을 여는 동작 자동 닫기(`S-09`) 및 에디터 내 임베드 중복 삽입 정리(`S-10`)를 처리하고, 닫힘 시 동작 옵션(중지·연결/확인/무시)을 제공한다.
+- [ ] `3-REC-03` 단일 문서 내 다중 녹음 파일 지원 및 전사 연계 확장 (`F-08`, 다중 세션 확장) → 마크다운 문서 하나에 여러 개의 녹음 파일/임베드가 존재할 수 있는 모델로 확장한다(현재 커서 위쪽 오디오 자동 선택 기능 연계). 회의 중단/재개 시 추가 녹음 파일을 순차적으로 누적(`seq = recording_count + 1`)하고, 문서 내 각 오디오 임베드별로 전사 결과를 매핑·관리할 수 있는 구조를 정립한다.
+- [ ] `3-REC-04` Frontmatter 메타데이터 및 본문 녹음 블록 2중 기록 (`F-06`, `F-07`) → Bases 및 Dataview 친화적인 Frontmatter 평면 메타데이터(`recording_state`, `recordings` 링크 배열, `recording_count`, `recording_total_seconds`, `recording_total_size_mb`, `recording_first_start`, `recording_last_end`)와 본문 섹션(기본 `## 녹음 기록`) 아래 세션별 상세 블록(`### 녹음 N · 시각 (소요)`, 임베드, 파일 경로, 용량 등)을 `vault.process`로 안전하게 동시 기록한다.
+- [ ] `3-REC-05` 녹음 정보 재계산 및 메타데이터 동기화 명령 (`C-05`) → 본문 내 실제 오디오 임베드/블록과 파일 메타데이터(`adapter.stat`)를 다시 읽어 누락되거나 변경된 Frontmatter 집계 속성을 재구성·동기화하는 명령(`이 노트 녹음 정보 재계산`)을 구현한다.
+- [ ] `3-REC-06` 미아(고아) 오디오 파일 방지 및 복구 체계 (`F-09`, `C-04`) → 비정상 종료(Obsidian 강제 종료 등) 후 재시작 시 영속 세션 레코드와 미연결 `Recording *` 파일을 대조해 복구 알림을 제공하고, 볼트 내 백링크가 0인 고아 오디오 파일을 모달로 검색해 특정 노트에 즉시 연결하는 명령(`고아 녹음 파일 점검`)을 구현한다.
+- [ ] `3-REC-07` 녹음 상태바 UI 및 원클릭 제어 (`F-10`, `S-13`) → Obsidian 상태표시줄(Status Bar)에 현재 녹음 중인 노트명과 경과 시간(`● 12:34 회의록`)을 표시하고, 클릭 시 즉시 중지 및 연결을 수행하도록 한다. 리본 아이콘 및 토글 명령(`C-03`)도 함께 연계한다.
+- [ ] `3-REC-08` 녹음 완료 후 로컬 전사(STT) 파이프라인 자동 연결 워크플로 → 녹음이 중지되어 노트에 안전하게 연결된 직후, 설정(`autoTranscribe`)에 따라 `On the Record`의 로컬 STT 대기열 또는 자동 전사 파이프라인으로 매끄럽게 인계되는 통합 워크플로를 설계·구현한다.

@@ -10,7 +10,7 @@
     "deploy": "node scripts/deploy.mjs",
     "check": "tsc --noEmit",
     "lint": "eslint src/",
-    "test": "node --no-warnings --test test/*.test.ts"
+    "test": "node --no-warnings --experimental-strip-types --test test/*.test.ts"
   },
   "author": "SUNGWON PARK",
   "license": "MIT",

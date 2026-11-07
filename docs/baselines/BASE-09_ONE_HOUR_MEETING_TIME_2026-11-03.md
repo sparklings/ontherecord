@@ -13,7 +13,7 @@
 - 공통 조건: whisper.cpp b5454 CPU 전용, `-l ko -t 8`, AC 전원, Windows 균형 조정. 샘플은 한국어 회의 3종([BASE-02](./BASE-02_KOREAN_MEETING_SAMPLES_2026-11-02.md)).
 - 전사 품질은 반영되지 않았다. 육안 검증 결과는 `0-BASE-08`에서 정한다.
 
-## 2. 집계표 (2026-11-03 기준)
+## 2. 집계표 (2026-11-07 갱신)
 
 | 장치 | 모델 | 기준 샘플(길이) | 반복 | 1시간 회의 소요(분) | 실시간 대비 배속 | 최대 RAM | 한 줄 최대 반복 | 판정 |
 |---|---|---|---:|---:|---:|---:|---:|---|
@@ -24,9 +24,9 @@
 | Samsung 960XFG | large-v3-q5_0 | 03 (44.2분) | 1 | 109.9 | 0.55× | 2.40 GB | 36 | 실시간보다 느림 |
 | Lenovo IdeaPad Gaming 3 (i7-10750H) | base-q5_1 | 02 (21.5분) | 2 | 14.6 | 4.1× | 461 MB | 미기록 | 실시간보다 빠름 |
 | Lenovo IdeaPad Gaming 3 | small-q5_1 | 02 (21.5분) | 2 | 26.0 | 2.3× | 720 MB | 미기록 | 실시간보다 빠름 |
-| Lenovo IdeaPad Gaming 3 | medium-q5_0 | - | - | 미측정 | - | - | - | 측정 예정 |
-| Lenovo IdeaPad Gaming 3 | large-v3-turbo-q5_0 | - | - | 미측정 | - | - | - | 측정 예정 |
-| Lenovo IdeaPad Gaming 3 | large-v3-q5_0 | - | - | 미측정 | - | - | - | 측정 예정 |
+| Lenovo IdeaPad Gaming 3 | medium-q5_0 | 02 (21.5분) | 1 | 68.2 | 0.88× | 1.37 GB | 1 | 실시간과 비슷하거나 느림 |
+| Lenovo IdeaPad Gaming 3 | large-v3-turbo-q5_0 | 01 (2.2분) | 2 | 82.5 | 0.73× | 928 MB | 1 | 실시간보다 느림 |
+| Lenovo IdeaPad Gaming 3 | large-v3-q5_0 | 01 (2.2분) | 2 | 171.3 | 0.35× | 2.13 GB | 1 | 실시간보다 느림 |
 
 ## 3. 읽는 방법과 주의
 

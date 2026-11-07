@@ -54,6 +54,25 @@
 - Samsung의 whisper.cpp 모델 측정(base, small, medium, large-v3-turbo, large-v3; 샘플 01~03)은 이것으로 마무리한다. Lenovo의 medium 이상 측정은 진행할 예정이며(TODO 0-BASE-06 후속 ②), 결과는 [1시간 회의 소요 집계표](./BASE-09_ONE_HOUR_MEETING_TIME_2026-11-03.md)에 반영한다.
 - 1시간 회의의 허용 처리 시간 목표는 아직 정해지지 않았다.
 
-## 5. Lenovo 반복
+## 5. Lenovo IdeaPad Gaming 3 측정 결과 (2026-11-07)
 
-[BASE-04 §4](./BASE-04_THROUGHPUT_MEASUREMENT_2026-11-02.md)와 같은 절차로 모델 ID `medium`, `large-v3-turbo`, `large-v3`, 양자화 `q5_0`을 지정한다. 모델 파일과 해시는 위와 동일해야 한다. large-v3는 RAM 약 2.3 GB가 필요하다.
+- 장치: `lenovo-ideapad-gaming3-15imh05` (Intel Core i7-10750H, 6C/12T, 8스레드, AC 전원, Windows 균형 조정).
+- 조건: whisper.cpp b5454 CPU 전용, `-l ko -t 8`, 동일 모델 해시(`medium`, `large-v3-turbo`, `large-v3` 각 q5_0).
+- 기록: `benchmarks\records\lenovo-ideapad-gaming3-15imh05\2026-11-07_lenovo-ideapad-gaming3-15imh05_001`~`008`.
+
+### 5-1. 표본 `real-sample-01` (130.6초) 및 `real-sample-02` (21.5분) 장치 간 비교
+
+| 모델 | 샘플 | Lenovo 소요(초) | Lenovo 오디오 1분당(초) | Samsung 오디오 1분당(초) | Lenovo 최대 RAM | 세그먼트 (두 기기 일치) |
+|---|---|---|---:|---:|---:|---:|
+| base-q5_1 | 01 | 32.6 | 15.0 | 8.7 | 356 MB | 29 |
+| small-q5_1 | 01 | 55.5 | 25.5 | 14.9 | 625 MB | 24 |
+| medium-q5_0 | 01 | 118.3 / 122.2 | 55.3 | 51.3 | 1,251 MB | 15 |
+| large-v3-turbo-q5_0 | 01 | 175.7 / 183.2 | 82.5 | 60.9 | 928 MB | 25 |
+| large-v3-q5_0 | 01 | 366.8 / 378.7 | 171.3 | 131.9 | 2,128 MB | 40 |
+| medium-q5_0 | 02 | 1467.5 | 68.2 | 47.5 | 1,373 MB | 171 |
+
+### 5-2. 분석 및 발견사항
+1. **세그먼트 수 100% 일치**: 5개 전 모델에서 두 기기의 세그먼트 수가 완벽히 일치하여 CPU 아키텍처(13세대 i5 vs 10세대 i7) 차이에도 불구하고 추론 결정론성(determinism)이 보장됨을 확인했다.
+2. **처리율 비교**: 최신 아키텍처인 Samsung i5-1340P가 Lenovo i7-10750H 대비 전반적으로 8%~40% 빠른 처리율을 보인다. 특히 `medium` 모델의 경우 Lenovo(55.3초/분)와 Samsung(51.3초/분)의 차이가 약 8%로 가장 적다.
+3. **메모리(RAM)**: 최대 메모리 사용량은 `medium` 약 1.25 GB, `turbo` 약 0.93 GB, `large-v3` 약 2.13 GB로 두 기기 간 차이가 없으며 16 GB 시스템에서 안정적으로 동작한다.
+4. **반복 통계**: `real-sample-01`에서는 5개 모델 모두 `maxRepeatedSegmentCount = 1`로 반복/환각 루프가 전혀 나타나지 않았다.

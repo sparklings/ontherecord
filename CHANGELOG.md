@@ -4,6 +4,31 @@
 
 분류: 추가 / 변경 / 삭제 / 결정 / 이슈
 
+## 2026-11-07
+
+### 추가
+- 레노버 노트북(다산동, Lenovo IdeaPad Gaming 3 15IMH05)의 `%LOCALAPPDATA%\on-the-record\local-settings.json`을 초기화하고 whisper-cli b5454, base 모델, Chocolatey FFmpeg 경로를 저장 및 검증
+- 레노버 노트북에서 `real-sample-01` 5개 모델 전수(`base`, `small`, `medium`, `large-v3-turbo`, `large-v3`) 및 `real-sample-02` `medium` 모델의 CPU 음성전사 성능 실측 완료. 두 PC 간 세그먼트 수 100% 일치 확인 및 집계표 갱신 (`0-BASE-06`, `0-BASE-09` 완료)
+- Hugging Face `ggerganov/whisper.cpp` 커밋 `5359861`에서 상위 모델 3종(`medium-q5_0`, `large-v3-turbo-q5_0`, `large-v3-q5_0`)을 다운로드하고 SHA-256 검증 완료 (5대 기준 모델 전수 구비)
+- `0-BASE-08` 모델별 전사 결과 정량/품질 검증 보고서([BASE-08_MODEL_SELECTION_2026-11-07.md](./docs/baselines/BASE-08_MODEL_SELECTION_2026-11-07.md)) 작성 완료
+- `TODO.md`에 식별코드 `GPU`(GPU 전사 기능 및 하드웨어 가속 평가) 분류 신설 및 `3-GPU-01`(cuBLAS/CUDA 가속 성능 실측), `3-GPU-02`(VRAM 4GB 모델 오프로딩 및 인터페이스 검토) 과제 추가 등록
+
+### 결정
+- **기본 권장 모델**: 실무 회의 IT/외래어(CMDB, syslog, config 등) 복원력과 장시간 회의 환각 억제력(고유율 92.6%, 최대 반복 12회)이 압도적인 **`medium-q5_0`**을 기본 모델로 확정
+- **보조 선택 모델**: 30분 이하 빠른 초안 확인용 경량 모델로 **`small-q5_1`**, GPU 연계 고정밀 모델로 **`large-v3-q5_0`** 선정 (`base`와 `large-v3-turbo`는 장시간 무한 루프로 부적격 탈락)
+- **1시간 회의 처리 허용 시간 목표**: 기본 모델 기준 **70분 이내** 처리 완료(1:1 준실시간 허용), 고속 모델 기준 **30분 이내** 완료로 확정
+
+### 삭제
+- OneDrive 동기화 충돌 사본인 `package-G2300227.json`, `benchmarks/summary/records-G2300227.csv`, `docs/baselines/BASE-06_LARGER_MODELS_2026-11-03-G2300227.md` 및 미사용 0바이트 파일 `scripts/update_todo.js`를 삭제
+
+### 변경
+- `package.json`의 `test` 스크립트에 `--experimental-strip-types` 플래그를 추가해 Node.js v22.16.0 환경에서 `.ts` 단위 테스트 실행 호환성 확보. 45개 단위 테스트 전건 통과
+- `src/cpuRuntimeDiscovery.ts`의 `getCpuToolSearchRoots`에 `%LOCALAPPDATA%\on-the-record-dev` 및 `%LOCALAPPDATA%\on-the-record`를 추가해 로컬 앱데이터/개발 폴더 내 whisper.cpp 런타임 및 모델 자동 검색을 지원. 레노버 환경에서 런타임 2종·모델 2종 정상 검색 확인 및 단위 테스트 갱신
+- 레노버 노트북 환경에서 whisper.cpp b5454 SHA-256·버전 검증, Chocolatey FFmpeg 9.0.1 기반 M4A 오디오 정규화, 시험 추론 및 JSON segment 초 단위 timestamp 파싱 실기 검증 완료
+- `PlugVaults`의 실제 오디오(`Recording 20261103130854.m4a`) 및 테스트 노트(`On the Record Test Case 1.md`)를 대상으로 실제 whisper.cpp 전사, embed 바로 아래 교체/추가 삽입 로직 및 전사문 검색어 매칭 실기 검증 완료
+- NVIDIA GeForce GTX 1650 Ti (4GB VRAM, 드라이버 580.88, CUDA 13.0) GPU 구동 상태 및 VRAM 적재 용량 분석 완료
+- TypeScript 검사, lint, production build 통과 후 `PlugVaults`에 배포하고 해시 일치 확인
+
 ## 2026-11-06
 
 ### 추가
