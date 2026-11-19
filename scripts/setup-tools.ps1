@@ -22,8 +22,8 @@ Write-Host "`n========================================================" -Foregro
 Write-Host " [On the Record] 외부 도구 자동 셋업 도우미 (Setup Helper)" -ForegroundColor Cyan
 Write-Host "========================================================`n" -ForegroundColor Cyan
 
-# 기본 저장 경로 정의
-$baseDir = "$env:LOCALAPPDATA\on-the-record-dev"
+# 기본 저장 경로 정의 (공식 표준 폴더: -dev 접미사 제외 정규화)
+$baseDir = "$env:LOCALAPPDATA\on-the-record"
 $runtimesDir = "$baseDir\runtimes"
 $modelsDir = "$baseDir\models"
 $pluginSettingsDir = "$env:LOCALAPPDATA\on-the-record"

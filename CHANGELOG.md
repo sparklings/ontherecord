@@ -7,6 +7,13 @@
 ## 2026-11-20
 
 ### 추가
+- **`3-ENV-17` 프로젝트 구조 및 로컬 저장소 폴더명 `-dev` 접미사 제거 정규화**:
+  - `src/modelCatalog.ts`: 기본 모델 저장 폴더를 `%LOCALAPPDATA%\on-the-record\models`로 통합하고, 기존 `%LOCALAPPDATA%\on-the-record-dev\models`에 대한 레거시 하위 호환 폴백 로직 추가
+  - `scripts/setup-tools.ps1`: 도구 및 모델 기본 설치 경로를 `%LOCALAPPDATA%\on-the-record`로 일원화
+  - 단위 테스트: `test/modelCatalog.test.ts` 갱신 및 통과
+- **`3-PROD-02` 플러그인 ID `obsidian-ontherecord` 변경 및 레포지토리 네이밍 정합성 기능 요구사항 추가**:
+  - Obsidian 공식 커뮤니티 플러그인 등록 정책("ID는 'obsidian'을 포함할 수 없음") 대조 분석
+  - GitHub 저장소명(`obsidian-ontherecord`)과 `manifest.json` 내부 플러그인 ID 분리 전략 및 데이터 마이그레이션 과제 정의(`TODO.md`)
 - **`3-REC-08` ~ `3-REC-11`, `3-UX-04`, `3-UX-05`, `3-UX-09` ~ `3-UX-13` 전용 사이드바 제어 패널 및 플레이어형 녹음·전사 워크플로**:
   - `src/sidebarView.ts`: 오른쪽 사이드바 전용 `ItemView`(`OnTheRecordSidebarView`) 구현
   - 플레이어형 컨트롤러: 대형 디지털 타이머, 녹음 진행 펄스 인디케이터, 녹음 시작(`●`), 일시정지(`❚❚`), 계속하기(`▶`), 안전 중지 및 연결(`■`) 4버튼 바

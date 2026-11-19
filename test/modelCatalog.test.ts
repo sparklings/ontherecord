@@ -32,7 +32,7 @@ test("getModelMetadata: 존재하지 않는 id 요청 시 기본 fallback 모델
 
 test("getDefaultModelStorageDir 및 resolveModelExpectedPath 경로 검증", () => {
 	const storageDir = getDefaultModelStorageDir();
-	assert.ok(storageDir.endsWith(path.join("on-the-record-dev", "models")));
+	assert.ok(storageDir.endsWith(path.join("on-the-record", "models")));
 
 	const mediumPath = resolveModelExpectedPath("medium");
 	assert.equal(mediumPath, path.join(storageDir, "ggml-medium-q5_0.bin"));

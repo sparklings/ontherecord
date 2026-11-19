@@ -72,13 +72,14 @@
 - [-] `0-ENV-15` 외부 GitLab 접속 인증서 검토 종료: 소스코드 배포처를 GitHub(`https://github.com/sparklings/ontherecord`)으로 공식 확정하고 독립 오픈소스 프로젝트로 정립함에 따라, 외부 GitLab 연동 과제를 공식 종료(취소) 처리.
 
 #### 3단계 과제 통합 및 재정리 완료 (3단계: 제품 완성 및 녹음·전사 워크플로 통합)
-- 분산되어 있던 3단계 이후, 상용성·제품화, 녹음 노트 기획 과제의 상충 요소를 해소하고 현행 구현 현황을 반영하여 6대 영역 단일 3단계로 취합·재편:
+- 분산되어 있던 3단계 이후, 상용성·제품화, 녹음 노트 기획 과제의 상충 요소를 해소하고 현행 구현 현황을 반영하여 7대 영역 단일 3단계로 취합·재편:
   - 1. 음성 녹음 라이프사이클 및 노트 연동 (`3-REC-01` ~ `3-REC-11`)
   - 2. 비차단 백그라운드 전사 파이프라인 및 자동 인계 (`3-PIPE-01` ~ `3-PIPE-06`)
   - 3. 외장/내장 GPU 가속 및 런타임 최적화 (`3-GPU-01` ~ `3-GPU-03`, `3-CPU-01`)
   - 4. 사용자 온보딩, 설정 구조 및 셋업 헬퍼 (`3-UX-01` ~ `3-UX-03`, `3-UX-06` ~ `3-UX-08`, `3-DOCS-01`)
   - 5. 사후 분석 및 로컬 AI 연계 (`3-POST-01`)
   - 6. 전용 사이드바 제어 패널 및 플레이어형 워크플로 (`3-UX-04` ~ `3-UX-05`, `3-UX-09` ~ `3-UX-13`)
+  - 7. 프로젝트 구조 정규화 및 플러그인 ID 변경 검토 (`3-ENV-17`, `3-PROD-02`)
 
 ## 2026-11-05
 
@@ -238,3 +239,21 @@
 - [x] `3-UX-12` 사이드바 전용 모던 플레이어 컨트롤러 테마 스타일링 및 애니메이션 (`styles.css`) → 완료(2026-11-20): 디지털 타이머 폰트, 녹음 진행 중 펄스 애니메이션(`otr-pulse`), 버튼 그리드 바, 오디오 임베드 행 카드 및 Line N 뱃지 네이티브 테마 CSS 완성([styles.css](./styles.css)).
 - [x] `3-UX-13` 오른쪽 사이드바 오디오 파일 선택(Vault 내부 및 외부 파일) 및 즉시 전사 시작 버튼 (`sidebar-audio-file-picker`) → 완료(2026-11-20): 사이드바 내 "오디오 파일 선택 전사" 버튼 배치 및 백그라운드 큐 인계 연동.
 - [x] `3-PIPE-06` Vault 외부 오디오 파일 파이프라인 및 보관함 복사(Import)·외부 참조 전사 처리 (`external-audio-pipeline`) → 완료(2026-11-20): Vault 내외 오디오 파일 탐색 및 백그라운드 전사 큐 연동 파이프라인 정합성 검증 완료.
+
+#### 7. 프로젝트 구조 정규화 및 플러그인 ID 변경 검토 (ENV & REPO)
+> 개발 단계에서 생성된 임시 폴더명(`-dev`)을 정규화하고, 사용자 요청에 따른 `obsidian-ontherecord` 플러그인 ID 변경 타당성 및 커뮤니티 배포 정책 부합 여부를 종합 검토하여 기능 요구사항에 반영한다.
+
+- [x] `3-ENV-17` 프로젝트 구조 및 로컬 저장소 폴더명 `-dev` 접미사 제거 정규화 → 완료(2026-11-20): 개발 단계에서 혼용되던 `%LOCALAPPDATA%\on-the-record-dev` 경로의 `-dev` 문자열을 배제하고, 공식 릴리즈 표준 폴더인 `%LOCALAPPDATA%\on-the-record\models` 및 `tools`로 통합 정규화([src/modelCatalog.ts](./src/modelCatalog.ts), [scripts/setup-tools.ps1](./scripts/setup-tools.ps1)). 기존 다운로드된 모델 보유 사용자를 위한 레거시 폴더 하위 호환 폴백 로직 적용 완료.
+- [ ] `3-PROD-02` 플러그인 ID `obsidian-ontherecord` 변경 및 레포지토리 네이밍 정합성 검토:
+  - **검토 배경**: 사용자 피드백에 따라 플러그인 식별자를 `obsidian-ontherecord`로 변경하여 GitHub 저장소명 및 패키지 구조와의 일관성을 확보하는 방안 검토.
+  - **Obsidian 공식 심사 정책 대조**:
+    - Obsidian 공식 개발자 정책([Developer policies](https://docs.obsidian.md/Community+directory/Developer+policies) 및 [Submission requirements](https://docs.obsidian.md/Community+directory/Submission+requirements+for+plugins)) 규정:
+      > *"The plugin ID must not contain the word 'obsidian' (e.g. use 'on-the-record', not 'obsidian-on-the-record')."*
+    - `manifest.json`의 `id` 필드에 `obsidian-` 접두사를 포함할 경우 공식 커뮤니티 디렉터리(`obsidian-releases`) 자동 검증 린터에서 오류로 반려되므로, 공식 커뮤니티 배포 시에는 ID에 `obsidian`을 제외한 `on-the-record` 또는 `ontherecord` 유지가 필수적임.
+    - 반면, **GitHub 저장소 이름(Repository Name)**은 `obsidian-ontherecord`가 커뮤니티 표준 관례이며 GitHub 검색 노출에 가장 이상적임.
+  - **전략적 분리 권고안 및 마이그레이션 과제**:
+    - (1) **GitHub 저장소 및 배포 패키지명**: `obsidian-ontherecord` 적용 (저장소 URL 및 릴리즈 아티팩트 가시성 강화)
+    - (2) **Obsidian 내부 플러그인 ID (`manifest.json`)**:
+      - 공식 커뮤니티 플러그인 스토어 등록용: `on-the-record` (공식 정책 100% 준수)
+      - BRAT 또는 수동/사내 배포 전용 빌드: `obsidian-ontherecord`로 일원화 가능
+    - (3) **데이터 마이그레이션 로직 설계**: ID 변경 시 볼트 내 `<vault>/.obsidian/plugins/<id>/data.json` 및 `%LOCALAPPDATA%/<id>/local-settings.json`의 저장 경로 자동 승계 및 마이그레이션 도우미 구현 필요.
