@@ -7,6 +7,16 @@
 ## 2026-11-19
 
 ### 추가
+- **`3-UX-06` 설정 화면 상태 뱃지 모던 리디자인 및 완벽한 한국어 현지화**:
+  - 기존 둔탁한 직사각형 블록 형태의 원색 뱃지를 Obsidian 네이티브 디자인 가이드라인에 부합하는 부드러운 알약 캡슐(`pill`) 및 미니 원형 인디케이터(`dot`) 스타일로 전면 리디자인 (`styles.css`, `settingsTab.ts`)
+  - 설정 화면 내 불필요한 영문 표현(`(Local Tools)`, `(Setup Helper)` 등)을 자연스러운 한국어로 정비
+  - Obsidian 전역 `moment.locale()` 및 `localStorage` 로케일 감지 체계를 보강하여 한국어 환경에서 100% 한글 UI 노출 보장
+- **`3-DOCS-01` 설정 옵션 상세 가이드 및 도움말 문서 작성**:
+  - 볼트/로컬 2단계 설정 아키텍처, 회의록 녹음 시작 모드, 탭 닫힘 방어, 모델 크기별 품질·소요시간, GPU 오프로딩(`-ngl`) 튜닝 효과 및 발열 완화 가이드를 집대성한 [docs/SETTINGS_GUIDE.md](./docs/SETTINGS_GUIDE.md) 작성 완료
+  - 설정 탭 최상단에 "상세 설정 가이드 보기" 원클릭 바로가기 배너 연동
+- **설정 파일 UTF-8 with BOM 자동 제거(Strip BOM) 호환성 패치**:
+  - Windows PowerShell 5.1의 `Set-Content` 또는 메모장 저장 시 생성되는 UTF-8 BOM(`\uFEFF`, `EF BB BF`)으로 인한 JSON 파싱 에러(`SyntaxError: Unexpected token '﻿'`)를 원천 차단하기 위해 `LocalSettingsStore`에 BOM 자동 제거 파서 구현
+  - `setup-tools.ps1`에서 BOM 없는 UTF-8 인코딩(`[System.Text.UTF8Encoding]::new($false)`) 저장 적용
 - **`3-GPU-02` GPU 레이어 오프로딩 및 가속 백엔드 추상화 인터페이스 연계**:
   - `ProviderDevice` 추상화에 `"vulkan"` 공식 추가 (`"cpu" | "cuda" | "openvino" | "vulkan"`)
   - 머신별 `LocalSettings`에 하드웨어 가속 설정(`gpuBackend`, `gpuLayers`, `gpuDeviceId`) 지원 및 검증 정규화

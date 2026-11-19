@@ -123,14 +123,35 @@ export const translations: Record<SupportedLocale, TranslationDict> = {
  */
 export function getCurrentLocale(): SupportedLocale {
 	try {
+		// 1. Obsidian 전역 moment 로케일 감지 (가장 정확한 앱 설정)
+		if (typeof window !== "undefined") {
+			const win = window as unknown as { moment?: { locale?: () => string }; i18next?: { language?: string } };
+			const momentLocale = win.moment?.locale?.();
+			if (momentLocale && momentLocale.toLowerCase().startsWith("ko")) {
+				return "ko";
+			}
+			const i18nLang = win.i18next?.language;
+			if (i18nLang && i18nLang.toLowerCase().startsWith("ko")) {
+				return "ko";
+			}
+		}
+
+		// 2. Obsidian localStorage 설정 확인
 		if (typeof window !== "undefined" && window.localStorage) {
 			const obsidianLang = window.localStorage.getItem("language");
 			if (obsidianLang && obsidianLang.toLowerCase().startsWith("ko")) {
 				return "ko";
 			}
 		}
+
+		// 3. 시스템 및 브라우저 기본 로케일 확인
+		if (typeof navigator !== "undefined" && navigator.language) {
+			if (navigator.language.toLowerCase().startsWith("ko")) {
+				return "ko";
+			}
+		}
 	} catch {
-		// 브라우저/로컬스토리지 접근 불가 환경
+		// 접근 불가 환경
 	}
 	return "en";
 }

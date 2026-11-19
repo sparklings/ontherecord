@@ -96,3 +96,26 @@ test("동일 PC 설정을 여러 창에서 수정해도 독립된 경로 값이 
 		await fs.rm(directory, { recursive: true, force: true });
 	}
 });
+
+test("UTF-8 with BOM(\\uFEFF)으로 저장된 local-settings.json도 안전하게 로드한다", async () => {
+	const directory = await fs.mkdtemp(path.join(os.tmpdir(), "otr-settings-bom-"));
+	try {
+		const pluginDir = path.join(directory, "on-the-record");
+		await fs.mkdir(pluginDir, { recursive: true });
+		const filePath = path.join(pluginDir, "local-settings.json");
+		const bomContent = "\uFEFF" + JSON.stringify({
+			runtimePath: "C:\\Tools\\whisper.exe",
+			modelPath: "C:\\Models\\ggml-base.bin",
+			ffmpegPath: "C:\\Tools\\ffmpeg.exe",
+		}, null, 2);
+		await fs.writeFile(filePath, bomContent, "utf8");
+
+		const store = new LocalSettingsStore(directory, "on-the-record");
+		const loaded = await store.load();
+		assert.equal(loaded.runtimePath, "C:\\Tools\\whisper.exe");
+		assert.equal(loaded.modelPath, "C:\\Models\\ggml-base.bin");
+		assert.equal(loaded.ffmpegPath, "C:\\Tools\\ffmpeg.exe");
+	} finally {
+		await fs.rm(directory, { recursive: true, force: true });
+	}
+});

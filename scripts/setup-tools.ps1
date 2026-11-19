@@ -177,7 +177,8 @@ $localConfig = [ordered]@{
 }
 
 $jsonText = $localConfig | ConvertTo-Json -Depth 4
-Set-Content -Path $localSettingsFile -Value $jsonText -Encoding UTF8
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+[System.IO.File]::WriteAllText($localSettingsFile, $jsonText, $utf8NoBom)
 Write-Host "  -> 로컬 설정 저장 완료: $localSettingsFile" -ForegroundColor Green
 
 # 런타임 스모크 테스트

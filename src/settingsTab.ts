@@ -18,21 +18,21 @@ function checkPathExists(filePath: string): { exists: boolean; sizeBytes?: numbe
 }
 
 function renderStatusBadge(container: HTMLElement, status: { exists: boolean; sizeBytes?: number }, label = "준비됨"): void {
-	const badge = container.createSpan({ cls: "otr-status-badge" });
-	badge.style.marginLeft = "0.5rem";
-	badge.style.padding = "2px 6px";
-	badge.style.borderRadius = "4px";
-	badge.style.fontSize = "0.85em";
-	badge.style.fontWeight = "bold";
-	if (status.exists) {
-		badge.style.backgroundColor = "var(--color-green, #2e7d32)";
-		badge.style.color = "#ffffff";
-		const sizeInfo = status.sizeBytes ? ` (${(status.sizeBytes / (1024 * 1024)).toFixed(1)} MB)` : "";
-		badge.setText(`✅ ${label}${sizeInfo}`);
+	const isReady = status.exists;
+	const badge = container.createSpan({ cls: `otr-status-badge ${isReady ? "is-ready" : "is-missing"}` });
+
+	// 부드러운 상태 표시 도트 (Point Indicator)
+	badge.createSpan({ cls: "otr-status-badge-dot" });
+
+	// 상태 레이블
+	if (isReady) {
+		badge.createSpan({ text: label });
+		if (status.sizeBytes) {
+			const sizeMb = (status.sizeBytes / (1024 * 1024)).toFixed(1);
+			badge.createSpan({ text: `· ${sizeMb} MB`, cls: "otr-status-badge-size" });
+		}
 	} else {
-		badge.style.backgroundColor = "var(--color-red, #c62828)";
-		badge.style.color = "#ffffff";
-		badge.setText("⚠️ 파일 없음");
+		badge.createSpan({ text: "파일 없음" });
 	}
 }
 
@@ -56,7 +56,27 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName("음성 녹음 및 세션").setHeading();
+		// 설정 도움말 및 튜토리얼 상단 안내 배너
+		const helpBanner = containerEl.createDiv({ cls: "setting-item-description" });
+		helpBanner.style.padding = "10px 14px";
+		helpBanner.style.marginBottom = "1.2rem";
+		helpBanner.style.borderRadius = "8px";
+		helpBanner.style.backgroundColor = "var(--background-secondary)";
+		helpBanner.style.border = "1px solid var(--background-modifier-border)";
+		helpBanner.style.display = "flex";
+		helpBanner.style.justifyContent = "space-between";
+		helpBanner.style.alignItems = "center";
+
+		const bannerText = helpBanner.createSpan();
+		bannerText.setText("💡 각 설정의 목적, 최적의 권장값 및 GPU 가속 튜닝 효과가 궁금하신가요?");
+
+		const guideBtn = helpBanner.createEl("button", { text: "📖 상세 설정 가이드 보기" });
+		guideBtn.style.cursor = "pointer";
+		guideBtn.onclick = () => {
+			window.open("https://github.com/sparklings/ontherecord/blob/main/docs/SETTINGS_GUIDE.md", "_blank");
+		};
+
+		new Setting(containerEl).setName("음성 녹음 및 세션 라이프사이클").setHeading();
 
 		const vaultSettings = this.getVaultSettings();
 
@@ -215,7 +235,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl).setName("이 기기의 CPU 전사 도구 경로 및 상태 (Local Tools)").setHeading();
+		new Setting(containerEl).setName("이 기기의 전사 도구 경로 및 상태").setHeading();
 		containerEl.createEl("p", {
 			text: "경로는 이 기기에만 저장됩니다 (%LOCALAPPDATA%\\on-the-record\\local-settings.json). 런타임·모델·FFmpeg는 플러그인 외부에서 직접 관리하며 Obsidian 정책을 준수합니다.",
 			cls: "setting-item-description",
@@ -341,8 +361,8 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("원클릭 도구 자동 셋업 스크립트 복사 (Setup Helper)")
-			.setDesc("별도 PowerShell 터미널에서 실행하여 whisper.cpp, 기본 모델 및 FFmpeg를 한 번에 자동 설치하고 설정을 연결하는 명령어를 복사합니다.")
+			.setName("외부 도구 원클릭 자동 셋업 명령어 복사")
+			.setDesc("PowerShell 터미널에서 실행하여 whisper.cpp, 기본 모델 및 FFmpeg를 한 번에 자동 설치하고 설정을 연결하는 명령어를 클립보드에 복사합니다.")
 			.addButton((button) =>
 				button.setButtonText("명령어 복사").onClick(async () => {
 					const cmd = `powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/sparklings/ontherecord/main/scripts/setup-tools.ps1 | iex"`;

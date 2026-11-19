@@ -49,7 +49,8 @@ export class LocalSettingsStore {
 			if (!isNodeError(error) || error.code !== "ENOENT") throw error;
 			return { ...DEFAULT_LOCAL_SETTINGS };
 		}
-		return normalizeLocalSettings(JSON.parse(contents) as unknown);
+		const sanitized = contents.charCodeAt(0) === 0xfeff ? contents.slice(1) : contents;
+		return normalizeLocalSettings(JSON.parse(sanitized) as unknown);
 	}
 
 	private async writeAtomically(settings: LocalSettings): Promise<void> {

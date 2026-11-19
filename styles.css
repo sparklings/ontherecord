@@ -16,3 +16,46 @@
 .otr-cpu-discovery-results .setting-item-description {
 	overflow-wrap: anywhere;
 }
+
+/* 세련된 알약(Pill) 형태의 상태 뱃지 (Obsidian 네이티브 디자인 가이드라인 준수) */
+.otr-status-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	margin-left: 0.6rem;
+	padding: 2px 10px;
+	border-radius: 9999px;
+	font-size: 0.75rem;
+	font-weight: 500;
+	line-height: 1.4;
+	vertical-align: middle;
+	letter-spacing: -0.01em;
+	box-shadow: none;
+}
+
+.otr-status-badge.is-ready {
+	background-color: var(--background-modifier-success, rgba(46, 160, 67, 0.12));
+	color: var(--text-success, #2ea043);
+	border: 1px solid var(--border-success, rgba(46, 160, 67, 0.25));
+}
+
+.otr-status-badge.is-missing {
+	background-color: var(--background-modifier-error, rgba(248, 81, 73, 0.12));
+	color: var(--text-error, #f85149);
+	border: 1px solid var(--border-error, rgba(248, 81, 73, 0.25));
+}
+
+.otr-status-badge-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background-color: currentColor;
+	flex-shrink: 0;
+}
+
+.otr-status-badge-size {
+	opacity: 0.75;
+	font-weight: 400;
+	font-size: 0.7rem;
+	margin-left: 2px;
+}
