@@ -1,6 +1,39 @@
-import { PluginSettingTab, Setting } from "obsidian";
+import { Notice, PluginSettingTab, Setting } from "obsidian";
 import type { App, Plugin } from "obsidian";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
+import * as fs from "fs";
+
+function checkPathExists(filePath: string): { exists: boolean; sizeBytes?: number } {
+	if (!filePath || filePath.trim().length === 0) return { exists: false };
+	try {
+		if (fs.existsSync(filePath)) {
+			const stat = fs.statSync(filePath);
+			return { exists: true, sizeBytes: stat.size };
+		}
+	} catch {
+		// 파일 시스템 오류 또는 권한 문제
+	}
+	return { exists: false };
+}
+
+function renderStatusBadge(container: HTMLElement, status: { exists: boolean; sizeBytes?: number }, label = "준비됨"): void {
+	const badge = container.createSpan({ cls: "otr-status-badge" });
+	badge.style.marginLeft = "0.5rem";
+	badge.style.padding = "2px 6px";
+	badge.style.borderRadius = "4px";
+	badge.style.fontSize = "0.85em";
+	badge.style.fontWeight = "bold";
+	if (status.exists) {
+		badge.style.backgroundColor = "var(--color-green, #2e7d32)";
+		badge.style.color = "#ffffff";
+		const sizeInfo = status.sizeBytes ? ` (${(status.sizeBytes / (1024 * 1024)).toFixed(1)} MB)` : "";
+		badge.setText(`✅ ${label}${sizeInfo}`);
+	} else {
+		badge.style.backgroundColor = "var(--color-red, #c62828)";
+		badge.style.color = "#ffffff";
+		badge.setText("⚠️ 파일 없음");
+	}
+}
 
 /* eslint obsidianmd/settings-tab/prefer-setting-definitions: off -- Retain compatibility with minAppVersion 1.7.2. */
 export class OnTheRecordSettingTab extends PluginSettingTab {
@@ -181,9 +214,9 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl).setName("이 기기의 CPU 전사 도구 경로").setHeading();
+		new Setting(containerEl).setName("이 기기의 CPU 전사 도구 경로 및 상태 (Local Tools)").setHeading();
 		containerEl.createEl("p", {
-			text: "경로는 이 기기에만 저장됩니다. 런타임·모델·ffmpeg는 플러그인 밖에서 직접 설치·관리하세요.",
+			text: "경로는 이 기기에만 저장됩니다 (%LOCALAPPDATA%\\on-the-record\\local-settings.json). 런타임·모델·FFmpeg는 플러그인 외부에서 직접 관리하며 Obsidian 정책을 준수합니다.",
 			cls: "setting-item-description",
 		});
 
@@ -196,9 +229,10 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			return;
 		}
 
-		new Setting(containerEl)
+		const runtimeStatus = checkPathExists(localSettings.runtimePath);
+		const runtimeSetting = new Setting(containerEl)
 			.setName("런타임 실행 파일")
-			.setDesc("사용자가 직접 설치한 실행 파일의 전체 경로입니다.")
+			.setDesc("사용자가 직접 설치한 whisper-cli 실행 파일의 전체 경로입니다.")
 			.addText((text) =>
 				text
 					.setValue(localSettings.runtimePath)
@@ -207,10 +241,12 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 						void this.updateLocalSettings({ runtimePath: value.trim() });
 					}),
 			);
+		renderStatusBadge(runtimeSetting.nameEl, runtimeStatus, "정상");
 
-		new Setting(containerEl)
+		const modelStatus = checkPathExists(localSettings.modelPath);
+		const modelSetting = new Setting(containerEl)
 			.setName("모델 파일")
-			.setDesc("사용자가 직접 설치한 모델 파일의 전체 경로입니다.")
+			.setDesc("사용자가 직접 설치한 GGML 양자화 모델 파일(.bin)의 전체 경로입니다.")
 			.addText((text) =>
 				text
 					.setValue(localSettings.modelPath)
@@ -219,10 +255,12 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 						void this.updateLocalSettings({ modelPath: value.trim() });
 					}),
 			);
+		renderStatusBadge(modelSetting.nameEl, modelStatus, "준비됨");
 
-		new Setting(containerEl)
-			.setName("Ffmpeg 실행 파일")
-			.setDesc("사용자가 직접 설치한 ffmpeg.exe의 전체 경로입니다. 설치·업데이트하지 않습니다.")
+		const ffmpegStatus = checkPathExists(localSettings.ffmpegPath);
+		const ffmpegSetting = new Setting(containerEl)
+			.setName("FFmpeg 실행 파일")
+			.setDesc("오디오 16kHz 정규화에 사용되는 ffmpeg.exe의 전체 경로입니다.")
 			.addText((text) =>
 				text
 					.setValue(localSettings.ffmpegPath)
@@ -231,19 +269,31 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 						void this.updateLocalSettings({ ffmpegPath: value.trim() });
 					}),
 			);
+		renderStatusBadge(ffmpegSetting.nameEl, ffmpegStatus, "준비됨");
 
 		new Setting(containerEl)
 			.setName("설치된 CPU 도구 자동 검색")
-			.setDesc("사용자 폴더의 whisper.cpp, models, programs 등 알려진 위치만 검색해 기준 SHA-256·버전을 검증합니다. 전체 드라이브는 검색하지 않으며, 설정 적용은 직접 승인해야 합니다.")
+			.setDesc("사용자 폴더의 whisper.cpp, models, programs 등 알려진 위치만 검색해 기준 SHA-256·버전을 검증합니다.")
 			.addButton((button) =>
 				button.setButtonText("검색").onClick(() => this.discoverCpuSetup()),
 			);
 
 		new Setting(containerEl)
 			.setName("런타임·모델 검증 및 시험 추론")
-			.setDesc("whisper.cpp 기준선 버전·SHA-256을 확인하고, 선택한 오디오를 FFmpeg로 16 kHz 모노 PCM WAV로 변환해 시험 전사합니다. 결과문과 변환 파일은 저장하지 않습니다.")
+			.setDesc("whisper.cpp 기준선 버전·SHA-256을 확인하고, 오디오를 변환해 시험 전사합니다.")
 			.addButton((button) =>
 				button.setButtonText("시험 시작").onClick(() => this.testCpuSetup()),
+			);
+
+		new Setting(containerEl)
+			.setName("FFmpeg 원클릭 설치 스크립트 복사 (Setup Helper)")
+			.setDesc("별도 PowerShell 터미널에서 실행하여 FFmpeg를 winget으로 설치할 수 있는 명령어를 클립보드에 복사합니다.")
+			.addButton((button) =>
+				button.setButtonText("명령어 복사").onClick(async () => {
+					const cmd = "winget install Gyan.FFmpeg";
+					await navigator.clipboard.writeText(cmd);
+					new Notice("FFmpeg 설치 명령어가 클립보드에 복사되었습니다.\nPowerShell 터미널을 열고 붙여넣어 실행하세요.");
+				}),
 			);
 	}
 }

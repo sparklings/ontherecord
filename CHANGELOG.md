@@ -7,6 +7,24 @@
 ## 2026-11-19
 
 ### 추가
+- **`3-REC-05` 녹음 정보 재계산 및 메타데이터 동기화 명령 (`C-05`, `이 노트 녹음 정보 재계산`)**:
+  - 활성 마크다운 노트의 본문 내 상세 녹음 블록, 세션 마커, 오디오 임베드를 파싱(`parseRecordingsFromBody`)하고 파일 메타데이터를 대조
+  - Frontmatter 평면 집계 속성(`recording_count`, `recording_total_seconds`, `recording_total_size_mb`, `recordings` 배열 등)을 완전 재계산·동기화하는 명령(`recalculate-note-recordings`) 구현
+  - 녹음이 완전히 삭제된 노트의 경우 불필요한 recording_* 메타데이터를 안전하게 정리
+  - 단위 테스트 4개 항목(`test/recalculateMetadata.test.ts`) 추가 및 통과
+- **`3-REC-06` 미아(고아) 오디오 파일 방지 및 복구 체계 (`F-09`, `C-04`, `고아 녹음 파일 점검`)**:
+  - 앱 시작 시 비정상 종료된 영속 녹음 세션(`active-session.json`)을 자동 점검하여 복구 안내 토스트 제공(`checkUnfinishedSessionOnStartup`)
+  - 볼트 내 백링크가 0개인 고아 녹음 파일들을 자동 탐지(`findOrphanAudioFiles`)하고 모달로 검색하여 활성 노트에 즉시 연결하는 명령(`check-orphan-audio`, `OrphanAudioModal`) 구현
+  - 단위 테스트 2개 항목(`test/orphanAudio.test.ts`) 추가 및 통과
+- **`3-PIPE-03` 타임스탬프-오디오 재생 동기화 (Audio Playback Sync)**:
+  - 전사 결과 본문 내 세그먼트 타임스탬프(`[02:15]`)를 클릭 가능한 상호작용 요소로 변환하는 마크다운 포스트 프로세서(`postProcessTimestamps`) 등록
+  - 타임스탬프 클릭 시 인접 오디오 플레이어(`<audio>`)의 재생 위치를 즉시 해당 초로 동기화 이동하고 자동 재생하는 이벤트 핸들러(`handleTimestampClick`, `syncAudioPlayback`) 구현
+  - 단위 테스트 2개 항목(`test/audioPlaybackSync.test.ts`) 추가 및 통과
+- **`3-UX-02` 설정 화면 정보 구조 개편 및 도구 무결성 검증 UI**:
+  - Vault 공통 설정(동기화 정책)과 PC별 로컬 도구 설정(`local-settings.json`)의 시각적 영역 분리
+  - 런타임 실행 파일, 모델 파일, FFmpeg 실행 파일의 실시간 존재/크기 검증 뱃지(`✅ 정상 / 준비됨 (MB)` / `⚠️ 파일 없음`) 렌더링
+  - PowerShell 터미널용 FFmpeg 원클릭 설치 스크립트 복사 버튼(Setup Helper) 추가
+- 전체 80개 단위 테스트 통과 및 production build(`main.js`, 155KB) 성공 검증
 - **새 노트북 환경(Samsung 930XDB) 개발환경 구축 및 외부 참조 모듈 설치**:
   - `winget`을 통해 FFmpeg 9.0.2 설치 완료 (`%LOCALAPPDATA%\Microsoft\WinGet\Packages\...`)
   - `whisper.cpp` v1.9.5(b5454) x64 CPU 공식 빌드 다운로드 및 SHA-256 검증 완료 (`%LOCALAPPDATA%\on-the-record-dev\runtimes\...`)

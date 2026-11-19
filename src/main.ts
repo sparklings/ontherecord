@@ -40,6 +40,22 @@ import type { CoreAudioRecorder, SessionStorageAdapter } from "./recordingSessio
 import { TabCloseHandler } from "./tabCloseHandler.ts";
 import { formatStatusBarProgress, TranscriptionQueueWorker } from "./transcriptionQueueWorker.ts";
 import { RecordingStatusBar } from "./recordingStatusBar.ts";
+import {
+	recalculateFrontmatterRecordings,
+	applyRecordingSessionToMarkdown,
+} from "./noteMetadataHandler.ts";
+import {
+	checkUnfinishedSessionOnStartup,
+	collectAllLinkedAudioPaths,
+	findOrphanAudioFiles,
+	SUPPORTED_AUDIO_EXTENSIONS,
+} from "./orphanAudioHandler.ts";
+import { OrphanAudioModal } from "./orphanAudioModal.ts";
+import type { OrphanAudioFileInfo } from "./orphanAudioHandler.ts";
+import {
+	handleTimestampClick,
+	postProcessTimestamps,
+} from "./audioPlaybackSync.ts";
 
 interface ObsidianAudioRecorderPlugin {
 	instance?: {
@@ -273,7 +289,39 @@ export default class OnTheRecordPlugin extends Plugin {
 			name: "전사문 검색",
 			callback: () => this.openTranscriptSearch(),
 		});
+		this.addCommand({
+			id: "recalculate-note-recordings",
+			name: "이 노트 녹음 정보 재계산",
+			checkCallback: (checking: boolean) => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if (activeFile && activeFile.extension === "md") {
+					if (!checking) {
+						void this.recalculateCurrentNoteRecordings(activeFile);
+					}
+					return true;
+				}
+				return false;
+			},
+		});
+		this.addCommand({
+			id: "check-orphan-audio",
+			name: "고아 녹음 파일 점검",
+			callback: () => {
+				void this.openOrphanAudioModal();
+			},
+		});
 		this.addRibbonIcon("search", "전사할 오디오 파일 선택", () => this.openAudioFilePicker());
+
+		// 3-PIPE-03: 타임스탬프 오디오 동기화 포스트 프로세서 및 클릭 이벤트 등록
+		this.registerMarkdownPostProcessor((el) => {
+			postProcessTimestamps(el);
+		});
+		this.registerDomEvent(document, "click", (evt: MouseEvent) => {
+			const target = evt.target as HTMLElement;
+			if (target) {
+				handleTimestampClick(target);
+			}
+		});
 
 		// 3-PIPE-01: 상태표시줄 아이템 생성
 		this.statusBarItem = this.addStatusBarItem();
@@ -330,6 +378,7 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		this.app.workspace.onLayoutReady(() => {
 			this.queueWorker.start();
+			void checkUnfinishedSessionOnStartup(this.app, this.sessionStore);
 			this.registerEvent(
 				this.app.vault.on("create", (file) => {
 					if (file instanceof TFile && file.extension.toLowerCase() === "md") {
@@ -1123,6 +1172,82 @@ export default class OnTheRecordPlugin extends Plugin {
 		});
 		await this.localSaveQueue;
 		return saved;
+	}
+
+	async recalculateCurrentNoteRecordings(file: TFile): Promise<void> {
+		try {
+			let resultSummary: { count: number; totalSeconds: number; totalSizeMb: number } | null = null;
+			await this.app.vault.process(file, (data) => {
+				const res = recalculateFrontmatterRecordings(data, (audioPath) => {
+					const cleanPath = audioPath.replace(/^!\[\[|\]\]$/g, "").replace(/^\[\[|\]\]$/g, "");
+					const dest = this.app.metadataCache.getFirstLinkpathDest(getLinkpath(cleanPath), file.path);
+					if (dest) {
+						return {
+							sizeBytes: dest.stat.size,
+							mtime: dest.stat.mtime,
+						};
+					}
+					return undefined;
+				});
+				resultSummary = {
+					count: res.count,
+					totalSeconds: res.totalSeconds,
+					totalSizeMb: res.totalSizeMb,
+				};
+				return res.updatedMarkdown;
+			});
+
+			if (resultSummary) {
+				if (resultSummary.count > 0) {
+					const min = Math.floor(resultSummary.totalSeconds / 60);
+					const sec = resultSummary.totalSeconds % 60;
+					new Notice(
+						`[On the Record] 녹음 정보 재계산 완료\n총 ${resultSummary.count}개 녹음 (소요: ${min}분 ${sec}초 · ${resultSummary.totalSizeMb} MB)`,
+						5000,
+					);
+				} else {
+					new Notice("[On the Record] 이 노트에서 녹음 정보를 찾을 수 없습니다.", 4000);
+				}
+			}
+		} catch (err) {
+			this.reportError("녹음 정보 재계산 중 오류가 발생했습니다.", err);
+		}
+	}
+
+	async openOrphanAudioModal(): Promise<void> {
+		try {
+			const files = this.app.vault.getFiles();
+			const audioFiles: OrphanAudioFileInfo[] = [];
+			for (const file of files) {
+				if (SUPPORTED_AUDIO_EXTENSIONS.has(file.extension.toLowerCase())) {
+					audioFiles.push({
+						path: file.path,
+						name: file.name,
+						sizeBytes: file.stat.size,
+						mtime: file.stat.mtime,
+					});
+				}
+			}
+
+			const linkedPaths = collectAllLinkedAudioPaths(this.app);
+			const orphans = findOrphanAudioFiles(audioFiles, linkedPaths);
+
+			const modal = new OrphanAudioModal(this.app, orphans, async (orphan, targetNote) => {
+				await this.app.vault.process(targetNote, (data) => {
+					const nextSeq = calculateNextRecordingSeq(data);
+					return applyRecordingSessionToMarkdown(data, {
+						audioPath: orphan.path,
+						seq: nextSeq,
+						sizeBytes: orphan.sizeBytes,
+						startedAt: orphan.mtime,
+						endedAt: orphan.mtime,
+					});
+				});
+			});
+			modal.open();
+		} catch (err) {
+			this.reportError("고아 녹음 파일 점검 중 오류가 발생했습니다.", err);
+		}
 	}
 
 	private reportError(message: string, error: unknown): void {

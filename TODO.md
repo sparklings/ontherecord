@@ -184,8 +184,8 @@
 - [x] `3-REC-02` 탭 닫힘 감지 및 녹음 자동 안전 중지·연결 (`F-04`, `F-05`, `C-02`) → 완료(2026-11-19): 녹음 중인 노트 탭이 닫힐 때(`WorkspaceLeaf.prototype.detach` 래핑) 녹음을 자동 안전 중지하고 생성된 오디오를 해당 노트에 안전하게 연결(attach, `attachAudioEmbedToMarkdown`)하도록 구현. 코어가 새 탭으로 오디오 파일을 여는 동작 자동 닫기(`S-09`) 및 에디터 내 임베드 중복 삽입 방지(`S-10`)를 처리하고, 닫힘 시 동작 옵션(`onTabCloseAction`: `stop-and-attach`(기본값) | `ignore`)을 제공. 단위 테스트 5개(`test/tabClose.test.ts`) 전건 통과.
 - [x] `3-REC-03` 단일 문서 내 다중 녹음 파일 지원 및 세션 격리 매핑 (`F-08`, 다중 세션 확장) → 완료(2026-11-19): 마크다운 문서 하나에 여러 개의 녹음 파일/임베드가 순차 누적(`seq = recording_count + 1`)될 수 있도록 확장. 각 세션별 고유 마커(`<!-- on-the-record:start audio="..." seq="N" -->` ~ `<!-- on-the-record:end ... -->`)를 부여하여, 다중 녹음의 전사 결과가 서로 덮어쓰지 않고 독립적으로 삽입·교체·관리되도록 격리. 단위 테스트(`test/noteMetadata.test.ts`) 통과.
 - [x] `3-REC-04` Frontmatter 집계 속성 및 본문 녹음 블록 2중 기록 (`F-06`, `F-07`) → 완료(2026-11-19): Bases 및 Dataview 친화적인 Frontmatter 평면 메타데이터(`recording_state`, `recordings` 링크 배열, `recording_count`, `recording_total_seconds`, `recording_total_size_mb`, `recording_first_start`, `recording_last_end`)와 본문 섹션(기본 `## 녹음 기록`) 아래 세션별 상세 블록(`### 녹음 N · 시각 (소요: MM:SS · 용량)`, 임베드, 마커)을 `vault.process` 단일 트랜잭션으로 안전하게 동시 기록하도록 구현([noteMetadataHandler.ts](./src/noteMetadataHandler.ts)). 단위 테스트 통과.
-- [ ] `3-REC-05` 녹음 정보 재계산 및 메타데이터 동기화 명령 (`C-05`) → 본문 내 실제 오디오 임베드/블록과 파일 메타데이터(`adapter.stat`)를 다시 읽어 누락되거나 변경된 Frontmatter 집계 속성을 재구성·동기화하는 명령(`이 노트 녹음 정보 재계산`)을 구현한다.
-- [ ] `3-REC-06` 미아(고아) 오디오 파일 방지 및 복구 체계 (`F-09`, `C-04`) → 비정상 종료(Obsidian 강제 종료 등) 후 재시작 시 영속 세션 레코드와 미연결 `Recording *` 파일을 대조해 복구 알림을 제공하고, 볼트 내 백링크가 0인 고아 오디오 파일을 모달로 검색해 특정 노트에 즉시 연결하는 명령(`고아 녹음 파일 점검`)을 구현한다.
+- [x] `3-REC-05` 녹음 정보 재계산 및 메타데이터 동기화 명령 (`C-05`) → 완료(2026-11-19): 본문 내 실제 오디오 임베드/블록과 파일 메타데이터(`adapter.stat`)를 다시 읽어 누락되거나 변경된 Frontmatter 집계 속성을 재구성·동기화하는 명령(`이 노트 녹음 정보 재계산`)을 구현([noteMetadataHandler.ts](./src/noteMetadataHandler.ts)). 단위 테스트(`test/recalculateMetadata.test.ts`) 통과.
+- [x] `3-REC-06` 미아(고아) 오디오 파일 방지 및 복구 체계 (`F-09`, `C-04`) → 완료(2026-11-19): 앱 시작 시 영속 세션 점검을 통한 비정상 종료 복구 안내 토스트 및 볼트 내 백링크가 0인 고아 오디오 파일을 모달로 검색해 활성 노트에 즉시 연결하는 명령(`고아 녹음 파일 점검`, [orphanAudioHandler.ts](./src/orphanAudioHandler.ts), [orphanAudioModal.ts](./src/orphanAudioModal.ts))을 구현. 단위 테스트(`test/orphanAudio.test.ts`) 통과.
 - [x] `3-REC-07` 녹음 상태표시줄 UI 및 원클릭 제어 (`F-10`, `S-13`) → 완료(2026-11-19): Obsidian 상태표시줄(Status Bar)에 현재 녹음 중인 노트명과 경과 시간(`🔴 01:23 회의록`)을 1초 주기로 실시간 렌더링하고, 상태표시줄 클릭 시 즉시 녹음을 안전 중지하고 대상 노트 연결 및 전사 인계를 수행하도록 구현([recordingStatusBar.ts](./src/recordingStatusBar.ts)). 단위 테스트(`test/recordingStatusBar.test.ts`) 통과.
 
 #### 2. 비차단 백그라운드 전사 파이프라인 및 자동 인계 (PIPE)
@@ -193,7 +193,7 @@
 
 - [x] `3-PIPE-01` 비차단 백그라운드 전사 큐 워커 및 상태표시줄(Status Bar) 진행률 표시 → 완료(2026-11-19): 장시간 회의 전사 시 모달이나 앱이 멈추지 않고, Obsidian 하단 상태표시줄에서 진행 상태(`🎙️ 전사 중 [45%]: filename.m4a`, 경과시간/단계, 클릭 시 상세 안내)를 확인하며 다른 노트를 작성할 수 있도록 비동기 큐 워커(`TranscriptionQueueWorker`) 파이프라인 및 상태표시줄 UI 연동 구현. 단위 테스트 4개(`test/transcriptionQueueWorker.test.ts`) 전건 통과.
 - [x] `3-PIPE-02` 녹음 완료 후 자동 전사 인계 및 노트 삽입 워크플로 통합 → 완료(2026-11-19): 녹음이 중지되어 노트에 안전하게 연결된 직후, 설정(`autoTranscribe`)에 따라 백그라운드 전사 큐로 즉시 인계(`worker.trigger()`). 완료 시 사용자 선택 모드(`transcriptionInsertMode`)에 따라 동작: (1) `auto`(기본값): 대상 노트의 해당 임베드 바로 아래에 `applyAudioEmbedInsertion`으로 백그라운드 안전 자동 삽입 및 인앱 알림, (2) `review`: 알림을 띄워 미리보기 모달 검토 후 승인 삽입 지원. 실제 오디오(`format-fixture.wav`) 추론 실기 검증 완료.
-- [ ] `3-PIPE-03` 타임스탬프-오디오 재생 동기화 (Audio Playback Sync) → 전사 결과 미리보기 모달 및 노트 본문에서 세그먼트 타임스탬프(`[02:15]`) 클릭 시, 해당 오디오 파일의 해당 위치로 즉시 이동해 재생하는 오디오 플레이어 싱크 기능 구현(전사 오탈자 확인 및 빠른 청취 검토 지원).
+- [x] `3-PIPE-03` 타임스탬프-오디오 재생 동기화 (Audio Playback Sync) → 완료(2026-11-19): 마크다운 포스트 프로세서 및 전역 클릭 핸들러를 통해 전사문 내 세그먼트 타임스탬프(`[02:15]`) 클릭 시 인접 오디오 플레이어의 재생 위치를 즉시 동기화 이동·재생 구현([audioPlaybackSync.ts](./src/audioPlaybackSync.ts)). 단위 테스트(`test/audioPlaybackSync.test.ts`) 통과.
 - [ ] `3-PIPE-04` 글로벌 배포를 위한 다국어(i18n) 지원 체계 구축 → Obsidian 공식 커뮤니티 플러그인 글로벌 공개를 위해 UI 기본 언어를 영어(en)로 구성하고, 한국어(ko) 번역 사전을 제공하는 경량 i18n 체계 도입.
 
 #### 3. 외장/내장 GPU 가속 및 런타임 최적화 (GPU & CPU)
@@ -208,7 +208,8 @@
 > Obsidian 플러그인 제출 정책(바이너리 자동 다운로드 금지)을 100% 준수하면서도, 초보 사용자가 원클릭으로 로컬 도구를 세팅할 수 있는 독립 셋업 도우미와 직관적인 설정 환경을 제공한다.
 
 - [ ] `3-UX-01` 사용자 주도 원클릭 도구 준비 도우미 (Setup Helper) → Obsidian 정책을 준수하기 위해 플러그인 코드 내부 다운로드를 배제하고, 사용자가 복사하여 본인의 터미널(PowerShell/winget)에서 실행할 수 있는 독립 실행형 셋업 스크립트(`scripts/setup-tools.ps1`) 및 설정 탭 내 원클릭 명령어 복사 버튼을 제공한다.
-- [ ] `3-UX-02` 설정 화면 정보 구조 개편 및 도구 무결성 검증 UI → Vault 공통 설정(`data.json`)과 PC별 로컬 도구 설정(`local-settings.json`)의 저장 영역과 역할을 명확히 분리하고, 런타임·모델·FFmpeg 경로의 실시간 버전/해시 검증 상태 및 시험 추론 결과를 한 장소에서 확인할 수 있는 직관적 UI를 구축한다.
+- [x] `3-UX-02` 설정 화면 정보 구조 개편 및 도구 무결성 검증 UI → 완료(2026-11-19): Vault 공통 설정과 PC별 로컬 도구 설정을 시각적으로 분리하고, 런타임/모델/FFmpeg 경로의 실시간 존재/크기 검증 뱃지(`✅ 준비됨` / `⚠️ 파일 없음`) 및 원클릭 설치 스크립트 복사 기능 구현([settingsTab.ts](./src/settingsTab.ts)).
+- [ ] `3-UX-03` 회의 녹음→자동 전사→회의록 완성 통합 사용자 여정(User Journey) 검증 → 첫 실행 설정부터 코어 녹음 개시, 탭 닫힘 시 안전 연결, 백그라운드 전사 및 노트 본문 자동 반영, 전사문 검색까지 이어지는 단절 없는 End-to-End 흐름을 초보 사용자 시나리오로 실기 검증한다.
 - [ ] `3-UX-03` 회의 녹음→자동 전사→회의록 완성 통합 사용자 여정(User Journey) 검증 → 첫 실행 설정부터 코어 녹음 개시, 탭 닫힘 시 안전 연결, 백그라운드 전사 및 노트 본문 자동 반영, 전사문 검색까지 이어지는 단절 없는 End-to-End 흐름을 초보 사용자 시나리오로 실기 검증한다.
 
 #### 5. 사후 분석 및 로컬 AI 연계 (POST - 선택 확장)

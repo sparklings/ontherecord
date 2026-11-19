@@ -19,6 +19,250 @@ export interface NoteRecordingFrontmatter {
 	recording_last_end?: string;
 }
 
+export function parseTimestampToSeconds(text: string): number {
+	const cleaned = text.trim().replace(/^\[|\]$/g, "");
+	const parts = cleaned.split(":").map((p) => parseInt(p, 10));
+	if (parts.some(isNaN)) return 0;
+	if (parts.length === 3) {
+		return parts[0] * 3600 + parts[1] * 60 + parts[2];
+	}
+	if (parts.length === 2) {
+		return parts[0] * 60 + parts[1];
+	}
+	if (parts.length === 1) {
+		return parts[0];
+	}
+	return 0;
+}
+
+export interface ParsedRecordingItem {
+	audioPath: string;
+	seq: number;
+	durationSeconds: number;
+	sizeMb: number;
+	dateTimeText?: string;
+}
+
+/**
+ * 마크다운 본문에서 오디오 녹음 블록 및 임베드를 파싱한다 (3-REC-05).
+ */
+export function parseRecordingsFromBody(markdown: string): ParsedRecordingItem[] {
+	const items: ParsedRecordingItem[] = [];
+	const seenPaths = new Set<string>();
+
+	// 1. "### 녹음 N" 헤딩 기반 블록 파싱:
+	// ### 녹음 1 · 2026-11-19 12:00 (소요: 02:15 · 3.45 MB)
+	// ![[audio.m4a]]
+	const headingRegex = /^###\s*녹음\s*(\d+)([^\n]*)/gm;
+	let headingMatch: RegExpExecArray | null;
+
+	while ((headingMatch = headingRegex.exec(markdown)) !== null) {
+		const seq = parseInt(headingMatch[1], 10) || items.length + 1;
+		const restOfLine = headingMatch[2];
+
+		let durationSeconds = 0;
+		let sizeMb = 0;
+		let dateTimeText: string | undefined;
+
+		const durationMatch = /\(소요:\s*([0-9:]+)/i.exec(restOfLine);
+		if (durationMatch) {
+			durationSeconds = parseTimestampToSeconds(durationMatch[1]);
+		}
+
+		const sizeMatch = /([0-9.]+)\s*MB/i.exec(restOfLine);
+		if (sizeMatch) {
+			sizeMb = parseFloat(sizeMatch[1]) || 0;
+		}
+
+		const dateMatch = /·\s*([0-9]{4}-[0-9]{2}-[0-9]{2}[^\(\n]*)/.exec(restOfLine);
+		if (dateMatch) {
+			dateTimeText = dateMatch[1].trim();
+		}
+
+		// 헤딩 바로 아래쪽에서 오디오 임베드 탐색
+		const restFromHeading = markdown.slice(headingMatch.index + headingMatch[0].length);
+		const embedMatch = /!\[\[([^\]]+\.(?:m4a|mp3|wav|ogg|flac|aac))\]\]/i.exec(restFromHeading);
+		if (embedMatch) {
+			// 다음 "### 녹음"이나 다른 "##" 헤딩이 나오기 전이어야 함
+			const nextHeadingIdx = restFromHeading.search(/\n##+/);
+			if (nextHeadingIdx === -1 || embedMatch.index < nextHeadingIdx) {
+				const audioPath = embedMatch[1].trim();
+				if (!seenPaths.has(audioPath)) {
+					seenPaths.add(audioPath);
+					items.push({
+						audioPath,
+						seq,
+						durationSeconds,
+						sizeMb,
+						dateTimeText,
+					});
+				}
+			}
+		}
+	}
+
+	// 2. 세션 마커 패턴:
+	// <!-- on-the-record:start audio="path.m4a" seq="1" -->
+	const markerRegex = /<!--\s*on-the-record:start\s+audio="([^"]+)"(?:\s+seq="(\d+)")?\s*-->/gi;
+	let match: RegExpExecArray | null;
+	while ((match = markerRegex.exec(markdown)) !== null) {
+		const audioPath = match[1].trim();
+		const seq = match[2] ? parseInt(match[2], 10) : items.length + 1;
+		if (audioPath && !seenPaths.has(audioPath)) {
+			seenPaths.add(audioPath);
+			items.push({
+				audioPath,
+				seq,
+				durationSeconds: 0,
+				sizeMb: 0,
+			});
+		}
+	}
+
+	// 3. 본문 내 단순 오디오 임베드 패턴: ![[...m4a]]
+	const embedRegex = /!\[\[([^\]]+\.(?:m4a|mp3|wav|ogg|flac|aac))\]\]/gi;
+	while ((match = embedRegex.exec(markdown)) !== null) {
+		const audioPath = match[1].trim();
+		if (audioPath && !seenPaths.has(audioPath)) {
+			seenPaths.add(audioPath);
+			items.push({
+				audioPath,
+				seq: items.length + 1,
+				durationSeconds: 0,
+				sizeMb: 0,
+			});
+		}
+	}
+
+	return items;
+}
+
+/**
+ * 마크다운 문서의 Frontmatter를 본문 내용 및 파일 정보 기준으로 완전히 재계산한다 (3-REC-05).
+ */
+export function recalculateFrontmatterRecordings(
+	markdown: string,
+	statsResolver?: (audioPath: string) => { sizeBytes?: number; durationSeconds?: number; mtime?: number } | undefined,
+): { updatedMarkdown: string; count: number; totalSeconds: number; totalSizeMb: number; recordings: string[] } {
+	const parsedItems = parseRecordingsFromBody(markdown);
+	const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---/;
+	const match = frontmatterRegex.exec(markdown);
+
+	const existingNonRecordingLines: string[] = [];
+	if (match) {
+		const rawYaml = match[1];
+		const lines = rawYaml.split(/\r?\n/);
+		let inRecordings = false;
+		for (const line of lines) {
+			if (line.startsWith("recordings:")) {
+				inRecordings = true;
+				continue;
+			}
+			if (inRecordings) {
+				if (/^\s*-\s*/.test(line)) {
+					continue;
+				} else {
+					inRecordings = false;
+				}
+			}
+			const colonIdx = line.indexOf(":");
+			if (colonIdx > 0) {
+				const key = line.slice(0, colonIdx).trim();
+				if (!key.startsWith("recording_") && key !== "recordings") {
+					existingNonRecordingLines.push(line);
+				}
+			} else {
+				existingNonRecordingLines.push(line);
+			}
+		}
+	}
+
+	if (parsedItems.length === 0) {
+		// 녹음이 전혀 없으면 Frontmatter의 recording_* 속성 제거
+		if (match) {
+			if (existingNonRecordingLines.length === 0) {
+				const rest = markdown.slice(match[0].length).replace(/^\r?\n/, "");
+				return { updatedMarkdown: rest, count: 0, totalSeconds: 0, totalSizeMb: 0, recordings: [] };
+			} else {
+				const newYaml = ["---", ...existingNonRecordingLines, "---"].join("\n");
+				return {
+					updatedMarkdown: markdown.replace(frontmatterRegex, newYaml),
+					count: 0,
+					totalSeconds: 0,
+					totalSizeMb: 0,
+					recordings: [],
+				};
+			}
+		}
+		return { updatedMarkdown: markdown, count: 0, totalSeconds: 0, totalSizeMb: 0, recordings: [] };
+	}
+
+	let totalSeconds = 0;
+	let totalSizeMb = 0;
+	const recordings: string[] = [];
+	let firstStartIso: string | undefined;
+	let lastEndIso: string | undefined;
+
+	for (const item of parsedItems) {
+		recordings.push(`"[[${item.audioPath}]]"`);
+		let duration = item.durationSeconds;
+		let sizeMb = item.sizeMb;
+
+		if (statsResolver) {
+			const stat = statsResolver(item.audioPath);
+			if (stat) {
+				if (duration === 0 && stat.durationSeconds) {
+					duration = stat.durationSeconds;
+				}
+				if (sizeMb === 0 && stat.sizeBytes) {
+					sizeMb = Math.round((stat.sizeBytes / (1024 * 1024)) * 100) / 100;
+				}
+				if (stat.mtime) {
+					const iso = new Date(stat.mtime).toISOString();
+					if (!firstStartIso) firstStartIso = iso;
+					lastEndIso = iso;
+				}
+			}
+		}
+
+		totalSeconds += duration;
+		totalSizeMb += sizeMb;
+	}
+
+	totalSizeMb = Math.round(totalSizeMb * 100) / 100;
+	const nowIso = new Date().toISOString();
+	if (!firstStartIso) firstStartIso = nowIso;
+	if (!lastEndIso) lastEndIso = nowIso;
+
+	const newYamlLines: string[] = [
+		...existingNonRecordingLines,
+		"recording_state: recorded",
+		"recordings:",
+		...recordings.map((r) => `  - ${r}`),
+		`recording_count: ${recordings.length}`,
+		`recording_total_seconds: ${totalSeconds}`,
+		`recording_total_size_mb: ${totalSizeMb}`,
+		`recording_first_start: "${firstStartIso}"`,
+		`recording_last_end: "${lastEndIso}"`,
+	];
+
+	const newYaml = ["---", ...newYamlLines, "---"].join("\n");
+	let updatedMarkdown: string;
+	if (match) {
+		updatedMarkdown = markdown.replace(frontmatterRegex, newYaml);
+	} else {
+		updatedMarkdown = `${newYaml}\n\n${markdown}`;
+	}
+
+	return {
+		updatedMarkdown,
+		count: recordings.length,
+		totalSeconds,
+		totalSizeMb,
+		recordings,
+	};
+}
+
 /**
  * 마크다운 문서의 Frontmatter(YAML)를 파싱하고 새 녹음 정보를 누적 갱신한다.
  */
