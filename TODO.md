@@ -67,8 +67,8 @@
   - [BASE-08_MODEL_SELECTION_2026-11-07.md](./docs/baselines/BASE-08_MODEL_SELECTION_2026-11-07.md) 작성 완료.
 - [x] `0-ENV-16` 실제 배포 구성요소 라이선스 확정 및 프로젝트 소유권 정리 완료:
   - 배포 아티팩트 라이선스 검증: 플러그인이 외부 런타임/모델을 번들링 배포하지 않기로 확정(`0-ENV-08`)함에 따라 제3자 바이너리 재배포 SBOM 의무가 소멸되었고, 실제 플러그인 배포물(`main.js`)은 npm 런타임 의존성 0개의 순수 자체 개발 MIT 코드임을 확인하여 완료 종결.
-  - 프로젝트 소유권 및 저작권자 갱신: 본 프로젝트는 회사 지시나 업무상 위탁이 아닌, 업무 중 개인적 필요에 의해 착수한 **박성원(SUNGWON PARK) 개인의 독립 오픈소스 프로젝트(MIT)**로 확정. 기존 회사(에스넷시스템) 관련 표기 및 사내 혜택 계획을 공식 폐기하고 `LICENSE`, `README.md`, `SUPPORT.md`를 개인 오픈소스 프로젝트 기준으로 전면 갱신.
-- [-] `0-ENV-15` 사내 GitLab 접속 인증서 검토 종료: 소스코드 배포처를 GitHub(`https://github.com/sparklings/ontherecord`)으로 공식 확정하고 개인 오픈소스 프로젝트로 독립함에 따라, 사내 GitLab 연동 과제를 공식 종료(취소) 처리.
+  - 프로젝트 소유권 및 저작권자 갱신: 본 프로젝트는 **박성원(SUNGWON PARK)의 독립 오픈소스 프로젝트(MIT)**로 확정. 저작권자를 `SUNGWON PARK`으로 확정하고 `LICENSE`, `README.md`, `SUPPORT.md`를 오픈소스 프로젝트 기준으로 전면 갱신.
+- [-] `0-ENV-15` 외부 GitLab 접속 인증서 검토 종료: 소스코드 배포처를 GitHub(`https://github.com/sparklings/ontherecord`)으로 공식 확정하고 독립 오픈소스 프로젝트로 정립함에 따라, 외부 GitLab 연동 과제를 공식 종료(취소) 처리.
 
 #### 3단계 과제 통합 및 재정리 완료 (3단계: 제품 완성 및 녹음·전사 워크플로 통합)
 - 분산되어 있던 3단계 이후, 상용성·제품화, 녹음 노트 기획 과제의 상충 요소를 해소하고 현행 구현 현황을 반영하여 5대 영역 단일 3단계로 취합·재편:
@@ -83,7 +83,7 @@
 ### 라이선스 및 공개 준비
 
 - [x] `0-ENV-16` 실제 배포 구성요소의 라이선스·고지 확정 → 완료(2026-11-07): 외부 런타임/모델 번들링 배포를 제외(`0-ENV-08`)함에 따라 제3자 바이너리 SBOM 의무가 소멸되었고, 플러그인 배포물(`main.js`)은 npm 런타임 의존성 0개의 순수 자체 MIT 코드임을 확인하여 종료.
-- 프로젝트 자체 코드에 MIT 정책을 적용한다. 본 프로젝트는 **박성원 개인의 오픈소스 프로젝트**이며 회사와는 아무런 관련이 없다(업무 중 개인적 필요에 의해 착수한 자발적 프로젝트). 저작권자는 `SUNGWON PARK (박성원)`이며 `LICENSE`에 반영했다.
+- 프로젝트 자체 코드에 MIT 정책을 적용한다. 본 프로젝트는 **박성원의 독립 오픈소스 프로젝트**이며, 저작권자는 `SUNGWON PARK (박성원)`으로 `LICENSE`에 반영했다.
 
 ## 2026-11-01
 
@@ -97,21 +97,21 @@
 - [x] `0-ENV-13` 설정 저장 구조 설계: vault 설정과 PC별 설정 분리 → [SETTINGS_DESIGN.md](./docs/design/SETTINGS_DESIGN.md) 초안 작성(2026-11-01), 동기화 방식 비의존으로 수정(2026-11-01). vault 설정은 `data.json`, PC별 설정과 런타임·모델은 `%LOCALAPPDATA%\<plugin-id>\`. 미결정: 외부 경로 입력, 저장 직전 수정 시각 확인
 
 - [x] `0-ENV-05` 플러그인 id, 이름 결정 → **결정(2026-11-01): 이름 `On the Record`, id `on-the-record`, 부제 `Local minutes for Obsidian`, 저자 `SUNGWON PARK`(변경: 기존 `Sungwon Park (SG)`), 저장소명 `ontherecord`(접근성 우선, 보고서의 기존 `obsidian-on-the-record`에서 변경).** 근거: [네이밍 보고서](./docs/research/OntheRecord_사업보고서_네이밍.md). id 규칙(소문자·하이픈, `obsidian` 미포함, `plugin` 미종료)과 커뮤니티 목록 중복 없음은 보고서 기준 확인됨(2026-11-01 목록 9,755개). 미확인: 국내·USPTO 상표 검색(9·42류), 도메인 확보. 상표 결과에 따라 이름이 바뀔 수 있으며, 그 경우 id는 공개 전까지만 변경 가능하다
-- [x] `0-ENV-02` Git 저장소 생성 및 GitHub 원격 연결 → 완료(2026-11-01). 로컬 저장소(`main`, `.gitignore` 동작 확인) 첫 커밋 후 private 저장소 `https://github.com/sparklings/ontherecord` 생성·push. 공개 범위는 라이선스·회사 규정 확인(`0-ENV-06`~`09`) 후 재결정. Git 사용자 정보는 전역 설정, `gh` 2.103.3 설치·로그인(`sparklings`)
+- [x] `0-ENV-02` Git 저장소 생성 및 GitHub 원격 연결 → 완료(2026-11-01). 로컬 저장소(`main`, `.gitignore` 동작 확인) 첫 커밋 후 private 저장소 `https://github.com/sparklings/ontherecord` 생성·push. Git 사용자 정보는 전역 설정, `gh` 2.103.3 설치·로그인(`sparklings`)
 
 #### 출시 준비 확인
 
 - [x] `0-ENV-11` 플러그인 프로젝트 초기화(AssistantEmily 구조 참조) → 완료(2026-11-01). 저장소 루트에 `manifest.json`(id `on-the-record`, `isDesktopOnly: true`), `versions.json`, `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `eslint.config.mjs`, `src/main.ts` 생성. `package.json`은 `private: false`, `license: MIT`. 잠정값: `minAppVersion` 1.7.2, 버전 0.0.0.
 - [x] `0-ENV-12` PlugVaults 배포 절차 작성(빌드 결과를 `.obsidian\plugins\<id>\`에 복사) → 완료(2026-11-01). [scripts/deploy.mjs](./scripts/deploy.mjs)와 `npm run deploy` 추가. 절차: (1) 프로덕션 빌드 (2) `main.js`, `manifest.json`, `styles.css`(있을 때만)를 `<vault>\.obsidian\plugins\on-the-record\`에 복사 (3) Obsidian에서 플러그인 활성화(최초 1회) 또는 재활성화. 대상 vault는 환경 변수 `OTR_TEST_VAULT`, 없으면 `%USERPROFILE%\OneDrive\PlugVaults`.
-- [x] `0-ENV-06` 라이선스 정책 확정 → **결정: 프로젝트 자체 코드는 완전한 MIT 라이선스 적용.** 박성원 개인의 오픈소스 프로젝트이며 회사와는 아무런 관련이 없다(기존 사내 혜택 계획은 공식 폐기).
-- [x] `0-ENV-07` 소프트웨어 권리 귀속 확인 → 회사 지시나 직무발명이 아닌, 개인적 필요에 의해 착수한 **박성원 개인의 독립 프로젝트**임을 확인 완료. 저작권자 `SUNGWON PARK (박성원)` 표기를 `LICENSE`에 반영.
+- [x] `0-ENV-06` 라이선스 정책 확정 → **결정: 프로젝트 자체 코드는 완전한 MIT 라이선스를 적용한다.** 박성원의 독립 오픈소스 프로젝트로 공개한다.
+- [x] `0-ENV-07` 소프트웨어 권리 귀속 확인 → 박성원의 독립 프로젝트임을 확인하고, 저작권자 `SUNGWON PARK (박성원)` 표기를 `LICENSE`에 반영 완료.
 - [x] `0-ENV-08` 공개 GitHub 저장소와 Obsidian 커뮤니티 플러그인 등록 정책 확인 → 공식 정책·제출 요건·FAQ·제출/관리 절차를 2026-11-05 대조하고 [정책 검토 문서](./docs/research/Obsidian_디렉터리정책_상충검토.md), README에 반영. 플러그인·의존성 설치/업데이트 금지에 따라 런타임·모델 자동 다운로드·설치를 배제하고 사용자 직접 관리로 확정.
 - [x] `0-ENV-10` 의존 구성 요소(`whisper.cpp`, 모델, 오디오 변환기)의 예비 라이선스 조사 → 플러그인이 바이너리/모델을 번들링 배포하지 않기로 확정함에 따라, 로컬 사용자 설치 소프트웨어로서 각각의 라이선스(whisper.cpp MIT, FFmpeg LGPL/GPL)를 따름을 확인.
 - [x] `0-ENV-09` MIT 정책 표기, `LICENSE` 파일 저작권자(`SUNGWON PARK`) 반영, README 및 패키지 메타데이터 갱신, 오픈소스 프로젝트 지원 안내 문서(`SUPPORT.md`) 작성 완료.
 
 #### 보류: 장소·장비 사유
 
-- [-] `0-ENV-15` 사내 GitLab 접속의 `http.sslVerify=false` 대체 검토 → 종료(2026-11-07, 취소): 소스코드 배포처를 GitHub(`https://github.com/sparklings/ontherecord`)으로 공식 확정하고 개인 오픈소스 프로젝트로 정립함에 따라, 사내 GitLab 등 외부 저장소 연동 이슈는 모두 불필요하여 공식 종료(취소) 처리.
+- [-] `0-ENV-15` 외부 GitLab 접속의 `http.sslVerify=false` 대체 검토 → 종료(2026-11-07, 취소): 소스코드 배포처를 GitHub(`https://github.com/sparklings/ontherecord`)으로 공식 확정하고 독립 오픈소스 프로젝트로 정립함에 따라, 외부 저장소 연동 이슈는 모두 불필요하여 공식 종료(취소) 처리.
 
 - [x] `0-ENV-01` Samsung PC에서 `Get-CimInstance Win32_VideoController` 조회, GPU 구성 확인 후 `systeminfo_Samsung_960XFG.md`와 개발계획서 수정 → 2026-11-02 확인: Intel Iris Xe Graphics, 드라이버 32.0.101.7088, `AdapterRAM` 2,147,479,552 bytes, `VEN_8086&DEV_A7A0`. 시스템 정보와 OntheRecord 개발계획서에 반영하고 [GPU 확인 기록](./docs/baselines/HARDWARE_CHECK_SAMSUNG_960XFG_2026-11-02.md) 추가. GPU provider 및 실제 가속은 별도 검증 필요.
 
@@ -209,7 +209,6 @@
 
 - [ ] `3-UX-01` 사용자 주도 원클릭 도구 준비 도우미 (Setup Helper) → Obsidian 정책을 준수하기 위해 플러그인 코드 내부 다운로드를 배제하고, 사용자가 복사하여 본인의 터미널(PowerShell/winget)에서 실행할 수 있는 독립 실행형 셋업 스크립트(`scripts/setup-tools.ps1`) 및 설정 탭 내 원클릭 명령어 복사 버튼을 제공한다.
 - [x] `3-UX-02` 설정 화면 정보 구조 개편 및 도구 무결성 검증 UI → 완료(2026-11-19): Vault 공통 설정과 PC별 로컬 도구 설정을 시각적으로 분리하고, 런타임/모델/FFmpeg 경로의 실시간 존재/크기 검증 뱃지(`✅ 준비됨` / `⚠️ 파일 없음`) 및 원클릭 설치 스크립트 복사 기능 구현([settingsTab.ts](./src/settingsTab.ts)).
-- [ ] `3-UX-03` 회의 녹음→자동 전사→회의록 완성 통합 사용자 여정(User Journey) 검증 → 첫 실행 설정부터 코어 녹음 개시, 탭 닫힘 시 안전 연결, 백그라운드 전사 및 노트 본문 자동 반영, 전사문 검색까지 이어지는 단절 없는 End-to-End 흐름을 초보 사용자 시나리오로 실기 검증한다.
 - [ ] `3-UX-03` 회의 녹음→자동 전사→회의록 완성 통합 사용자 여정(User Journey) 검증 → 첫 실행 설정부터 코어 녹음 개시, 탭 닫힘 시 안전 연결, 백그라운드 전사 및 노트 본문 자동 반영, 전사문 검색까지 이어지는 단절 없는 End-to-End 흐름을 초보 사용자 시나리오로 실기 검증한다.
 
 #### 5. 사후 분석 및 로컬 AI 연계 (POST - 선택 확장)
