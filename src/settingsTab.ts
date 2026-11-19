@@ -3,6 +3,7 @@ import type { App, Plugin } from "obsidian";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
 import { t } from "./i18n.ts";
 import { SUPPORTED_MODELS, getModelMetadata, checkModelFileInstalled, buildModelDownloadCommand } from "./modelCatalog.ts";
+import { testLocalLlmConnection } from "./localLlmClient.ts";
 import * as fs from "fs";
 
 function checkPathExists(filePath: string): { exists: boolean; sizeBytes?: number } {
@@ -117,6 +118,18 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					.setPlaceholder("예: Meetings 또는 회의록")
 					.onChange((value) => {
 						void this.updateVaultSettings({ autoRecordFolder: value.trim() });
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("회의록 템플릿 파일 기준 자동 시작")
+			.setDesc("지정한 템플릿(예: Templates/회의록.md)으로 새 문서가 생성되었을 때만 녹음이 시작됩니다. (비워두면 모든 새 노트에 적용)")
+			.addText((text) =>
+				text
+					.setValue(vaultSettings.autoRecordTemplatePath)
+					.setPlaceholder("예: Templates/회의록.md")
+					.onChange((value) => {
+						void this.updateVaultSettings({ autoRecordTemplatePath: value.trim() });
 					}),
 			);
 
@@ -315,6 +328,79 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 						void this.updateVaultSettings({
 							transcriptSearchTerms: value.split(/\r?\n/).map((term) => term.trim()).filter(Boolean),
 						});
+					}),
+			);
+
+		new Setting(containerEl).setName("🤖 로컬 AI 회의록 요약 (Ollama / LM Studio)").setHeading();
+		containerEl.createEl("p", {
+			text: "클라우드 전송 없이 내 PC의 로컬 LLM과 연동하여 회의 전사문의 핵심 요약, 주요 결정 사항, 액션 아이템을 100% 프라이빗하게 자동 추출합니다.",
+			cls: "setting-item-description",
+		});
+
+		new Setting(containerEl)
+			.setName("로컬 AI 회의록 요약 활성화")
+			.setDesc("로컬 LLM을 통한 자동 요약 기능 사용 여부를 설정합니다.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(vaultSettings.enableLocalLlm)
+					.onChange((value) => {
+						void this.updateVaultSettings({ enableLocalLlm: value });
+					}),
+			);
+
+		const endpointSetting = new Setting(containerEl)
+			.setName("로컬 LLM 엔드포인트 URL")
+			.setDesc("Ollama (기본: http://localhost:11434) 또는 LM Studio (http://localhost:1234) 주소입니다. 보안을 위해 오직 localhost만 허용됩니다.")
+			.addText((text) =>
+				text
+					.setValue(vaultSettings.localLlmEndpoint)
+					.setPlaceholder("http://localhost:11434")
+					.onChange((value) => {
+						void this.updateVaultSettings({ localLlmEndpoint: value.trim() });
+					}),
+			);
+
+		endpointSetting.addButton((button) =>
+			button.setButtonText("연결 확인").onClick(async () => {
+				button.setDisabled(true);
+				button.setButtonText("확인 중...");
+				try {
+					const res = await testLocalLlmConnection(vaultSettings.localLlmEndpoint);
+					if (res.ok) {
+						const modelList = res.models.length > 0 ? ` (감지된 모델: ${res.models.slice(0, 3).join(", ")}${res.models.length > 3 ? " 외" : ""})` : "";
+						new Notice(`✅ 로컬 LLM 서버 연결 성공 [${res.serverType}]${modelList}`, 5000);
+					} else {
+						new Notice(`❌ 연결 실패: ${res.error ?? "서버 응답 없음"}`, 6000);
+					}
+				} catch (err: unknown) {
+					new Notice(`❌ 오류: ${err instanceof Error ? err.message : String(err)}`, 6000);
+				} finally {
+					button.setDisabled(false);
+					button.setButtonText("연결 확인");
+				}
+			}),
+		);
+
+		new Setting(containerEl)
+			.setName("요약 모델 이름")
+			.setDesc("PC에 설치된 로컬 LLM 모델명을 입력하세요. (예: qwen2.5:7b, gemma2:9b, llama3.1:8b)")
+			.addText((text) =>
+				text
+					.setValue(vaultSettings.localLlmModel)
+					.setPlaceholder("qwen2.5:7b")
+					.onChange((value) => {
+						void this.updateVaultSettings({ localLlmModel: value.trim() });
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("전사 완료 시 자동 요약 생성")
+			.setDesc("음성 전사가 완료되어 노트에 삽입된 후 자동으로 로컬 AI 요약 섹션을 노트 하단에 추가합니다.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(vaultSettings.localLlmAutoSummarize)
+					.onChange((value) => {
+						void this.updateVaultSettings({ localLlmAutoSummarize: value });
 					}),
 			);
 

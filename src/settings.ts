@@ -16,8 +16,16 @@ export interface VaultSettings {
 	recordStartMode: RecordStartMode;
 	recordStartNotification: boolean;
 	autoRecordFolder: string;
+	recordStartFolder?: string;
 	onTabCloseAction: OnTabCloseAction;
 	transcriptionInsertMode: TranscriptionInsertMode;
+	// 로컬 LLM 사후 요약 연계 (3-POST-01)
+	enableLocalLlm: boolean;
+	localLlmEndpoint: string;
+	localLlmModel: string;
+	localLlmAutoSummarize: boolean;
+	// 템플릿 기반 회의록 생성 및 조건부 자동 시작 (3-REC-09)
+	autoRecordTemplatePath: string;
 }
 
 export interface LocalSettings {
@@ -44,6 +52,11 @@ export const DEFAULT_VAULT_SETTINGS: VaultSettings = {
 	autoRecordFolder: "",
 	onTabCloseAction: "stop-and-attach",
 	transcriptionInsertMode: "auto",
+	enableLocalLlm: false,
+	localLlmEndpoint: "http://localhost:11434",
+	localLlmModel: "qwen2.5:7b",
+	localLlmAutoSummarize: false,
+	autoRecordTemplatePath: "",
 };
 
 export const DEFAULT_LOCAL_SETTINGS: LocalSettings = {
@@ -156,6 +169,36 @@ export function normalizeVaultSettings(value: unknown): VaultSettings {
 			throw new Error("transcriptionInsertMode 설정이 올바르지 않습니다.");
 		}
 		result.transcriptionInsertMode = value.transcriptionInsertMode;
+	}
+	if (value.enableLocalLlm !== undefined) {
+		if (typeof value.enableLocalLlm !== "boolean") {
+			throw new Error("enableLocalLlm 설정이 올바르지 않습니다.");
+		}
+		result.enableLocalLlm = value.enableLocalLlm;
+	}
+	if (value.localLlmEndpoint !== undefined) {
+		if (typeof value.localLlmEndpoint !== "string") {
+			throw new Error("localLlmEndpoint 설정이 올바르지 않습니다.");
+		}
+		result.localLlmEndpoint = value.localLlmEndpoint.trim();
+	}
+	if (value.localLlmModel !== undefined) {
+		if (typeof value.localLlmModel !== "string") {
+			throw new Error("localLlmModel 설정이 올바르지 않습니다.");
+		}
+		result.localLlmModel = value.localLlmModel.trim();
+	}
+	if (value.localLlmAutoSummarize !== undefined) {
+		if (typeof value.localLlmAutoSummarize !== "boolean") {
+			throw new Error("localLlmAutoSummarize 설정이 올바르지 않습니다.");
+		}
+		result.localLlmAutoSummarize = value.localLlmAutoSummarize;
+	}
+	if (value.autoRecordTemplatePath !== undefined) {
+		if (typeof value.autoRecordTemplatePath !== "string") {
+			throw new Error("autoRecordTemplatePath 설정이 올바르지 않습니다.");
+		}
+		result.autoRecordTemplatePath = value.autoRecordTemplatePath.trim();
 	}
 	return result;
 }

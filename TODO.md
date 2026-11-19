@@ -220,7 +220,7 @@
 #### 5. 사후 분석 및 로컬 AI 연계 (POST - 선택 확장)
 > 전사 완료 후 완전한 프라이빗 환경을 유지하면서 회의록의 가치를 극대화하는 로컬 LLM 후처리 파이프라인을 설계한다.
 
-- [ ] `3-POST-01` 로컬 LLM 연동 회의록 요약·액션 아이템 템플릿 연계 검토 → 클라우드 API 대신 로컬 LLM(Ollama, LM Studio 등 로컬 호스트 API)과 연동하여, 전사 완료 후 '핵심 요약', '할 일(Action Items)', '결정 사항'을 자동 추출해 마크다운 노트 템플릿으로 출력하는 선택 기능 설계.
+- [x] `3-POST-01` 로컬 LLM 연동 회의록 요약·액션 아이템 템플릿 연계 → 완료(2026-11-20): 100% 로컬 오프라인 프라이버시(localhost/127.0.0.1만 허용) 기반 로컬 LLM 클라이언트([src/localLlmClient.ts](./src/localLlmClient.ts)) 및 회의록 3단 구조(핵심 요약, 주요 결정 사항, 액션 아이템) 프롬프트 엔진([src/summaryPrompt.ts](./src/summaryPrompt.ts)) 구현. Ollama 및 OpenAI 호환 API(LM Studio 등) 원클릭 연결 테스트, 전사 완료 후 자동 요약 및 활성 노트 수동 요약 명령(`summarize-active-note-transcript`) 제공. 단위 테스트 5개([test/localLlm.test.ts](./test/localLlm.test.ts)) 통과.
 
 #### 6. 전용 사이드바 제어 패널 및 플레이어형 녹음·전사 워크플로 (SIDEBAR & CONTROLS)
 > 새 노트 자동 감지의 불확실성을 해소하고, 오른쪽 사이드바에서 플레이어형 제어(녹음/일시정지/재개/중지) 및 노트 내 다중 레코딩 임베드 탐색·선택형 전사를 원클릭으로 수행할 수 있는 직관적인 UI를 구축한다.

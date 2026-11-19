@@ -56,6 +56,8 @@ import {
 	handleTimestampClick,
 	postProcessTimestamps,
 } from "./audioPlaybackSync.ts";
+import { generateMeetingSummary } from "./localLlmClient.ts";
+import { extractTranscriptFromMarkdown, formatMeetingSummaryBlock } from "./summaryPrompt.ts";
 
 interface ObsidianAudioRecorderPlugin {
 	instance?: {
@@ -308,6 +310,20 @@ export default class OnTheRecordPlugin extends Plugin {
 			name: "고아 녹음 파일 점검",
 			callback: () => {
 				void this.openOrphanAudioModal();
+			},
+		});
+		this.addCommand({
+			id: "summarize-active-note-transcript",
+			name: "현재 활성 노트 전사문 로컬 AI 요약 생성",
+			checkCallback: (checking: boolean) => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if (activeFile && activeFile.extension === "md") {
+					if (!checking) {
+						void this.generateAndAppendSummary(activeFile);
+					}
+					return true;
+				}
+				return false;
 			},
 		});
 		this.addRibbonIcon("search", "전사할 오디오 파일 선택", () => this.openAudioFilePicker());
@@ -589,11 +605,46 @@ export default class OnTheRecordPlugin extends Plugin {
 					}),
 				);
 				new Notice(`[On the Record] '${filename}' 전사 결과가 노트(${target.note.path})에 자동 삽입되었습니다.`, 6000);
+
+				if (this.vaultSettings.enableLocalLlm && this.vaultSettings.localLlmAutoSummarize) {
+					void this.generateAndAppendSummary(target.note);
+				}
 			} catch (error) {
 				this.reportError(`전사 결과 자동 삽입에 실패했습니다: ${item.filePath}`, error);
 			}
 		} else {
 			new Notice(`[On the Record] '${filename}' 전사가 완료되었습니다. 결과를 검토하고 노트에 삽입하세요.`, 10000);
+		}
+	}
+
+	async generateAndAppendSummary(note: TFile): Promise<void> {
+		if (!this.vaultSettings.enableLocalLlm) {
+			new Notice("로컬 LLM 요약 기능이 꺼져 있습니다. 설정 화면에서 활성화하세요.");
+			return;
+		}
+
+		try {
+			const content = await this.app.vault.read(note);
+			const transcriptText = extractTranscriptFromMarkdown(content);
+			if (!transcriptText || transcriptText.trim().length === 0) {
+				new Notice(`[On the Record] '${note.basename}' 노트에서 요약할 전사문을 찾을 수 없습니다.`);
+				return;
+			}
+
+			new Notice(`[On the Record] '${note.basename}' 로컬 AI 요약 생성을 시작합니다... (${this.vaultSettings.localLlmModel})`, 5000);
+
+			const summary = await generateMeetingSummary({
+				endpoint: this.vaultSettings.localLlmEndpoint,
+				model: this.vaultSettings.localLlmModel,
+				transcript: transcriptText,
+			});
+
+			const summaryBlock = formatMeetingSummaryBlock(summary, this.vaultSettings.localLlmModel);
+			await this.app.vault.process(note, (c) => c + summaryBlock);
+			new Notice(`[On the Record] '${note.basename}' 로컬 AI 회의 요약이 노트 하단에 추가되었습니다!`, 7000);
+		} catch (error: unknown) {
+			const msg = error instanceof Error ? error.message : String(error);
+			new Notice(`[On the Record] 로컬 AI 요약 생성 실패: ${msg}`, 8000);
 		}
 	}
 

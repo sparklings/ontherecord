@@ -7,6 +7,13 @@
 ## 2026-11-20
 
 ### 추가
+- **`3-POST-01` 로컬 LLM 연동 회의록 요약·액션 아이템 템플릿 연계**:
+  - `src/localLlmClient.ts`: 프라이버시 보호를 위해 오직 `localhost`/`127.0.0.1` 로컬 호스트만 허용하는 로컬 LLM 클라이언트 구현 (외부 클라우드 URL 원천 차단)
+  - Ollama(`/api/tags`, `/api/chat`) 및 OpenAI 호환 엔드포인트(LM Studio 등 `/v1/models`, `/v1/chat/completions`) 듀얼 지원 및 원클릭 연결 테스트 기능 제공
+  - `src/summaryPrompt.ts`: 한국어 비즈니스 회의 맞춤형 3단 구조(📌 핵심 요약, 🎯 주요 결정 사항, ✅ 액션 아이템) 프롬프트 및 마크다운 포매터, 본문 전사문 자동 추출기 구현
+  - 설정 탭(`src/settingsTab.ts`): "🤖 로컬 AI 회의록 요약 (Ollama / LM Studio)" 독립 섹션, 엔드포인트/모델 입력, 원클릭 연결 확인 버튼, 자동 요약 토글 추가
+  - 명령 연동(`src/main.ts`): "현재 활성 노트 전사문 로컬 AI 요약 생성(`summarize-active-note-transcript`)" 명령 추가 및 백그라운드 전사 완료 시 자동 요약 삽입 옵션 연동
+  - 단위 테스트: `test/localLlm.test.ts` 5개 항목 추가 및 통과
 - **`3-UX-08` 지원 모델 선택지 전체 확장 및 모델별 원클릭 다운로드 가이드 UI**:
   - `src/modelCatalog.ts`: 공식 5대 GGML 양자화 모델(`base`, `small`, `medium`, `large-v3-turbo`, `large-v3`) 메타데이터 테이블, 파일명, 권장 여부, 다운로드 URL 매핑 함수 정의
   - 설정 탭(`src/settingsTab.ts`): 모델 선택 시 실시간 로컬 설치 여부 뱃지(`이 PC에 준비됨` / `미설치`), 모델 규격 및 설명 카드 렌더링
