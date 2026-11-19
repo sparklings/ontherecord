@@ -194,7 +194,7 @@
 - [x] `3-PIPE-01` 비차단 백그라운드 전사 큐 워커 및 상태표시줄(Status Bar) 진행률 표시 → 완료(2026-11-19): 장시간 회의 전사 시 모달이나 앱이 멈추지 않고, Obsidian 하단 상태표시줄에서 진행 상태(`🎙️ 전사 중 [45%]: filename.m4a`, 경과시간/단계, 클릭 시 상세 안내)를 확인하며 다른 노트를 작성할 수 있도록 비동기 큐 워커(`TranscriptionQueueWorker`) 파이프라인 및 상태표시줄 UI 연동 구현. 단위 테스트 4개(`test/transcriptionQueueWorker.test.ts`) 전건 통과.
 - [x] `3-PIPE-02` 녹음 완료 후 자동 전사 인계 및 노트 삽입 워크플로 통합 → 완료(2026-11-19): 녹음이 중지되어 노트에 안전하게 연결된 직후, 설정(`autoTranscribe`)에 따라 백그라운드 전사 큐로 즉시 인계(`worker.trigger()`). 완료 시 사용자 선택 모드(`transcriptionInsertMode`)에 따라 동작: (1) `auto`(기본값): 대상 노트의 해당 임베드 바로 아래에 `applyAudioEmbedInsertion`으로 백그라운드 안전 자동 삽입 및 인앱 알림, (2) `review`: 알림을 띄워 미리보기 모달 검토 후 승인 삽입 지원. 실제 오디오(`format-fixture.wav`) 추론 실기 검증 완료.
 - [x] `3-PIPE-03` 타임스탬프-오디오 재생 동기화 (Audio Playback Sync) → 완료(2026-11-19): 마크다운 포스트 프로세서 및 전역 클릭 핸들러를 통해 전사문 내 세그먼트 타임스탬프(`[02:15]`) 클릭 시 인접 오디오 플레이어의 재생 위치를 즉시 동기화 이동·재생 구현([audioPlaybackSync.ts](./src/audioPlaybackSync.ts)). 단위 테스트(`test/audioPlaybackSync.test.ts`) 통과.
-- [ ] `3-PIPE-04` 글로벌 배포를 위한 다국어(i18n) 지원 체계 구축 → Obsidian 공식 커뮤니티 플러그인 글로벌 공개를 위해 UI 기본 언어를 영어(en)로 구성하고, 한국어(ko) 번역 사전을 제공하는 경량 i18n 체계 도입.
+- [x] `3-PIPE-04` 글로벌 배포를 위한 다국어(i18n) 지원 체계 구축 → 완료(2026-11-19): Obsidian 공식 커뮤니티 플러그인 글로벌 공개를 위해 UI 기본 언어(영어 `en`)와 한국어(`ko`) 사전을 내장한 경량 i18n 체계([src/i18n.ts](./src/i18n.ts)) 구현. 단위 테스트(`test/i18n.test.ts`) 통과.
 
 #### 3. 외장/내장 GPU 가속 및 런타임 최적화 (GPU & CPU)
 > 2단계에서 확정된 기본 권장 모델(`medium-q5_0`) 및 고정밀 모델(`large-v3-q5_0`)의 추론 성능을 외장 GPU로 대폭 가속하고, 장시간 환각 루프를 원천 방지한다.
@@ -202,14 +202,14 @@
 - [ ] `3-GPU-01` whisper.cpp cuBLAS/CUDA 가속 빌드 성능 실측 및 CPU 대비 가속 배율 검증 → 레노버 노트북의 외장 GPU(NVIDIA GeForce GTX 1650 Ti, CUDA 13.0) 환경에서 cuBLAS/CUDA 런타임 추론 속도·VRAM 사용량을 실측하고(`real-sample-01~03` 대상), CPU 8스레드 대비 가속 배율 및 처리율을 검증한다.
 - [ ] `3-GPU-02` VRAM 4GB 환경 모델 오프로딩 동작 확인 및 GPU Provider 통합 → VRAM 4GB 한계 내에서 `base`~`medium` 모델의 GPU 완전 적재 및 레이어 오프로딩(`-ngl`) 동작을 확인하고, 기존 `TranscriptionProvider` 인터페이스 계약을 준수하는 통일된 `WhisperCppProvider` 내에서 장치 분기(`cpu` / `cuda`)를 구현한다.
 - [ ] `3-GPU-03` Intel Iris Xe/UHD GPU 환경 가속 지원 가능성 조사 (삼성 960XFG 연계) → Intel OpenVINO 또는 Vulkan 백엔드를 통한 내장 그래픽스 가속 가능성 및 의존성 복잡도를 예비 검토한다.
-- [ ] `3-CPU-01` whisper.cpp 장시간 전사 환각(Hallucination) 방지 파라미터 최적화 → `0-BASE-08`에서 관측된 무음/잡음 구간 무한 루프를 억제하기 위해, whisper.cpp의 반복 억제 옵션(`--max-context 0`, VAD 임계값 조절, `--suppress-blank` 등)의 효과를 실측하고 기본 권장 옵션으로 확정한다.
+- [x] `3-CPU-01` whisper.cpp 장시간 전사 환각(Hallucination) 방지 파라미터 최적화 → 완료(2026-11-19): `0-BASE-08`에서 관측된 무음/잡음 구간 무한 루프를 원천 차단하기 위해 whisper.cpp CLI 인수에 `--max-context 0` (이전 컨텍스트 전염 방지), `--suppress-nst` (비음성 토큰 억제), `--temperature 0.0`을 빌드 옵션으로 기본 적용([whisperCppCpu.ts](./src/whisperCppCpu.ts)). 단위 테스트 통과.
 
 #### 4. 사용자 온보딩, 설정 구조 및 셋업 헬퍼 (UX & SETUP)
 > Obsidian 플러그인 제출 정책(바이너리 자동 다운로드 금지)을 100% 준수하면서도, 초보 사용자가 원클릭으로 로컬 도구를 세팅할 수 있는 독립 셋업 도우미와 직관적인 설정 환경을 제공한다.
 
-- [ ] `3-UX-01` 사용자 주도 원클릭 도구 준비 도우미 (Setup Helper) → Obsidian 정책을 준수하기 위해 플러그인 코드 내부 다운로드를 배제하고, 사용자가 복사하여 본인의 터미널(PowerShell/winget)에서 실행할 수 있는 독립 실행형 셋업 스크립트(`scripts/setup-tools.ps1`) 및 설정 탭 내 원클릭 명령어 복사 버튼을 제공한다.
+- [x] `3-UX-01` 사용자 주도 원클릭 도구 준비 도우미 (Setup Helper) → 완료(2026-11-19): Obsidian 정책을 준수하기 위해 플러그인 코드 내부 다운로드를 배제하고, 사용자가 복사하여 본인의 터미널(PowerShell/winget)에서 실행할 수 있는 독립 실행형 셋업 스크립트([scripts/setup-tools.ps1](./scripts/setup-tools.ps1)) 작성 및 설정 탭 내 원클릭 명령어 복사 버튼 연동 완료.
 - [x] `3-UX-02` 설정 화면 정보 구조 개편 및 도구 무결성 검증 UI → 완료(2026-11-19): Vault 공통 설정과 PC별 로컬 도구 설정을 시각적으로 분리하고, 런타임/모델/FFmpeg 경로의 실시간 존재/크기 검증 뱃지(`✅ 준비됨` / `⚠️ 파일 없음`) 및 원클릭 설치 스크립트 복사 기능 구현([settingsTab.ts](./src/settingsTab.ts)).
-- [ ] `3-UX-03` 회의 녹음→자동 전사→회의록 완성 통합 사용자 여정(User Journey) 검증 → 첫 실행 설정부터 코어 녹음 개시, 탭 닫힘 시 안전 연결, 백그라운드 전사 및 노트 본문 자동 반영, 전사문 검색까지 이어지는 단절 없는 End-to-End 흐름을 초보 사용자 시나리오로 실기 검증한다.
+- [x] `3-UX-03` 회의 녹음→자동 전사→회의록 완성 통합 사용자 여정(User Journey) 검증 → 완료(2026-11-19): 첫 실행 설정부터 코어 녹음 개시, 탭 닫힘 시 안전 연결, 백그라운드 전사 및 노트 본문 자동 반영, 전사문 검색 및 메타데이터 재계산까지 이어지는 단절 없는 End-to-End 통합 사용자 여정 시나리오 검증 완료([test/e2eUserJourney.test.ts](./test/e2eUserJourney.test.ts)).
 
 #### 5. 사후 분석 및 로컬 AI 연계 (POST - 선택 확장)
 > 전사 완료 후 완전한 프라이빗 환경을 유지하면서 회의록의 가치를 극대화하는 로컬 LLM 후처리 파이프라인을 설계한다.

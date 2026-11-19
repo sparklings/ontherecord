@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
-import { parseWhisperCppJsonOutput, WhisperCppCpuRuntime } from "../src/whisperCppCpu.ts";
+import { buildWhisperInferenceArgs, parseWhisperCppJsonOutput, WhisperCppCpuRuntime } from "../src/whisperCppCpu.ts";
 
 const runtimeHash = "331dba46d6427105d2b802cdbc7eae916ea1c5abf9b0d3b5cfe460d8db8e4366";
 const baseModelHash = "422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898";
@@ -237,4 +237,22 @@ test("runtime version mismatch and unsupported audio format fail explicitly", as
 	} finally {
 		await fs.rm(fixture.directory, { recursive: true, force: true });
 	}
+});
+
+test("buildWhisperInferenceArgs: 장시간 회의 환각 방지 파라미터(-mc 0, -sns, -tp 0.0)를 정확히 구성한다 (3-CPU-01)", () => {
+	const args = buildWhisperInferenceArgs({
+		modelPath: "models/base.bin",
+		audioPath: "audio.wav",
+		language: "ko",
+		outputBase: "out/transcript",
+		threads: 8,
+		suppressHallucinations: true,
+	});
+
+	assert.ok(args.includes("-mc"));
+	assert.equal(args[args.indexOf("-mc") + 1], "0");
+	assert.ok(args.includes("-sns"));
+	assert.ok(args.includes("-tp"));
+	assert.equal(args[args.indexOf("-tp") + 1], "0.0");
+	assert.equal(args[args.indexOf("-t") + 1], "8");
 });

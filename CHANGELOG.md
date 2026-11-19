@@ -7,6 +7,19 @@
 ## 2026-11-19
 
 ### 추가
+- **`3-UX-01` 사용자 주도 원클릭 도구 준비 도우미 (Setup Helper)**:
+  - 초보 사용자가 터미널 한 줄 실행으로 whisper.cpp, 기본 모델 및 FFmpeg를 자동 설치하고 설정을 연결할 수 있는 독립 실행형 스크립트(`scripts/setup-tools.ps1`) 구현
+  - 플러그인 설정 화면 내 원클릭 명령어 복사 버튼 연동
+- **`3-CPU-01` whisper.cpp 장시간 전사 환각(Hallucination) 방지 파라미터 최적화**:
+  - `buildWhisperInferenceArgs` 함수 구현 및 whisper.cpp CLI 인수에 `--max-context 0` (이전 컨텍스트 전염 방지), `--suppress-nst` (비음성 잡음 토큰 억제), `--temperature 0.0` 기본 옵션 적용
+  - 단위 테스트 추가
+- **`3-PIPE-04` 글로벌 배포를 위한 경량 다국어(i18n) 체계 구축**:
+  - 외부 의존성 없는 TypeScript 순수 딕셔너리 기반 경량 다국어 모듈(`src/i18n.ts`) 구현
+  - 기본 영어(`en`) 및 한국어(`ko`) 사전 구축 및 템플릿 변수 치환 지원
+  - 단위 테스트 4개 항목(`test/i18n.test.ts`) 추가 및 통과
+- **`3-UX-03` 회의 녹음→자동 전사→회의록 완성 통합 사용자 여정(E2E) 검증**:
+  - 노트 생성, 음성 녹음 연결, 백그라운드 전사 결과 삽입, 다중 녹음 격리 및 메타데이터 재계산 동기화까지 전 과정을 검증하는 End-to-End 통합 테스트(`test/e2eUserJourney.test.ts`) 구축
+- 전체 86개 단위 테스트 전건 통과 및 production build 성공 검증
 - **오픈소스 프로젝트 저작권 문구 관리 및 표기 정돈**:
   - 프로젝트 전반(README.md, SUPPORT.md, TODO.md, CHANGELOG.md, 설계/조사 문서)에서 독자에게 거부감이나 불필요한 오해를 유발할 수 있는 방어적·해명성 사족 문구 제거
   - "박성원(SUNGWON PARK)이 개발한 독립 오픈소스 프로젝트(MIT)" 표준 문체로 일관되게 정비

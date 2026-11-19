@@ -286,13 +286,16 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("FFmpeg 원클릭 설치 스크립트 복사 (Setup Helper)")
-			.setDesc("별도 PowerShell 터미널에서 실행하여 FFmpeg를 winget으로 설치할 수 있는 명령어를 클립보드에 복사합니다.")
+			.setName("원클릭 도구 자동 셋업 스크립트 복사 (Setup Helper)")
+			.setDesc("별도 PowerShell 터미널에서 실행하여 whisper.cpp, 기본 모델 및 FFmpeg를 한 번에 자동 설치하고 설정을 연결하는 명령어를 복사합니다.")
 			.addButton((button) =>
 				button.setButtonText("명령어 복사").onClick(async () => {
-					const cmd = "winget install Gyan.FFmpeg";
+					const cmd = `powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/sparklings/ontherecord/main/scripts/setup-tools.ps1 | iex"`;
 					await navigator.clipboard.writeText(cmd);
-					new Notice("FFmpeg 설치 명령어가 클립보드에 복사되었습니다.\nPowerShell 터미널을 열고 붙여넣어 실행하세요.");
+					new Notice(
+						"On the Record 외부 도구 자동 셋업 명령어가 클립보드에 복사되었습니다.\nPowerShell 터미널을 열고 붙여넣어 실행하세요.",
+						7000,
+					);
 				}),
 			);
 	}

@@ -162,6 +162,34 @@ const defaultDependencies: CpuRuntimeDependencies = {
 	},
 };
 
+export function buildWhisperInferenceArgs(options: {
+	modelPath: string;
+	audioPath: string;
+	language: string;
+	outputBase: string;
+	threads?: number;
+	suppressHallucinations?: boolean;
+}): string[] {
+	const args = [
+		"-m", options.modelPath,
+		"-f", options.audioPath,
+		"-l", options.language,
+		"-t", String(options.threads ?? 4),
+		"-np",
+		"-oj",
+		"-of", options.outputBase,
+	];
+
+	if (options.suppressHallucinations !== false) {
+		// 3-CPU-01: 장시간 회의 전사 시 무음/잡음 구간 무한 루프(환각) 방지 최적화
+		args.push("-mc", "0"); // 이전 세그먼트 컨텍스트 누적 차단
+		args.push("-sns"); // 비음성(non-speech) 토큰 억제
+		args.push("-tp", "0.0"); // 결정론적 온도 고정
+	}
+
+	return args;
+}
+
 export class WhisperCppCpuRuntime {
 	private readonly dependencies: CpuRuntimeDependencies;
 
@@ -344,17 +372,17 @@ export class WhisperCppCpuRuntime {
 			await assertRegularFile(normalizedAudioPath, "정규화된 오디오 파일");
 
 			onProgress("transcribing");
+			const whisperArgs = buildWhisperInferenceArgs({
+				modelPath,
+				audioPath: normalizedAudioPath,
+				language,
+				outputBase,
+				threads: 4,
+				suppressHallucinations: true,
+			});
 			await this.dependencies.runCommand(
 				runtimePath,
-				[
-					"-m", modelPath,
-					"-f", normalizedAudioPath,
-					"-l", language,
-					"-t", "4",
-					"-np",
-					"-oj",
-					"-of", outputBase,
-				],
+				whisperArgs,
 				SMOKE_TEST_TIMEOUT_MS,
 			);
 			const transcriptPath = `${outputBase}.json`;
