@@ -1,6 +1,6 @@
 {
   "name": "on-the-record",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": false,
   "description": "Local minutes for Obsidian.",
   "main": "main.js",

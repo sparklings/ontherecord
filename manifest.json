@@ -1,7 +1,7 @@
 {
   "id": "on-the-record",
   "name": "On the Record",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "minAppVersion": "1.7.2",
   "description": "Local minutes for Obsidian.",
   "author": "SUNGWON PARK",
