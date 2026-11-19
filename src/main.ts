@@ -39,6 +39,7 @@ import {
 import type { CoreAudioRecorder, SessionStorageAdapter } from "./recordingSession.ts";
 import { TabCloseHandler } from "./tabCloseHandler.ts";
 import { formatStatusBarProgress, TranscriptionQueueWorker } from "./transcriptionQueueWorker.ts";
+import { RecordingStatusBar } from "./recordingStatusBar.ts";
 
 interface ObsidianAudioRecorderPlugin {
 	instance?: {
@@ -164,14 +165,20 @@ export default class OnTheRecordPlugin extends Plugin {
 	private tabCloseHandler!: TabCloseHandler;
 	private queueWorker!: TranscriptionQueueWorker;
 	private statusBarItem: HTMLElement | null = null;
+	private recordingStatusBar!: RecordingStatusBar;
+	private recordingStatusBarItem: HTMLElement | null = null;
 
 	async onload(): Promise<void> {
 		this.setupSessionManager();
 		this.setupTabCloseHandler();
 		this.setupQueueWorker();
+		this.setupRecordingStatusBar();
 
 		try {
-			await this.sessionManager.restore();
+			const restored = await this.sessionManager.restore();
+			if (restored) {
+				this.recordingStatusBar.start(restored);
+			}
 		} catch (error) {
 			this.reportError("이전 녹음 세션을 복원하지 못했습니다.", error);
 		}
@@ -228,6 +235,10 @@ export default class OnTheRecordPlugin extends Plugin {
 					notePath: note.path,
 					seq,
 					onNotice: (msg) => new Notice(msg, 4000),
+				}).then((session) => {
+					if (session) {
+						this.recordingStatusBar.start(session);
+					}
 				});
 			},
 		});
@@ -235,17 +246,7 @@ export default class OnTheRecordPlugin extends Plugin {
 			id: "stop-recording",
 			name: "음성 녹음 중지",
 			callback: () => {
-				if (!this.sessionManager.isRecording()) {
-					new Notice("현재 진행 중인 음성 녹음이 없습니다.");
-					return;
-				}
-				void this.sessionManager.stopSession().then((session) => {
-					if (session) {
-						new Notice(`${session.notePath}의 음성 녹음을 중지했습니다.`);
-					} else {
-						new Notice("음성 녹음을 중지했습니다.");
-					}
-				});
+				void this.stopCurrentRecording();
 			},
 		});
 		this.addCommand({
@@ -361,6 +362,7 @@ export default class OnTheRecordPlugin extends Plugin {
 	}
 
 	onunload(): void {
+		this.recordingStatusBar?.stop();
 		this.queueWorker?.stop();
 		this.watcher?.dispose();
 		this.watcher = null;
@@ -476,6 +478,40 @@ export default class OnTheRecordPlugin extends Plugin {
 		});
 	}
 
+	private setupRecordingStatusBar(): void {
+		this.recordingStatusBarItem = this.addStatusBarItem();
+		this.recordingStatusBarItem.addClass("otr-recording-status-bar");
+		this.recordingStatusBar = new RecordingStatusBar(
+			{
+				setText: (t) => this.recordingStatusBarItem?.setText(t),
+				setAttribute: (k, v) => this.recordingStatusBarItem?.setAttribute(k, v),
+				removeAttribute: (k) => this.recordingStatusBarItem?.removeAttribute(k),
+				addClass: (c) => this.recordingStatusBarItem?.addClass(c),
+				removeClass: (c) => this.recordingStatusBarItem?.removeClass(c),
+			},
+			() => {
+				void this.stopCurrentRecording();
+			},
+		);
+		this.recordingStatusBarItem.onClickEvent(() => {
+			this.recordingStatusBar.handleClick();
+		});
+	}
+
+	private async stopCurrentRecording(): Promise<void> {
+		if (!this.sessionManager.isRecording()) {
+			new Notice("현재 진행 중인 음성 녹음이 없습니다.");
+			return;
+		}
+		const session = await this.sessionManager.stopSession();
+		this.recordingStatusBar.stop();
+		if (session) {
+			new Notice(`${session.notePath}의 음성 녹음을 중지했습니다.`);
+		} else {
+			new Notice("음성 녹음을 중지했습니다.");
+		}
+	}
+
 	private async handleQueueItemCompleted(item: QueuedRecording, result: TranscriptionResult): Promise<void> {
 		const filename = item.filePath.split("/").pop() ?? item.filePath;
 		const targets = this.findAudioEmbedTargets(item.filePath);
@@ -547,13 +583,16 @@ export default class OnTheRecordPlugin extends Plugin {
 		const existingEmbeds = this.app.metadataCache.getFileCache(file)?.embeds?.length ?? 0;
 		const seq = calculateNextRecordingSeq(existingEmbeds);
 
-		await this.sessionManager.startSession({
+		const session = await this.sessionManager.startSession({
 			notePath: file.path,
 			seq,
 			mode,
 			showNotice,
 			onNotice: (msg) => new Notice(msg, 4000),
 		});
+		if (session) {
+			this.recordingStatusBar.start(session);
+		}
 	}
 
 	private async updateVaultSettings(patch: Partial<VaultSettings>): Promise<void> {
@@ -590,17 +629,23 @@ export default class OnTheRecordPlugin extends Plugin {
 		);
 
 		if (signal.aborted) return;
-		if (result.status === "timeout") {
-			// 최근 중지된 녹음 세션이 있는 경우 노트에 안전 연결 시도 (3-REC-02)
-			const recentSession = this.sessionManager.getActiveSession() ?? this.tabCloseHandler.getRecentlyStoppedSession();
-			if (recentSession) {
-				await this.tabCloseHandler.attachAudioToNote(recentSession.notePath, file.path);
-				result.notePaths = [recentSession.notePath];
-			} else {
-				new Notice("녹음 노트의 오디오 링크를 확인하지 못했습니다. 파일 찾기 기능을 사용하세요.");
-				return;
+
+		const recentSession = this.sessionManager.getActiveSession() ?? this.tabCloseHandler.getRecentlyStoppedSession();
+		if (recentSession) {
+			await this.tabCloseHandler.attachAudioToNote(recentSession.notePath, file.path, {
+				seq: recentSession.seq,
+				startedAt: recentSession.startedAt,
+				endedAt: Date.now(),
+				sizeBytes: size ?? file.stat.size,
+			});
+			if (!result.notePaths.includes(recentSession.notePath)) {
+				result.notePaths.push(recentSession.notePath);
 			}
+		} else if (result.status === "timeout") {
+			new Notice("녹음 노트의 오디오 링크를 확인하지 못했습니다. 파일 찾기 기능을 사용하세요.");
+			return;
 		}
+
 		if (result.status !== "linked" && result.notePaths.length === 0) return;
 
 		const added = this.recordingQueue.enqueue({

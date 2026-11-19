@@ -1,5 +1,7 @@
 import type { OnTabCloseAction } from "./settings.ts";
 import type { ActiveRecordingSession, RecordingSessionManager } from "./recordingSession.ts";
+import { applyRecordingSessionToMarkdown } from "./noteMetadataHandler.ts";
+import type { RecordingMetadataEntry } from "./noteMetadataHandler.ts";
 
 export interface TabCloseVaultAdapter {
 	read(path: string): Promise<string>;
@@ -109,15 +111,31 @@ export class TabCloseHandler {
 
 	/**
 	 * 생성된 오디오 파일을 해당 노트에 안전하게 연결(attach)한다.
+	 * 세션 메타데이터가 있으면 Frontmatter와 본문 녹음 블록을 2중 기록한다 (3-REC-04, 3-REC-03).
 	 */
-	async attachAudioToNote(notePath: string, audioPath: string): Promise<boolean> {
+	async attachAudioToNote(
+		notePath: string,
+		audioPath: string,
+		sessionMetadata?: Partial<RecordingMetadataEntry>,
+	): Promise<boolean> {
 		try {
 			if (!(await this.vault.exists(notePath))) {
 				return false;
 			}
 
+			const recently = this.getRecentlyStoppedSession();
+			const now = Date.now();
+			const entry: RecordingMetadataEntry = {
+				audioPath,
+				seq: sessionMetadata?.seq ?? recently?.seq ?? 1,
+				startedAt: sessionMetadata?.startedAt ?? recently?.startedAt ?? (now - 60_000),
+				endedAt: sessionMetadata?.endedAt ?? now,
+				sizeBytes: sessionMetadata?.sizeBytes,
+				durationSeconds: sessionMetadata?.durationSeconds,
+			};
+
 			await this.vault.process(notePath, (content) => {
-				return attachAudioEmbedToMarkdown(content, audioPath);
+				return applyRecordingSessionToMarkdown(content, entry);
 			});
 			return true;
 		} catch (error) {

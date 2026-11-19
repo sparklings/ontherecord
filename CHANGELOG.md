@@ -28,7 +28,19 @@
   - 전사 완료 후 반영 모드(`transcriptionInsertMode`: `auto`(기본값) | `review`) 지원:
     - 자동 삽입 모드: 대상 노트의 해당 오디오 embed 바로 아래에 `applyAudioEmbedInsertion`을 통해 백그라운드 안전 자동 삽입 및 토스트 알림
     - 수동 검토 모드: 알림 클릭 또는 미리보기 모달을 통한 검토 후 삽입 안내
-- 전체 65개 단위 테스트 통과 및 production build(`main.js`, 124KB) 성공 검증
+- **`3-REC-07` 녹음 상태표시줄 UI 및 원클릭 제어 (`F-10`, `S-13`)**:
+  - `RecordingStatusBar` 모듈 구현: 녹음 세션 시작 시 Obsidian 하단 상태표시줄에 실시간 경과 시간(`🔴 01:23 파일명`) 1초 주기 타이머 렌더링
+  - 상태표시줄 클릭 이벤트 핸들러: 클릭 한 번으로 녹음 안전 중지, 대상 노트 연결 및 전사 대기열 자동 인계 수행
+  - 앱 재시작 시 디스크 복원 세션 감지 및 상태표시줄 즉시 복원 연동
+  - 단위 테스트 2개 항목(`test/recordingStatusBar.test.ts`) 추가 및 전건 통과
+- **`3-REC-04` Frontmatter 집계 속성 및 본문 녹음 블록 2중 기록 (`F-06`, `F-07`)**:
+  - Dataview / Bases 호환 Frontmatter 평면 메타데이터(`recording_state`, `recordings` 위키링크 배열, `recording_count`, `recording_total_seconds`, `recording_total_size_mb`, `recording_first_start`, `recording_last_end`) 자동 기록 및 누적 집계
+  - 본문 섹션(기본 `## 녹음 기록`) 아래 세션별 상세 블록(`### 녹음 N · 일시 (소요: MM:SS · 용량)`)을 `vault.process` 단일 트랜잭션으로 안전하게 동시 생성
+- **`3-REC-03` 단일 문서 내 다중 녹음 파일 지원 및 세션 격리 매핑 (`F-08`)**:
+  - 단일 노트 내 다중 녹음 순차 누적(`seq = recording_count + 1`) 시 각 세션별 고유 마커(`<!-- on-the-record:start audio="..." seq="N" -->`) 부여 및 블록 격리
+  - 동일 오디오 재호출 시 중복 블록 생성 방지 및 세션 간 전사문 덮어쓰기 원천 차단
+  - 단위 테스트 5개 항목(`test/noteMetadata.test.ts`) 추가 및 전건 통과
+- 전체 72개 단위 테스트 통과 및 production build(`main.js`, 134KB) 성공 검증
 
 ## 2026-11-07
 
