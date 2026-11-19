@@ -1,4 +1,4 @@
-import { FileSystemAdapter, getLinkpath, MarkdownView, Modal, Notice, Plugin, TFile } from "obsidian";
+import { FileSystemAdapter, getLinkpath, MarkdownView, Modal, Notice, Plugin, TFile, WorkspaceLeaf } from "obsidian";
 import type { EmbedCache } from "obsidian";
 import { DEFAULT_VAULT_SETTINGS, normalizeVaultSettings } from "./settings.ts";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
@@ -6,6 +6,7 @@ import { LocalSettingsStore } from "./localSettingsStore.ts";
 import { RecordingWatcher } from "./recordingWatcher.ts";
 import { OnTheRecordSettingTab } from "./settingsTab.ts";
 import { RecordingQueue } from "./recordingQueue.ts";
+import type { QueuedRecording } from "./recordingQueue.ts";
 import { waitForLinkedNotes } from "./linkWaiter.ts";
 import { AUDIO_EXTENSIONS, isSupportedAudioExtension } from "./audioFiles.ts";
 import { AudioFilePickerModal } from "./audioFilePicker.ts";
@@ -25,7 +26,7 @@ import type { AudioEmbedPosition } from "./resultPreview.ts";
 
 import { AudioEmbedTargetPickerModal, ExistingResultModal, ResultPreviewModal } from "./resultPreviewModal.ts";
 import type { AudioEmbedTarget } from "./resultPreviewModal.ts";
-import { applyAudioEmbedInsertion, hasExistingResult, prioritizeAudioEmbeds } from "./resultPreview.ts";
+import { applyAudioEmbedInsertion, formatResultMarkdown, hasExistingResult, prioritizeAudioEmbeds } from "./resultPreview.ts";
 import type { ExistingResultChoice } from "./resultPreview.ts";
 import type { TranscriptionResult } from "./provider.ts";
 import type { CpuSmokeTestStage } from "./whisperCppCpu.ts";
@@ -36,6 +37,8 @@ import {
 	resolveRecordStartNotice,
 } from "./recordingSession.ts";
 import type { CoreAudioRecorder, SessionStorageAdapter } from "./recordingSession.ts";
+import { TabCloseHandler } from "./tabCloseHandler.ts";
+import { formatStatusBarProgress, TranscriptionQueueWorker } from "./transcriptionQueueWorker.ts";
 
 interface ObsidianAudioRecorderPlugin {
 	instance?: {
@@ -158,9 +161,15 @@ export default class OnTheRecordPlugin extends Plugin {
 	private readonly pendingManualSelections = new Map<string, AbortController>();
 	private cpuDiscoveryInProgress = false;
 	private sessionManager!: RecordingSessionManager;
+	private tabCloseHandler!: TabCloseHandler;
+	private queueWorker!: TranscriptionQueueWorker;
+	private statusBarItem: HTMLElement | null = null;
 
 	async onload(): Promise<void> {
 		this.setupSessionManager();
+		this.setupTabCloseHandler();
+		this.setupQueueWorker();
+
 		try {
 			await this.sessionManager.restore();
 		} catch (error) {
@@ -265,6 +274,50 @@ export default class OnTheRecordPlugin extends Plugin {
 		});
 		this.addRibbonIcon("search", "전사할 오디오 파일 선택", () => this.openAudioFilePicker());
 
+		// 3-PIPE-01: 상태표시줄 아이템 생성
+		this.statusBarItem = this.addStatusBarItem();
+		this.statusBarItem.addClass("otr-status-bar");
+		this.statusBarItem.onClickEvent(() => {
+			const progress = this.queueWorker.getProgress();
+			if (progress) {
+				const pct = progress.percent !== undefined ? ` (${Math.round(progress.percent)}%)` : "";
+				new Notice(`[On the Record] 전사 진행 중: ${progress.item.filePath}${pct}\n단계: ${progress.stage}`, 5000);
+			} else {
+				const queuedCount = this.recordingQueue.list().filter((i) => i.status === "queued").length;
+				if (queuedCount > 0) {
+					new Notice(`[On the Record] 대기열에 ${queuedCount}개 파일이 대기 중입니다.`, 4000);
+				} else {
+					new Notice("[On the Record] 현재 진행 중인 전사 작업이 없습니다.", 3000);
+				}
+			}
+		});
+
+		// 3-REC-02: WorkspaceLeaf.prototype.detach 후킹하여 탭 닫힘 감지
+		const originalDetach = WorkspaceLeaf.prototype.detach;
+		const pluginInstance = this;
+		this.register(() => {
+			WorkspaceLeaf.prototype.detach = originalDetach;
+		});
+		WorkspaceLeaf.prototype.detach = function (this: WorkspaceLeaf) {
+			const view = this.view;
+			if (view instanceof MarkdownView && view.file) {
+				void pluginInstance.tabCloseHandler?.handleLeafClose(view.file.path);
+			}
+			return originalDetach.apply(this);
+		};
+
+		// S-09: 코어 녹음기가 생성 직후 새 탭으로 오디오 파일을 여는 동작 자동 닫기
+		this.registerEvent(
+			this.app.workspace.on("active-leaf-change", (leaf) => {
+				if (leaf && leaf.view instanceof MarkdownView === false) {
+					const activeFile = this.app.workspace.getActiveFile();
+					if (activeFile && pluginInstance.tabCloseHandler?.shouldAutoCloseAudioLeaf(activeFile.path)) {
+						leaf.detach();
+					}
+				}
+			}),
+		);
+
 		const watcher = new RecordingWatcher(
 			this.app,
 			(recording) =>
@@ -275,6 +328,7 @@ export default class OnTheRecordPlugin extends Plugin {
 		this.watcher = watcher;
 
 		this.app.workspace.onLayoutReady(() => {
+			this.queueWorker.start();
 			this.registerEvent(
 				this.app.vault.on("create", (file) => {
 					if (file instanceof TFile && file.extension.toLowerCase() === "md") {
@@ -307,6 +361,7 @@ export default class OnTheRecordPlugin extends Plugin {
 	}
 
 	onunload(): void {
+		this.queueWorker?.stop();
 		this.watcher?.dispose();
 		this.watcher = null;
 		for (const controller of this.pendingManualSelections.values()) controller.abort();
@@ -363,6 +418,98 @@ export default class OnTheRecordPlugin extends Plugin {
 		};
 
 		this.sessionManager = new RecordingSessionManager(storage, recorder);
+	}
+
+	private setupTabCloseHandler(): void {
+		this.tabCloseHandler = new TabCloseHandler({
+			sessionManager: this.sessionManager,
+			vault: {
+				read: async (path) => {
+					const file = this.app.vault.getAbstractFileByPath(path);
+					if (file instanceof TFile) return this.app.vault.read(file);
+					return "";
+				},
+				process: async (path, fn) => {
+					const file = this.app.vault.getAbstractFileByPath(path);
+					if (file instanceof TFile) return this.app.vault.process(file, fn);
+					return "";
+				},
+				exists: async (path) => {
+					return Boolean(this.app.vault.getAbstractFileByPath(path));
+				},
+			},
+			getAction: () => this.vaultSettings.onTabCloseAction,
+			onNotice: (msg) => new Notice(msg, 5000),
+		});
+	}
+
+	private setupQueueWorker(): void {
+		this.queueWorker = new TranscriptionQueueWorker({
+			queue: this.recordingQueue,
+			engine: new WhisperCppCpuRuntime(),
+			settingsProvider: {
+				getLocalSettings: () => this.localSettings,
+				getVaultSettings: () => ({ language: this.vaultSettings.language }),
+				resolveFullPath: (filePath) => {
+					const adapter = this.app.vault.adapter;
+					if (adapter instanceof FileSystemAdapter) {
+						return adapter.getFullPath(filePath);
+					}
+					return null;
+				},
+			},
+			onProgress: (progress) => {
+				const text = formatStatusBarProgress(progress);
+				this.statusBarItem?.setText(text);
+				if (text) {
+					this.statusBarItem?.setAttribute("title", `[On the Record] 전사 진행 중: ${progress?.item.filePath}\n클릭 시 상세 확인`);
+				} else {
+					this.statusBarItem?.removeAttribute("title");
+				}
+			},
+			onItemCompleted: async (item, result) => {
+				await this.handleQueueItemCompleted(item, result);
+			},
+			onItemError: (item, error) => {
+				this.reportError(`'${item.filePath}' 백그라운드 전사에 실패했습니다.`, error);
+			},
+		});
+	}
+
+	private async handleQueueItemCompleted(item: QueuedRecording, result: TranscriptionResult): Promise<void> {
+		const filename = item.filePath.split("/").pop() ?? item.filePath;
+		const targets = this.findAudioEmbedTargets(item.filePath);
+
+		if (targets.length === 0) {
+			new Notice(`[On the Record] '${filename}' 전사가 완료되었습니다. (노트 임베드 미연결)`, 7000);
+			return;
+		}
+
+		const target = targets[0];
+		const formattedMarkdown = formatResultMarkdown(result, { includeTimestamps: true });
+
+		if (this.vaultSettings.transcriptionInsertMode === "auto") {
+			try {
+				let choice: ExistingResultChoice = "append";
+				const current = await this.app.vault.read(target.note);
+				if (hasExistingResult(current, item.filePath)) {
+					choice = "append";
+				}
+				await this.app.vault.process(target.note, (content) =>
+					applyAudioEmbedInsertion(content, {
+						audioPath: item.filePath,
+						markdown: formattedMarkdown,
+						embed: this.toAudioEmbedPosition(target.embed),
+						existing: choice,
+					}),
+				);
+				new Notice(`[On the Record] '${filename}' 전사 결과가 노트(${target.note.path})에 자동 삽입되었습니다.`, 6000);
+			} catch (error) {
+				this.reportError(`전사 결과 자동 삽입에 실패했습니다: ${item.filePath}`, error);
+			}
+		} else {
+			new Notice(`[On the Record] '${filename}' 전사가 완료되었습니다. 결과를 검토하고 노트에 삽입하세요.`, 10000);
+		}
 	}
 
 	private async handleMarkdownNoteCreated(file: TFile): Promise<void> {
@@ -444,10 +591,17 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		if (signal.aborted) return;
 		if (result.status === "timeout") {
-			new Notice("녹음 노트의 오디오 링크를 확인하지 못했습니다. 파일 찾기 기능을 사용하세요.");
-			return;
+			// 최근 중지된 녹음 세션이 있는 경우 노트에 안전 연결 시도 (3-REC-02)
+			const recentSession = this.sessionManager.getActiveSession() ?? this.tabCloseHandler.getRecentlyStoppedSession();
+			if (recentSession) {
+				await this.tabCloseHandler.attachAudioToNote(recentSession.notePath, file.path);
+				result.notePaths = [recentSession.notePath];
+			} else {
+				new Notice("녹음 노트의 오디오 링크를 확인하지 못했습니다. 파일 찾기 기능을 사용하세요.");
+				return;
+			}
 		}
-		if (result.status !== "linked") return;
+		if (result.status !== "linked" && result.notePaths.length === 0) return;
 
 		const added = this.recordingQueue.enqueue({
 			filePath: file.path,
@@ -459,7 +613,8 @@ export default class OnTheRecordPlugin extends Plugin {
 		if (!added) return;
 
 		this.logQueueState();
-		new Notice("녹음 파일을 전사 대기열에 추가했습니다. 전사 엔진 연결은 아직 제공되지 않습니다.");
+		new Notice("녹음 파일을 백그라운드 전사 대기열에 추가했습니다.");
+		this.queueWorker.trigger();
 	}
 
 	private async previewAndInsertResult(result: TranscriptionResult, audioPath: string, target: AudioEmbedTarget): Promise<void> {
@@ -854,7 +1009,8 @@ export default class OnTheRecordPlugin extends Plugin {
 			}
 
 			this.logQueueState();
-			new Notice("선택한 오디오 파일을 전사 대기열에 추가했습니다. 전사 엔진 연결은 아직 제공되지 않습니다.");
+			new Notice("선택한 오디오 파일을 백그라운드 전사 대기열에 추가했습니다.");
+			this.queueWorker.trigger();
 		} catch (error) {
 			if (!controller.signal.aborted) this.reportError("선택한 오디오 파일을 확인하지 못했습니다.", error);
 		} finally {

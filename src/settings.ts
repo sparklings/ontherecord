@@ -1,5 +1,7 @@
 export type DevicePreference = "auto" | "cpu" | "accelerator";
 export type RecordStartMode = "auto" | "manual";
+export type OnTabCloseAction = "stop-and-attach" | "ignore";
+export type TranscriptionInsertMode = "auto" | "review";
 
 export interface VaultSettings {
 	schemaVersion: 1;
@@ -13,6 +15,8 @@ export interface VaultSettings {
 	recordStartMode: RecordStartMode;
 	recordStartNotification: boolean;
 	autoRecordFolder: string;
+	onTabCloseAction: OnTabCloseAction;
+	transcriptionInsertMode: TranscriptionInsertMode;
 }
 
 export interface LocalSettings {
@@ -34,6 +38,8 @@ export const DEFAULT_VAULT_SETTINGS: VaultSettings = {
 	recordStartMode: "auto",
 	recordStartNotification: true,
 	autoRecordFolder: "",
+	onTabCloseAction: "stop-and-attach",
+	transcriptionInsertMode: "auto",
 };
 
 export const DEFAULT_LOCAL_SETTINGS: LocalSettings = {
@@ -131,6 +137,18 @@ export function normalizeVaultSettings(value: unknown): VaultSettings {
 			throw new Error("autoRecordFolder 설정이 올바르지 않습니다.");
 		}
 		result.autoRecordFolder = value.autoRecordFolder.trim();
+	}
+	if (value.onTabCloseAction !== undefined) {
+		if (value.onTabCloseAction !== "stop-and-attach" && value.onTabCloseAction !== "ignore") {
+			throw new Error("onTabCloseAction 설정이 올바르지 않습니다.");
+		}
+		result.onTabCloseAction = value.onTabCloseAction;
+	}
+	if (value.transcriptionInsertMode !== undefined) {
+		if (value.transcriptionInsertMode !== "auto" && value.transcriptionInsertMode !== "review") {
+			throw new Error("transcriptionInsertMode 설정이 올바르지 않습니다.");
+		}
+		result.transcriptionInsertMode = value.transcriptionInsertMode;
 	}
 	return result;
 }

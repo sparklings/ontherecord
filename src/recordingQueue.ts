@@ -1,9 +1,12 @@
+export type RecordingQueueStatus = "queued" | "processing" | "completed" | "error" | "cancelled";
+
 export interface QueuedRecording {
 	filePath: string;
 	notePaths: string[];
 	size: number;
 	queuedAt: number;
-	status: "queued";
+	status: RecordingQueueStatus;
+	error?: string;
 }
 
 export class RecordingQueue {
@@ -13,6 +16,23 @@ export class RecordingQueue {
 		if (this.jobs.has(job.filePath)) return false;
 		this.jobs.set(job.filePath, { ...job, notePaths: [...job.notePaths] });
 		return true;
+	}
+
+	update(filePath: string, patch: Partial<QueuedRecording>): boolean {
+		const existing = this.jobs.get(filePath);
+		if (!existing) return false;
+		this.jobs.set(filePath, {
+			...existing,
+			...patch,
+			notePaths: patch.notePaths ? [...patch.notePaths] : existing.notePaths,
+		});
+		return true;
+	}
+
+	get(filePath: string): QueuedRecording | null {
+		const job = this.jobs.get(filePath);
+		if (!job) return null;
+		return { ...job, notePaths: [...job.notePaths] };
 	}
 
 	remove(filePath: string): boolean {

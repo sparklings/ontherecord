@@ -64,6 +64,19 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					}),
 			);
 
+		new Setting(containerEl)
+			.setName("노트 탭 닫힘 시 동작")
+			.setDesc("녹음 중인 노트의 탭이 닫힐 때 처리 방식입니다.")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("stop-and-attach", "녹음 자동 중지 및 오디오 안전 연결 (권장)")
+					.addOption("ignore", "녹음 유지 (수동 중지)")
+					.setValue(vaultSettings.onTabCloseAction)
+					.onChange((value) => {
+						void this.updateVaultSettings({ onTabCloseAction: value as "stop-and-attach" | "ignore" });
+					}),
+			);
+
 		new Setting(containerEl).setName("음성 전사").setHeading();
 		new Setting(containerEl)
 			.setName("녹음 파일 감지")
@@ -76,11 +89,24 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("자동 전사")
-			.setDesc("녹음 파일이 안정화되고 노트 링크가 확인되면 전사 대기열에 추가합니다. 실제 엔진 실행은 아직 지원하지 않습니다.")
+			.setDesc("녹음 파일이 준비되면 백그라운드 전사 큐로 인계하여 자동 전사합니다.")
 			.addToggle((toggle) =>
 				toggle.setValue(vaultSettings.autoTranscribe).onChange((value) => {
 					void this.updateVaultSettings({ autoTranscribe: value });
 				}),
+			);
+
+		new Setting(containerEl)
+			.setName("전사 결과 반영 방식")
+			.setDesc("백그라운드 전사 완료 시 노트에 결과를 반영하는 방식입니다.")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("auto", "오디오 임베드 아래 자동 삽입 (권장)")
+					.addOption("review", "미리보기 모달로 검토 후 승인 삽입")
+					.setValue(vaultSettings.transcriptionInsertMode)
+					.onChange((value) => {
+						void this.updateVaultSettings({ transcriptionInsertMode: value as "auto" | "review" });
+					}),
 			);
 
 		new Setting(containerEl)

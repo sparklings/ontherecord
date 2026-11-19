@@ -4,6 +4,32 @@
 
 분류: 추가 / 변경 / 삭제 / 결정 / 이슈
 
+## 2026-11-19
+
+### 추가
+- **새 노트북 환경(Samsung 930XDB) 개발환경 구축 및 외부 참조 모듈 설치**:
+  - `winget`을 통해 FFmpeg 9.0.2 설치 완료 (`%LOCALAPPDATA%\Microsoft\WinGet\Packages\...`)
+  - `whisper.cpp` v1.9.5(b5454) x64 CPU 공식 빌드 다운로드 및 SHA-256 검증 완료 (`%LOCALAPPDATA%\on-the-record-dev\runtimes\...`)
+  - `base-q5_1` 및 `small-q5_1` 모델 다운로드 및 SHA-256 무결성 검증 완료 (`%LOCALAPPDATA%\on-the-record-dev\models\...`)
+  - `%LOCALAPPDATA%\on-the-record\local-settings.json` 초기화 및 실제 오디오(`format-fixture.wav`) 추론 실기 검증 완료
+- **`3-REC-02` 탭 닫힘 감지 및 녹음 자동 안전 중지·연결 (`F-04`, `F-05`, `C-02`)**:
+  - `WorkspaceLeaf.prototype.detach` 가로채기를 통해 녹음 중인 노트 탭 닫힘 감지 및 자동 안전 중지 구현
+  - 코어 Audio recorder가 생성 직후 새 탭으로 오디오를 여는 동작 자동 닫기(`S-09`) 구현
+  - 노트 본문 내 오디오 임베드 존재 여부 판별(`hasAudioEmbedInMarkdown`) 및 미존재 시 본문 끝 안전 연결(`attachAudioEmbedToMarkdown`, `S-10`) 구현
+  - `onTabCloseAction` 설정(`stop-and-attach`(기본값) | `ignore`) 지원
+  - 단위 테스트 5개 항목(`test/tabClose.test.ts`) 추가 및 전건 통과
+- **`3-PIPE-01` 비차단 백그라운드 전사 큐 워커 및 상태표시줄(Status Bar) 진행률 표시**:
+  - UI 블로킹 없는 비동기 큐 워커(`TranscriptionQueueWorker`) 및 작업 생명주기(시작/취소/완료/오류) 관리 구현
+  - Obsidian 하단 상태표시줄 아이템 생성 및 실시간 전사 진행률(`🎙️ 전사 중 [45%]: filename.m4a`) 및 클릭 시 상세 상태 표시 구현
+  - `RecordingQueue` 상태 모델 확장(`QueuedRecording`, `update()`, `get()`)
+  - 단위 테스트 4개 항목(`test/transcriptionQueueWorker.test.ts`) 추가 및 전건 통과
+- **`3-PIPE-02` 녹음 완료 후 자동 전사 인계 및 노트 삽입 워크플로 통합**:
+  - 녹음 파일 안정화 후 백그라운드 전사 큐로 즉시 인계(`this.queueWorker.trigger()`)
+  - 전사 완료 후 반영 모드(`transcriptionInsertMode`: `auto`(기본값) | `review`) 지원:
+    - 자동 삽입 모드: 대상 노트의 해당 오디오 embed 바로 아래에 `applyAudioEmbedInsertion`을 통해 백그라운드 안전 자동 삽입 및 토스트 알림
+    - 수동 검토 모드: 알림 클릭 또는 미리보기 모달을 통한 검토 후 삽입 안내
+- 전체 65개 단위 테스트 통과 및 production build(`main.js`, 124KB) 성공 검증
+
 ## 2026-11-07
 
 ### 추가
