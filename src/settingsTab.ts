@@ -2,6 +2,7 @@ import { Notice, PluginSettingTab, Setting } from "obsidian";
 import type { App, Plugin } from "obsidian";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
 import { t } from "./i18n.ts";
+import { SUPPORTED_MODELS, getModelMetadata, checkModelFileInstalled, buildModelDownloadCommand } from "./modelCatalog.ts";
 import * as fs from "fs";
 
 function checkPathExists(filePath: string): { exists: boolean; sizeBytes?: number } {
@@ -79,6 +80,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName("🎙️ 음성 녹음 및 회의록 세션").setHeading();
 
 		const vaultSettings = this.getVaultSettings();
+		const localSettings = this.getLocalSettings();
 
 		new Setting(containerEl)
 			.setName("회의록 작성 시 녹음 시작 방식")
@@ -201,19 +203,90 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl)
+		const modelSizeSetting = new Setting(containerEl)
 			.setName("음성인식 모델 크기")
-			.setDesc("품질과 속도의 균형을 위해 Medium 모델을 기본 권장합니다.")
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("medium", "Medium (공식 권장 · 높은 정확도)")
-					.addOption("small", "Small (균형 · 중간 속도)")
-					.addOption("base", "Base (초고속 · 가벼움)")
-					.setValue(vaultSettings.defaultModelSize)
-					.onChange((value) => {
-						void this.updateVaultSettings({ defaultModelSize: value });
-					}),
-			);
+			.setDesc("전사에 사용할 whisper 모델을 선택합니다. 한국어 비즈니스 회의에는 Medium 모델을 기본 권장합니다.");
+
+		const modelInfoContainer = containerEl.createDiv({ cls: "otr-model-info-container" });
+		modelInfoContainer.style.marginTop = "-0.5rem";
+		modelInfoContainer.style.marginBottom = "1rem";
+
+		const renderModelInfo = (modelId: string) => {
+			modelInfoContainer.empty();
+			const meta = getModelMetadata(modelId);
+			const installStatus = checkModelFileInstalled(modelId, localSettings?.modelPath);
+
+			const card = modelInfoContainer.createDiv({ cls: "setting-item-description" });
+			card.style.padding = "10px 14px";
+			card.style.borderRadius = "8px";
+			card.style.backgroundColor = "var(--background-secondary)";
+			card.style.border = "1px solid var(--background-modifier-border)";
+
+			const topRow = card.createDiv();
+			topRow.style.display = "flex";
+			topRow.style.justifyContent = "space-between";
+			topRow.style.alignItems = "center";
+			topRow.style.marginBottom = "6px";
+
+			const titleSpan = topRow.createSpan({ text: `📦 ${meta.filename} (약 ${meta.sizeMb} MB · ${meta.quantization})` });
+			titleSpan.style.fontWeight = "bold";
+
+			const badgeSpan = topRow.createSpan({
+				cls: `otr-status-badge ${installStatus.installed ? "is-ready" : "is-missing"}`,
+			});
+			badgeSpan.createSpan({ cls: "otr-status-badge-dot" });
+			badgeSpan.createSpan({ text: installStatus.installed ? "이 PC에 준비됨" : "미설치" });
+
+			const descP = card.createEl("p", { text: meta.description });
+			descP.style.margin = "4px 0 8px 0";
+			descP.style.fontSize = "0.9em";
+
+			const bottomRow = card.createDiv();
+			bottomRow.style.display = "flex";
+			bottomRow.style.justifyContent = "space-between";
+			bottomRow.style.alignItems = "center";
+			bottomRow.style.gap = "8px";
+			bottomRow.style.flexWrap = "wrap";
+
+			const linkA = bottomRow.createEl("a", { text: "🔗 Hugging Face 공식 출처 열기", href: meta.huggingFaceUrl });
+			linkA.style.fontSize = "0.85em";
+			linkA.target = "_blank";
+
+			if (!installStatus.installed) {
+				const downloadBtn = bottomRow.createEl("button", { text: "📥 다운로드 명령어 복사" });
+				downloadBtn.style.cursor = "pointer";
+				downloadBtn.onclick = async () => {
+					const cmd = buildModelDownloadCommand(modelId);
+					await navigator.clipboard.writeText(cmd);
+					new Notice(
+						`[${meta.filename}] 다운로드 명령어가 복사되었습니다.\nPowerShell 터미널을 열고 붙여넣어 실행하세요.`,
+						7000,
+					);
+				};
+			} else if (localSettings && localSettings.modelPath !== installStatus.resolvedPath) {
+				const applyBtn = bottomRow.createEl("button", { text: "이 모델을 전사 경로로 적용" });
+				applyBtn.style.cursor = "pointer";
+				applyBtn.onclick = async () => {
+					await this.updateLocalSettings({ modelPath: installStatus.resolvedPath });
+					new Notice(`전사 모델 경로가 적용되었습니다: ${installStatus.resolvedPath}`, 4000);
+					this.display();
+				};
+			}
+		};
+
+		modelSizeSetting.addDropdown((dropdown) => {
+			for (const m of SUPPORTED_MODELS) {
+				dropdown.addOption(m.id, m.label);
+			}
+			dropdown
+				.setValue(vaultSettings.defaultModelSize)
+				.onChange((value) => {
+					void this.updateVaultSettings({ defaultModelSize: value });
+					renderModelInfo(value);
+				});
+		});
+
+		renderModelInfo(vaultSettings.defaultModelSize);
 
 		new Setting(containerEl)
 			.setName("연산 프로세서 선호도")
@@ -251,7 +324,6 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			cls: "setting-item-description",
 		});
 
-		const localSettings = this.getLocalSettings();
 		if (!localSettings) {
 			containerEl.createEl("p", {
 				text: this.localSettingsError ?? "PC별 설정을 불러올 수 없습니다.",
@@ -275,7 +347,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		renderStatusBadge(runtimeSetting.nameEl, runtimeStatus, "정상");
 
 		const modelStatus = checkPathExists(localSettings.modelPath);
-		const modelSetting = new Setting(containerEl)
+		const modelPathSetting = new Setting(containerEl)
 			.setName("모델 파일")
 			.setDesc("사용자가 직접 설치한 GGML 양자화 모델 파일(.bin)의 전체 경로입니다.")
 			.addText((text) =>
@@ -286,7 +358,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 						void this.updateLocalSettings({ modelPath: value.trim() });
 					}),
 			);
-		renderStatusBadge(modelSetting.nameEl, modelStatus, "준비됨");
+		renderStatusBadge(modelPathSetting.nameEl, modelStatus, "준비됨");
 
 		const ffmpegStatus = checkPathExists(localSettings.ffmpegPath);
 		const ffmpegSetting = new Setting(containerEl)
