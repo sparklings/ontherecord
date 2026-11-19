@@ -6,7 +6,8 @@ import { tmpdir } from "os";
 import * as path from "path";
 import { promisify } from "util";
 import { ProviderError } from "./provider.ts";
-import type { TranscriptionResult, TranscriptionSegment } from "./provider.ts";
+import type { ProviderDevice, TranscriptionResult, TranscriptionSegment } from "./provider.ts";
+import type { GpuBackend } from "./settings.ts";
 
 const execFile = promisify(execFileCallback);
 
@@ -162,14 +163,19 @@ const defaultDependencies: CpuRuntimeDependencies = {
 	},
 };
 
-export function buildWhisperInferenceArgs(options: {
+export interface WhisperInferenceOptions {
 	modelPath: string;
 	audioPath: string;
 	language: string;
 	outputBase: string;
 	threads?: number;
 	suppressHallucinations?: boolean;
-}): string[] {
+	device?: ProviderDevice | "auto";
+	gpuLayers?: number;
+	gpuDeviceId?: number;
+}
+
+export function buildWhisperInferenceArgs(options: WhisperInferenceOptions): string[] {
 	const args = [
 		"-m", options.modelPath,
 		"-f", options.audioPath,
@@ -180,6 +186,16 @@ export function buildWhisperInferenceArgs(options: {
 		"-of", options.outputBase,
 	];
 
+	// 3-GPU-01 / 3-GPU-02: GPU 오프로딩(-ngl) 및 장치 선택(-dev), CPU 강제(-ng) 지원
+	if (options.device === "cpu") {
+		args.push("-ng");
+	} else if (options.gpuLayers !== undefined && options.gpuLayers > 0) {
+		args.push("-ngl", String(options.gpuLayers));
+		if (options.gpuDeviceId !== undefined && options.gpuDeviceId >= 0) {
+			args.push("-dev", String(options.gpuDeviceId));
+		}
+	}
+
 	if (options.suppressHallucinations !== false) {
 		// 3-CPU-01: 장시간 회의 전사 시 무음/잡음 구간 무한 루프(환각) 방지 최적화
 		args.push("-mc", "0"); // 이전 세그먼트 컨텍스트 누적 차단
@@ -188,6 +204,12 @@ export function buildWhisperInferenceArgs(options: {
 	}
 
 	return args;
+}
+
+export interface WhisperGpuExecutionOptions {
+	gpuBackend?: GpuBackend;
+	gpuLayers?: number;
+	gpuDeviceId?: number;
 }
 
 export class WhisperCppCpuRuntime {
@@ -289,9 +311,10 @@ export class WhisperCppCpuRuntime {
 		audioPath: string,
 		language: string,
 		onProgress: CpuSmokeTestProgress = () => undefined,
+		gpuOptions?: WhisperGpuExecutionOptions,
 	): Promise<WhisperCppCpuVerification> {
 		const verification = await this.verify(runtimePath, modelPath, onProgress);
-		await this.runInference(runtimePath, modelPath, ffmpegPath, audioPath, language, onProgress);
+		await this.runInference(runtimePath, modelPath, ffmpegPath, audioPath, language, onProgress, gpuOptions);
 		return verification;
 	}
 
@@ -302,16 +325,21 @@ export class WhisperCppCpuRuntime {
 		audioPath: string,
 		language: string,
 		onProgress: CpuSmokeTestProgress = () => undefined,
+		gpuOptions?: WhisperGpuExecutionOptions,
 	): Promise<TranscriptionResult> {
 		const verification = await this.verify(runtimePath, modelPath, onProgress);
-		const transcription = await this.runInference(runtimePath, modelPath, ffmpegPath, audioPath, language, onProgress);
+		const transcription = await this.runInference(runtimePath, modelPath, ffmpegPath, audioPath, language, onProgress, gpuOptions);
+		const device: ProviderDevice =
+			gpuOptions?.gpuBackend === "cuda" || gpuOptions?.gpuBackend === "vulkan" || gpuOptions?.gpuBackend === "openvino"
+				? gpuOptions.gpuBackend
+				: (gpuOptions?.gpuLayers && gpuOptions.gpuLayers > 0 ? "cuda" : "cpu");
 		return {
 			...transcription,
 			engine: {
 				providerId: "whisper-cpp-cpu",
 				providerVersion: verification.runtimeVersion.replace(/^whisper\.cpp version:\s*/, ""),
 				modelId: verification.modelId,
-				device: "cpu",
+				device,
 			},
 			warnings: [],
 		};
@@ -324,6 +352,7 @@ export class WhisperCppCpuRuntime {
 		audioPath: string,
 		language: string,
 		onProgress: CpuSmokeTestProgress,
+		gpuOptions?: WhisperGpuExecutionOptions,
 	): Promise<Pick<TranscriptionResult, "language" | "text" | "segments">> {
 		onProgress("checking-audio");
 		if (!CPU_AUDIO_EXTENSION_SET.has(path.extname(audioPath).slice(1).toLowerCase())) {
@@ -379,6 +408,9 @@ export class WhisperCppCpuRuntime {
 				outputBase,
 				threads: 4,
 				suppressHallucinations: true,
+				device: gpuOptions?.gpuBackend,
+				gpuLayers: gpuOptions?.gpuLayers,
+				gpuDeviceId: gpuOptions?.gpuDeviceId,
 			});
 			await this.dependencies.runCommand(
 				runtimePath,

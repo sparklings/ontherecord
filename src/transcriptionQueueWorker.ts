@@ -19,11 +19,19 @@ export interface TranscriptionEngine {
 		language: string,
 		onProgress?: (stage: string, percent?: number) => void,
 		signal?: AbortSignal,
+		gpuOptions?: { gpuBackend?: string; gpuLayers?: number; gpuDeviceId?: number },
 	): Promise<TranscriptionResult>;
 }
 
 export interface WorkerSettingsProvider {
-	getLocalSettings(): { runtimePath: string; modelPath: string; ffmpegPath: string } | null;
+	getLocalSettings(): {
+		runtimePath: string;
+		modelPath: string;
+		ffmpegPath: string;
+		gpuBackend?: string;
+		gpuLayers?: number;
+		gpuDeviceId?: number;
+	} | null;
 	getVaultSettings(): { language: string };
 	resolveFullPath(vaultRelativePath: string): string | null;
 }
@@ -182,6 +190,11 @@ export class TranscriptionQueueWorker {
 					});
 				},
 				controller.signal,
+				{
+					gpuBackend: localSettings.gpuBackend,
+					gpuLayers: localSettings.gpuLayers,
+					gpuDeviceId: localSettings.gpuDeviceId,
+				},
 			);
 
 			if (controller.signal.aborted) {

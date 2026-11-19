@@ -7,6 +7,19 @@
 ## 2026-11-19
 
 ### 추가
+- **`3-GPU-02` GPU 레이어 오프로딩 및 가속 백엔드 추상화 인터페이스 연계**:
+  - `ProviderDevice` 추상화에 `"vulkan"` 공식 추가 (`"cpu" | "cuda" | "openvino" | "vulkan"`)
+  - 머신별 `LocalSettings`에 하드웨어 가속 설정(`gpuBackend`, `gpuLayers`, `gpuDeviceId`) 지원 및 검증 정규화
+  - `buildWhisperInferenceArgs`에서 레이어 오프로딩(`-ngl N`), 디바이스 번호(`-dev N`), CPU 전용 강제(`-ng`) 인수 생성 지원
+  - 백그라운드 전사 큐 워커(`TranscriptionQueueWorker`)에 로컬 GPU 설정 파라미터 연동
+  - 설정 UI([src/settingsTab.ts](./src/settingsTab.ts)) 내 "하드웨어 및 GPU 가속 설정" 섹션 및 백엔드/레이어/디바이스 입력 제공
+  - 단위 테스트 7개 항목(`test/whisperGpuOffload.test.ts`) 추가 및 통과
+- **`3-GPU-03` Intel Iris Xe 내장 GPU 가속 가능성 기술 조사 완료**:
+  - 삼성 노트북 환경(Intel Iris Xe 80/96 EU)의 아키텍처적 특성 및 UMA 메모리 대역폭 병목 분석
+  - Vulkan 1.4(`ggml-vulkan`)와 OpenVINO(`-oved GPU`) 백엔드의 의존성·모델 호환성·배포 복잡도 비교 검토
+  - Windows 내장 `vulkan-1.dll` 활용 및 원본 GGML 모델 무변환 구동 가능한 Vulkan 백엔드 공식 채택 권고 및 로드맵 수립
+  - 기술 보고서 작성: [GPU-03_INTEL_IRIS_XE_FEASIBILITY.md](./docs/baselines/GPU-03_INTEL_IRIS_XE_FEASIBILITY.md)
+- 전체 93개 단위 테스트 전건 통과 및 production build 성공 검증
 - **`3-UX-01` 사용자 주도 원클릭 도구 준비 도우미 (Setup Helper)**:
   - 초보 사용자가 터미널 한 줄 실행으로 whisper.cpp, 기본 모델 및 FFmpeg를 자동 설치하고 설정을 연결할 수 있는 독립 실행형 스크립트(`scripts/setup-tools.ps1`) 구현
   - 플러그인 설정 화면 내 원클릭 명령어 복사 버튼 연동

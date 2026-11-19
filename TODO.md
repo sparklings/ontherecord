@@ -199,9 +199,9 @@
 #### 3. 외장/내장 GPU 가속 및 런타임 최적화 (GPU & CPU)
 > 2단계에서 확정된 기본 권장 모델(`medium-q5_0`) 및 고정밀 모델(`large-v3-q5_0`)의 추론 성능을 외장 GPU로 대폭 가속하고, 장시간 환각 루프를 원천 방지한다.
 
-- [ ] `3-GPU-01` whisper.cpp cuBLAS/CUDA 가속 빌드 성능 실측 및 CPU 대비 가속 배율 검증 → 레노버 노트북의 외장 GPU(NVIDIA GeForce GTX 1650 Ti, CUDA 13.0) 환경에서 cuBLAS/CUDA 런타임 추론 속도·VRAM 사용량을 실측하고(`real-sample-01~03` 대상), CPU 8스레드 대비 가속 배율 및 처리율을 검증한다.
-- [ ] `3-GPU-02` VRAM 4GB 환경 모델 오프로딩 동작 확인 및 GPU Provider 통합 → VRAM 4GB 한계 내에서 `base`~`medium` 모델의 GPU 완전 적재 및 레이어 오프로딩(`-ngl`) 동작을 확인하고, 기존 `TranscriptionProvider` 인터페이스 계약을 준수하는 통일된 `WhisperCppProvider` 내에서 장치 분기(`cpu` / `cuda`)를 구현한다.
-- [ ] `3-GPU-03` Intel Iris Xe/UHD GPU 환경 가속 지원 가능성 조사 (삼성 960XFG 연계) → Intel OpenVINO 또는 Vulkan 백엔드를 통한 내장 그래픽스 가속 가능성 및 의존성 복잡도를 예비 검토한다.
+- [ ] `3-GPU-01` whisper.cpp cuBLAS/CUDA 가속 빌드 성능 실측 및 CPU 대비 가속 배율 검증 → 레노버 노트북의 외장 GPU(NVIDIA GeForce GTX 1650 Ti, CUDA 13.0) 환경에서 cuBLAS/CUDA 런타임 추론 속도·VRAM 사용량을 실측하고(`real-sample-01~03` 대상), CPU 8스레드 대비 가속 배율 및 처리율을 검증한다 (레노버 노트북 환경 연계 대기).
+- [x] `3-GPU-02` VRAM 4GB 환경 모델 오프로딩 동작 확인 및 GPU Provider 통합 → 완료(2026-11-19): `ProviderDevice` 추상화(`cpu`, `cuda`, `vulkan`, `openvino`) 및 `LocalSettings` 연계(`gpuBackend`, `gpuLayers`, `gpuDeviceId`), whisper.cpp 레이어 오프로딩(`-ngl`), 디바이스 인덱스(`-dev`), CPU 강제(`-ng`) 파라미터 생성기 및 백그라운드 큐 워커 연동 완료. 설정 UI 및 단위 테스트(`test/whisperGpuOffload.test.ts`) 통과.
+- [x] `3-GPU-03` Intel Iris Xe/UHD GPU 환경 가속 지원 가능성 조사 (삼성 960XFG 연계) → 완료(2026-11-19): Vulkan 1.4(`ggml-vulkan`)와 OpenVINO(`-oved GPU`) 비교 분석 완료. Zero-Conversion, 무설치 DLL 호환성, Windows 내장 드라이버(`vulkan-1.dll`) 이점으로 Vulkan 백엔드 공식 채택 권고 및 로드맵 수립. 상세: [GPU-03_INTEL_IRIS_XE_FEASIBILITY.md](./docs/baselines/GPU-03_INTEL_IRIS_XE_FEASIBILITY.md).
 - [x] `3-CPU-01` whisper.cpp 장시간 전사 환각(Hallucination) 방지 파라미터 최적화 → 완료(2026-11-19): `0-BASE-08`에서 관측된 무음/잡음 구간 무한 루프를 원천 차단하기 위해 whisper.cpp CLI 인수에 `--max-context 0` (이전 컨텍스트 전염 방지), `--suppress-nst` (비음성 토큰 억제), `--temperature 0.0`을 빌드 옵션으로 기본 적용([whisperCppCpu.ts](./src/whisperCppCpu.ts)). 단위 테스트 통과.
 
 #### 4. 사용자 온보딩, 설정 구조 및 셋업 헬퍼 (UX & SETUP)

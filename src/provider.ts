@@ -1,6 +1,6 @@
 import type { DevicePreference } from "./settings.ts";
 
-export type ProviderDevice = "cpu" | "cuda" | "openvino";
+export type ProviderDevice = "cpu" | "cuda" | "openvino" | "vulkan";
 
 export type ProviderReadiness =
 	| { status: "ready" }
@@ -36,6 +36,8 @@ export interface TranscriptionRequest {
 	options: {
 		language: string;
 		devicePreference: DevicePreference;
+		gpuLayers?: number;
+		gpuDeviceId?: number;
 	};
 }
 

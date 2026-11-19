@@ -1,4 +1,5 @@
 export type DevicePreference = "auto" | "cpu" | "accelerator";
+export type GpuBackend = "auto" | "cpu" | "cuda" | "vulkan" | "openvino";
 export type RecordStartMode = "auto" | "manual";
 export type OnTabCloseAction = "stop-and-attach" | "ignore";
 export type TranscriptionInsertMode = "auto" | "review";
@@ -24,6 +25,9 @@ export interface LocalSettings {
 	runtimePath: string;
 	modelPath: string;
 	ffmpegPath: string;
+	gpuBackend?: GpuBackend;
+	gpuLayers?: number;
+	gpuDeviceId?: number;
 }
 
 export const DEFAULT_VAULT_SETTINGS: VaultSettings = {
@@ -47,6 +51,9 @@ export const DEFAULT_LOCAL_SETTINGS: LocalSettings = {
 	runtimePath: "",
 	modelPath: "",
 	ffmpegPath: "",
+	gpuBackend: "auto",
+	gpuLayers: 0,
+	gpuDeviceId: 0,
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -170,6 +177,35 @@ export function normalizeLocalSettings(value: unknown): LocalSettings {
 	if (value.ffmpegPath !== undefined) {
 		if (typeof value.ffmpegPath !== "string") throw new Error("ffmpegPath 설정이 올바르지 않습니다.");
 		result.ffmpegPath = value.ffmpegPath;
+	}
+	if (value.gpuBackend !== undefined) {
+		const allowed: readonly GpuBackend[] = ["auto", "cpu", "cuda", "vulkan", "openvino"];
+		if (typeof value.gpuBackend !== "string" || !allowed.includes(value.gpuBackend as GpuBackend)) {
+			throw new Error("gpuBackend 설정이 올바르지 않습니다.");
+		}
+		result.gpuBackend = value.gpuBackend as GpuBackend;
+	}
+	if (value.gpuLayers !== undefined) {
+		if (
+			typeof value.gpuLayers !== "number" ||
+			!Number.isInteger(value.gpuLayers) ||
+			value.gpuLayers < 0 ||
+			value.gpuLayers > 999
+		) {
+			throw new Error("gpuLayers 설정은 0~999 사이의 정수여야 합니다.");
+		}
+		result.gpuLayers = value.gpuLayers;
+	}
+	if (value.gpuDeviceId !== undefined) {
+		if (
+			typeof value.gpuDeviceId !== "number" ||
+			!Number.isInteger(value.gpuDeviceId) ||
+			value.gpuDeviceId < 0 ||
+			value.gpuDeviceId > 64
+		) {
+			throw new Error("gpuDeviceId 설정은 0~64 사이의 정수여야 합니다.");
+		}
+		result.gpuDeviceId = value.gpuDeviceId;
 	}
 	return result;
 }

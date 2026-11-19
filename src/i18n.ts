@@ -34,6 +34,13 @@ export interface TranslationDict {
 	"settings.heading.transcription": string;
 	"settings.heading.localTools": string;
 	"settings.heading.setupHelper": string;
+	"settings.heading.gpuAcceleration": string;
+	"settings.gpuBackend.name": string;
+	"settings.gpuBackend.desc": string;
+	"settings.gpuLayers.name": string;
+	"settings.gpuLayers.desc": string;
+	"settings.gpuDeviceId.name": string;
+	"settings.gpuDeviceId.desc": string;
 }
 
 export const translations: Record<SupportedLocale, TranslationDict> = {
@@ -65,6 +72,13 @@ export const translations: Record<SupportedLocale, TranslationDict> = {
 		"settings.heading.transcription": "Speech-to-Text Transcription",
 		"settings.heading.localTools": "Local Machine Tools & Status",
 		"settings.heading.setupHelper": "One-Click Setup Helper",
+		"settings.heading.gpuAcceleration": "Hardware & GPU Acceleration",
+		"settings.gpuBackend.name": "GPU Acceleration Backend",
+		"settings.gpuBackend.desc": "Select acceleration backend for whisper.cpp (Auto, CPU, NVIDIA CUDA, Vulkan, OpenVINO).",
+		"settings.gpuLayers.name": "GPU Offload Layers (-ngl)",
+		"settings.gpuLayers.desc": "Number of model layers to offload to GPU VRAM (0: CPU only, 99: full model offload).",
+		"settings.gpuDeviceId.name": "GPU Device Index (-dev)",
+		"settings.gpuDeviceId.desc": "Target GPU device ID when multiple GPUs are installed (default: 0).",
 	},
 	ko: {
 		"cmd.startRecording": "현재 활성 노트에서 음성 녹음 시작",
@@ -94,6 +108,13 @@ export const translations: Record<SupportedLocale, TranslationDict> = {
 		"settings.heading.transcription": "음성 전사 파이프라인",
 		"settings.heading.localTools": "이 기기의 CPU 전사 도구 경로 및 상태",
 		"settings.heading.setupHelper": "원클릭 도구 자동 셋업 스크립트 (Setup Helper)",
+		"settings.heading.gpuAcceleration": "하드웨어 및 GPU 가속 설정",
+		"settings.gpuBackend.name": "GPU 가속 백엔드",
+		"settings.gpuBackend.desc": "whisper.cpp 추론 가속 백엔드를 선택합니다 (자동 감지, CPU 전용, NVIDIA CUDA, Vulkan, OpenVINO).",
+		"settings.gpuLayers.name": "GPU 오프로드 레이어 수 (-ngl)",
+		"settings.gpuLayers.desc": "GPU VRAM에 오프로드할 신경망 레이어 수입니다 (0: CPU 전용, 99: 모델 전체 오프로드).",
+		"settings.gpuDeviceId.name": "GPU 장치 번호 (-dev)",
+		"settings.gpuDeviceId.desc": "여러 GPU가 장착된 경우 연산에 사용할 GPU 인덱스 번호입니다 (기본값: 0).",
 	},
 };
 

@@ -1,6 +1,7 @@
 import { Notice, PluginSettingTab, Setting } from "obsidian";
 import type { App, Plugin } from "obsidian";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
+import { t } from "./i18n.ts";
 import * as fs from "fs";
 
 function checkPathExists(filePath: string): { exists: boolean; sizeBytes?: number } {
@@ -270,6 +271,60 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					}),
 			);
 		renderStatusBadge(ffmpegSetting.nameEl, ffmpegStatus, "준비됨");
+
+		new Setting(containerEl).setName(t("settings.heading.gpuAcceleration")).setHeading();
+		containerEl.createEl("p", {
+			text: "NVIDIA 외장 그래픽(CUDA) 또는 내장 그래픽(Vulkan/OpenVINO) 가속을 사용할 때 적용되는 로컬 설정입니다.",
+			cls: "setting-item-description",
+		});
+
+		new Setting(containerEl)
+			.setName(t("settings.gpuBackend.name"))
+			.setDesc(t("settings.gpuBackend.desc"))
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("auto", "자동 감지 (Auto)")
+					.addOption("cpu", "CPU 전용 (CPU)")
+					.addOption("cuda", "NVIDIA CUDA (외장 GPU)")
+					.addOption("vulkan", "Vulkan (Intel Iris Xe / AMD / NVIDIA)")
+					.addOption("openvino", "Intel OpenVINO")
+					.setValue(localSettings.gpuBackend ?? "auto")
+					.onChange((value) => {
+						if (value === "auto" || value === "cpu" || value === "cuda" || value === "vulkan" || value === "openvino") {
+							void this.updateLocalSettings({ gpuBackend: value });
+						}
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(t("settings.gpuLayers.name"))
+			.setDesc(t("settings.gpuLayers.desc"))
+			.addText((text) =>
+				text
+					.setValue(String(localSettings.gpuLayers ?? 0))
+					.setPlaceholder("0 (CPU 전용) 또는 99 (전체 오프로드)")
+					.onChange((value) => {
+						const num = parseInt(value.trim(), 10);
+						if (!isNaN(num) && num >= 0 && num <= 999) {
+							void this.updateLocalSettings({ gpuLayers: num });
+						}
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(t("settings.gpuDeviceId.name"))
+			.setDesc(t("settings.gpuDeviceId.desc"))
+			.addText((text) =>
+				text
+					.setValue(String(localSettings.gpuDeviceId ?? 0))
+					.setPlaceholder("0")
+					.onChange((value) => {
+						const num = parseInt(value.trim(), 10);
+						if (!isNaN(num) && num >= 0 && num <= 64) {
+							void this.updateLocalSettings({ gpuDeviceId: num });
+						}
+					}),
+			);
 
 		new Setting(containerEl)
 			.setName("설치된 CPU 도구 자동 검색")
