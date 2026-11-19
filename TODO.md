@@ -79,7 +79,7 @@
   - 4. 사용자 온보딩, 설정 구조 및 셋업 헬퍼 (`3-UX-01` ~ `3-UX-03`, `3-UX-06` ~ `3-UX-08`, `3-DOCS-01`)
   - 5. 사후 분석 및 로컬 AI 연계 (`3-POST-01`)
   - 6. 전용 사이드바 제어 패널 및 플레이어형 워크플로 (`3-UX-04` ~ `3-UX-05`, `3-UX-09` ~ `3-UX-13`)
-  - 7. 프로젝트 구조 정규화 및 플러그인 ID 변경 검토 (`3-ENV-17`, `3-PROD-02`)
+  - 7. 프로젝트 구조 정규화 및 플러그인 ID 유지 확정 (`3-ENV-17`, `3-PROD-02`)
 
 ## 2026-11-05
 
@@ -240,20 +240,13 @@
 - [x] `3-UX-13` 오른쪽 사이드바 오디오 파일 선택(Vault 내부 및 외부 파일) 및 즉시 전사 시작 버튼 (`sidebar-audio-file-picker`) → 완료(2026-11-20): 사이드바 내 "오디오 파일 선택 전사" 버튼 배치 및 백그라운드 큐 인계 연동.
 - [x] `3-PIPE-06` Vault 외부 오디오 파일 파이프라인 및 보관함 복사(Import)·외부 참조 전사 처리 (`external-audio-pipeline`) → 완료(2026-11-20): Vault 내외 오디오 파일 탐색 및 백그라운드 전사 큐 연동 파이프라인 정합성 검증 완료.
 
-#### 7. 프로젝트 구조 정규화 및 플러그인 ID 변경 검토 (ENV & REPO)
-> 개발 단계에서 생성된 임시 폴더명(`-dev`)을 정규화하고, 사용자 요청에 따른 `obsidian-ontherecord` 플러그인 ID 변경 타당성 및 커뮤니티 배포 정책 부합 여부를 종합 검토하여 기능 요구사항에 반영한다.
+#### 7. 프로젝트 구조 정규화 및 플러그인 ID 유지 확정 (ENV & REPO)
+> 개발 단계에서 생성된 임시 폴더명(`-dev`)을 정규화하고, 사용자 요청에 따른 `obsidian-ontherecord` 플러그인 ID 변경 타당성 및 커뮤니티 배포 정책 부합 여부를 검토하여 결론을 반영한다.
 
-- [x] `3-ENV-17` 프로젝트 구조 및 로컬 저장소 폴더명 `-dev` 접미사 제거 정규화 → 완료(2026-11-20): 개발 단계에서 혼용되던 `%LOCALAPPDATA%\on-the-record-dev` 경로의 `-dev` 문자열을 배제하고, 공식 릴리즈 표준 폴더인 `%LOCALAPPDATA%\on-the-record\models` 및 `tools`로 통합 정규화([src/modelCatalog.ts](./src/modelCatalog.ts), [scripts/setup-tools.ps1](./scripts/setup-tools.ps1)). 기존 다운로드된 모델 보유 사용자를 위한 레거시 폴더 하위 호환 폴백 로직 적용 완료.
-- [ ] `3-PROD-02` 플러그인 ID `obsidian-ontherecord` 변경 및 레포지토리 네이밍 정합성 검토:
-  - **검토 배경**: 사용자 피드백에 따라 플러그인 식별자를 `obsidian-ontherecord`로 변경하여 GitHub 저장소명 및 패키지 구조와의 일관성을 확보하는 방안 검토.
-  - **Obsidian 공식 심사 정책 대조**:
-    - Obsidian 공식 개발자 정책([Developer policies](https://docs.obsidian.md/Community+directory/Developer+policies) 및 [Submission requirements](https://docs.obsidian.md/Community+directory/Submission+requirements+for+plugins)) 규정:
-      > *"The plugin ID must not contain the word 'obsidian' (e.g. use 'on-the-record', not 'obsidian-on-the-record')."*
-    - `manifest.json`의 `id` 필드에 `obsidian-` 접두사를 포함할 경우 공식 커뮤니티 디렉터리(`obsidian-releases`) 자동 검증 린터에서 오류로 반려되므로, 공식 커뮤니티 배포 시에는 ID에 `obsidian`을 제외한 `on-the-record` 또는 `ontherecord` 유지가 필수적임.
-    - 반면, **GitHub 저장소 이름(Repository Name)**은 `obsidian-ontherecord`가 커뮤니티 표준 관례이며 GitHub 검색 노출에 가장 이상적임.
-  - **전략적 분리 권고안 및 마이그레이션 과제**:
-    - (1) **GitHub 저장소 및 배포 패키지명**: `obsidian-ontherecord` 적용 (저장소 URL 및 릴리즈 아티팩트 가시성 강화)
-    - (2) **Obsidian 내부 플러그인 ID (`manifest.json`)**:
-      - 공식 커뮤니티 플러그인 스토어 등록용: `on-the-record` (공식 정책 100% 준수)
-      - BRAT 또는 수동/사내 배포 전용 빌드: `obsidian-ontherecord`로 일원화 가능
-    - (3) **데이터 마이그레이션 로직 설계**: ID 변경 시 볼트 내 `<vault>/.obsidian/plugins/<id>/data.json` 및 `%LOCALAPPDATA%/<id>/local-settings.json`의 저장 경로 자동 승계 및 마이그레이션 도우미 구현 필요.
+- [x] `3-ENV-17` 프로젝트 구조 및 로컬 저장소 폴더명 `-dev` 접미사 제거 정규화 → 완료(2026-11-20): 개발 단계의 임시 경로인 `%LOCALAPPDATA%\on-the-record-dev`를 완전히 배제하고, 공식 릴리즈 표준 폴더인 `%LOCALAPPDATA%\on-the-record\models` 및 `tools`로 단일화([src/modelCatalog.ts](./src/modelCatalog.ts), [scripts/setup-tools.ps1](./scripts/setup-tools.ps1), [src/cpuRuntimeDiscovery.ts](./src/cpuRuntimeDiscovery.ts)). 사용자 결정에 따라 `-dev` 폴더에 대한 별도 레거시 fallback은 일절 지원하지 않고 깔끔하게 단일 표준 경로만 적용.
+- [x] `3-PROD-02` 플러그인 ID `obsidian-ontherecord` 변경 검토 및 `on-the-record` 유지 확정 → 완료(2026-11-20):
+  - **검토 결과 및 사용자 결정**: 플러그인 ID는 **`on-the-record`로 변경 없이 유지 확정**.
+  - **결정 근거**:
+    - **Obsidian 공식 심사 정책 준수**: Obsidian 공식 커뮤니티 플러그인 등록 요건([Submission requirements](https://docs.obsidian.md/Community+directory/Submission+requirements+for+plugins))상 플러그인 ID에 `obsidian` 단어 포함이 금지되어 있어(`id cannot contain 'obsidian'`), `obsidian-ontherecord`로 변경 시 공식 디렉터리 등재 심사에서 자동 반려됨.
+    - **기존 데이터 및 설정 무결성 유지**: 볼트 내 `<vault>/.obsidian/plugins/on-the-record/data.json` 및 `%LOCALAPPDATA%\on-the-record\local-settings.json`의 영속 경로 변경에 따른 마이그레이션 리스크 방지.
+  - 이에 따라 `obsidian-ontherecord`로의 플러그인 ID 변경은 미수행(취소/종료)하고, 공식 ID `on-the-record`를 변동 없이 유지한다.

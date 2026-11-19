@@ -44,7 +44,6 @@ export function getCpuToolSearchRoots(environment: SearchEnvironment): CpuToolSe
 		joinIfSet(environment.userProfile, "Documents", "whisper.cpp"),
 		joinIfSet(environment.localAppData, "Programs", "whisper.cpp"),
 		joinIfSet(environment.localAppData, "whisper.cpp"),
-		joinIfSet(environment.localAppData, "on-the-record-dev"),
 		joinIfSet(environment.localAppData, "on-the-record"),
 		joinIfSet(environment.programFiles, "whisper.cpp"),
 		joinIfSet(environment.programFilesX86, "whisper.cpp"),

@@ -17,7 +17,6 @@ test("known local roots include user, app-local, and program installation folder
 	assert.ok(roots.paths.includes(path.resolve("C:\\Users\\Tester\\whisper.cpp")));
 	assert.ok(roots.paths.includes(path.resolve("C:\\Users\\Tester\\Models")));
 	assert.ok(roots.paths.includes(path.resolve("C:\\Users\\Tester\\AppData\\Local\\Programs\\whisper.cpp")));
-	assert.ok(roots.paths.includes(path.resolve("C:\\Users\\Tester\\AppData\\Local\\on-the-record-dev")));
 	assert.ok(roots.paths.includes(path.resolve("C:\\Users\\Tester\\AppData\\Local\\on-the-record")));
 	assert.ok(roots.paths.includes(path.resolve("C:\\Program Files (x86)\\whisper.cpp")));
 });

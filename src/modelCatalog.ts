@@ -99,24 +99,12 @@ export function checkModelFileInstalled(modelId: string, currentConfiguredPath?:
 		}
 	}
 
-	// 2. 표준 릴리즈 저장 위치 확인 (%LOCALAPPDATA%\on-the-record\models\ggml-*.bin)
+	// 2. 표준 저장 위치 확인 (%LOCALAPPDATA%\on-the-record\models\ggml-*.bin)
 	const standardPath = resolveModelExpectedPath(modelId);
 	try {
 		if (fs.existsSync(standardPath)) {
 			const stat = fs.statSync(standardPath);
 			return { installed: true, resolvedPath: standardPath, sizeBytes: stat.size };
-		}
-	} catch {
-		// 무시
-	}
-
-	// 3. 레거시 dev 위치 하위 호환 확인 (%LOCALAPPDATA%\on-the-record-dev\models\ggml-*.bin)
-	const localAppData = process.env.LOCALAPPDATA || "";
-	const legacyPath = path.join(localAppData, "on-the-record-dev", "models", meta.filename);
-	try {
-		if (fs.existsSync(legacyPath)) {
-			const stat = fs.statSync(legacyPath);
-			return { installed: true, resolvedPath: legacyPath, sizeBytes: stat.size };
 		}
 	} catch {
 		// 무시
