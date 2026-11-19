@@ -7,6 +7,15 @@
 ## 2026-11-20
 
 ### 추가
+- **`3-REC-08` ~ `3-REC-11`, `3-UX-04`, `3-UX-05`, `3-UX-09` ~ `3-UX-13` 전용 사이드바 제어 패널 및 플레이어형 녹음·전사 워크플로**:
+  - `src/sidebarView.ts`: 오른쪽 사이드바 전용 `ItemView`(`OnTheRecordSidebarView`) 구현
+  - 플레이어형 컨트롤러: 대형 디지털 타이머, 녹음 진행 펄스 인디케이터, 녹음 시작(`●`), 일시정지(`❚❚`), 계속하기(`▶`), 안전 중지 및 연결(`■`) 4버튼 바
+  - 스마트 분할 세션(Split-Session): Obsidian 코어 레코더의 pause 미지원 한계를 극복하여 일시정지 시 오디오 연결 마감, 계속하기 시 `seq=2`로 후속 녹음을 매끄럽게 결합
+  - `src/noteAudioExplorer.ts`: 활성 마크다운 노트 본문의 다중 오디오 임베드(`![[...]]`) 실시간 파싱, `Line N` 행 번호 및 전사 상태 뱃지 렌더링, [이동](에디터 커서 즉시 포커스) 및 [전사](백그라운드 큐 인계) 인터페이스 제공
+  - `src/meetingNoteCreator.ts`: 날짜·시간 기반 표준 회의록(`YYYY-MM-DD HHmm 회의록.md`) 안전 생성기, 동적 템플릿 변수 치환(`{{date}}`, `{{time}}`, `{{title}}`) 및 템플릿 일치 시에만 녹음 자동 시작 트리거(`autoRecordTemplatePath`) 연계
+  - 명령 연동: "새 회의록 작성 및 음성 녹음 시작(`create-meeting-note-and-record`)", "오른쪽 사이드바 회의록 제어 패널 열기(`open-sidebar-panel`)" 명령 및 리본 마이크 아이콘 등록
+  - 테마 스타일링(`styles.css`): 모던 플레이어 테마, 펄스 애니메이션, Line N 뱃지 및 카드 그리드 완성
+  - 단위 테스트: `test/meetingNoteCreator.test.ts`, `test/noteAudioExplorer.test.ts`, `test/sidebarView.test.ts` 추가 및 전건 통과
 - **`3-POST-01` 로컬 LLM 연동 회의록 요약·액션 아이템 템플릿 연계**:
   - `src/localLlmClient.ts`: 프라이버시 보호를 위해 오직 `localhost`/`127.0.0.1` 로컬 호스트만 허용하는 로컬 LLM 클라이언트 구현 (외부 클라우드 URL 원천 차단)
   - Ollama(`/api/tags`, `/api/chat`) 및 OpenAI 호환 엔드포인트(LM Studio 등 `/v1/models`, `/v1/chat/completions`) 듀얼 지원 및 원클릭 연결 테스트 기능 제공

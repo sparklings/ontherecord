@@ -58,6 +58,8 @@ import {
 } from "./audioPlaybackSync.ts";
 import { generateMeetingSummary } from "./localLlmClient.ts";
 import { extractTranscriptFromMarkdown, formatMeetingSummaryBlock } from "./summaryPrompt.ts";
+import { OnTheRecordSidebarView, OTR_SIDEBAR_VIEW_TYPE } from "./sidebarView.ts";
+import { createMeetingNote, isContentMatchingTemplate } from "./meetingNoteCreator.ts";
 
 interface ObsidianAudioRecorderPlugin {
 	instance?: {
@@ -237,6 +239,97 @@ export default class OnTheRecordPlugin extends Plugin {
 			),
 		);
 
+		this.registerView(
+			OTR_SIDEBAR_VIEW_TYPE,
+			(leaf) =>
+				new OnTheRecordSidebarView(leaf, {
+					isRecording: () => this.sessionManager.isRecording(),
+					getActiveSessionNotePath: () => this.sessionManager.getActiveSession()?.notePath ?? null,
+					startRecording: async (note) => {
+						const existingEmbeds = this.app.metadataCache.getFileCache(note)?.embeds?.length ?? 0;
+						const seq = calculateNextRecordingSeq(existingEmbeds);
+						const session = await this.sessionManager.startManualSession({
+							notePath: note.path,
+							seq,
+							onNotice: (msg) => new Notice(msg, 4000),
+						});
+						if (session) {
+							this.recordingStatusBar.start(session);
+						}
+					},
+					pauseRecording: async () => {
+						await this.stopCurrentRecording();
+						new Notice("녹음이 일시정지되었습니다. ('계속하기'를 누르면 후속 녹음이 이어집니다)");
+					},
+					resumeRecording: async () => {
+						const activeFile = this.app.workspace.getActiveFile();
+						if (!activeFile) return;
+						const existingEmbeds = this.app.metadataCache.getFileCache(activeFile)?.embeds?.length ?? 0;
+						const seq = calculateNextRecordingSeq(existingEmbeds);
+						const session = await this.sessionManager.startManualSession({
+							notePath: activeFile.path,
+							seq,
+							onNotice: (msg) => new Notice(msg, 4000),
+						});
+						if (session) {
+							this.recordingStatusBar.start(session);
+						}
+					},
+					stopRecording: async () => {
+						await this.stopCurrentRecording();
+					},
+					createNewMeetingNote: async () => {
+						const file = await createMeetingNote(this.app, {
+							folder: this.vaultSettings.autoRecordFolder,
+							templatePath: this.vaultSettings.autoRecordTemplatePath,
+						});
+						const leaf = this.app.workspace.getLeaf(false);
+						await leaf.openFile(file);
+						return file;
+					},
+					enqueueAudioTranscription: async (audioPath: string) => {
+						this.recordingQueue.enqueue(audioPath);
+						void this.queueWorker.trigger();
+					},
+					openAudioPicker: () => {
+						this.openAudioFilePicker();
+					},
+					generateSummary: async (note) => {
+						await this.generateAndAppendSummary(note);
+					},
+				}),
+		);
+
+		this.addCommand({
+			id: "create-meeting-note-and-record",
+			name: "새 회의록 작성 및 음성 녹음 시작",
+			callback: async () => {
+				const file = await createMeetingNote(this.app, {
+					folder: this.vaultSettings.autoRecordFolder,
+					templatePath: this.vaultSettings.autoRecordTemplatePath,
+				});
+				const leaf = this.app.workspace.getLeaf(false);
+				await leaf.openFile(file);
+				const session = await this.sessionManager.startManualSession({
+					notePath: file.path,
+					seq: 1,
+					onNotice: (msg) => new Notice(msg, 4000),
+				});
+				if (session) {
+					this.recordingStatusBar.start(session);
+				}
+				await this.activateSidebarView();
+			},
+		});
+
+		this.addCommand({
+			id: "open-sidebar-panel",
+			name: "오른쪽 사이드바 회의록 제어 패널 열기",
+			callback: async () => {
+				await this.activateSidebarView();
+			},
+		});
+
 		this.addCommand({
 			id: "start-recording",
 			name: "현재 활성 노트에서 음성 녹음 시작",
@@ -326,7 +419,21 @@ export default class OnTheRecordPlugin extends Plugin {
 				return false;
 			},
 		});
+		this.addRibbonIcon("microphone", "On the Record 회의록 제어 패널 열기", () => {
+			void this.activateSidebarView();
+		});
 		this.addRibbonIcon("search", "전사할 오디오 파일 선택", () => this.openAudioFilePicker());
+
+		this.registerEvent(
+			this.app.workspace.on("active-leaf-change", () => {
+				this.refreshSidebarViews();
+			}),
+		);
+		this.registerEvent(
+			this.app.workspace.on("file-open", () => {
+				this.refreshSidebarViews();
+			}),
+		);
 
 		// 3-PIPE-03: 타임스탬프 오디오 동기화 포스트 프로세서 및 클릭 이벤트 등록
 		this.registerMarkdownPostProcessor((el) => {
@@ -656,6 +763,24 @@ export default class OnTheRecordPlugin extends Plugin {
 			if (folder && !file.path.startsWith(`${folder}/`)) return;
 		}
 
+		if (this.vaultSettings.autoRecordTemplatePath && this.vaultSettings.autoRecordTemplatePath.trim().length > 0) {
+			const templatePath = this.vaultSettings.autoRecordTemplatePath.trim();
+			const templateFile = this.app.vault.getAbstractFileByPath(templatePath);
+			if (templateFile && "read" in templateFile && typeof (templateFile as TFile).read === "function") {
+				try {
+					const [templateContent, noteContent] = await Promise.all([
+						this.app.vault.read(templateFile as TFile),
+						this.app.vault.read(file),
+					]);
+					if (!isContentMatchingTemplate(noteContent, templateContent)) {
+						return;
+					}
+				} catch {
+					// 읽기 실패 시 통과
+				}
+			}
+		}
+
 		let frontmatterRecorder: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter?.recorder;
 		if (frontmatterRecorder === undefined) {
 			try {
@@ -692,6 +817,33 @@ export default class OnTheRecordPlugin extends Plugin {
 		});
 		if (session) {
 			this.recordingStatusBar.start(session);
+		}
+	}
+
+	async activateSidebarView(): Promise<void> {
+		const { workspace } = this.app;
+		let leaf = workspace.getLeavesOfType(OTR_SIDEBAR_VIEW_TYPE)[0];
+		if (!leaf) {
+			const rightLeaf = workspace.getRightLeaf(false);
+			if (rightLeaf) {
+				await rightLeaf.setViewState({
+					type: OTR_SIDEBAR_VIEW_TYPE,
+					active: true,
+				});
+				leaf = rightLeaf;
+			}
+		}
+		if (leaf) {
+			workspace.revealLeaf(leaf);
+		}
+	}
+
+	refreshSidebarViews(): void {
+		const leaves = this.app.workspace.getLeavesOfType(OTR_SIDEBAR_VIEW_TYPE);
+		for (const leaf of leaves) {
+			if (leaf.view instanceof OnTheRecordSidebarView) {
+				void leaf.view.refresh();
+			}
 		}
 	}
 
