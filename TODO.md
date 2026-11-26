@@ -28,6 +28,23 @@
 
 ## 2026-11-26
 
+### Stitch 시안 1:1 정밀 구현 및 누락 화면 완성 과제 (신규 등록)
+- [ ] `UI-05` Stitch 사이드바 1:1 정밀 DOM/CSS 이식 (`stitch-sidebar-and-floating.html` 기준)
+  - `Target note` 카드: 파일명 전용 인셋 박스 및 `● Record` 알약 버튼 시안 1:1 동기화
+  - 오디오 임베드 카드: 하단 `[Jump]` 좌측, `[Transcribe]`(보라색) 우측 양끝 정렬(`justify-between`) 및 카드 테두리/배경색 일치
+  - 임의 추가되었던 파형 녹음 카드(`.otr-rec-deck-card`) 정리 및 시안 사양 준수
+- [ ] `UI-06` Stitch 환경설정 '전사 & 모델' 탭 1:1 정밀 DOM/CSS 이식 (`stitch-settings-modal.html` 기준)
+  - 3개 로컬 도구 카드: 상단 제목 + Ready 배지 / 하단 풀폭 경로 입력창 + `[찾아보기]` 버튼 2단 커스텀 카드 구현
+  - 하단 진단 바: `[도구 자동 검색]` 및 `[시험 시작]`(보라색) 우측 정렬
+  - 5대 모델 카드 및 `--prompt` 어휘 힌트 카드 여백·구분선·배지 시안 완전 일치화
+- [ ] `DESIGN-01` Stitch 누락 시안 제작 및 HTML 추출
+  - 환경설정 `Workflow(워크플로)` 탭 시안 제작 및 `docs/design/stitch-workflow-tab.html` 저장
+  - 환경설정 `Acceleration & AI(가속 & AI)` 탭 시안 제작 및 `docs/design/stitch-acceleration-tab.html` 저장
+  - `Review Modal(전사 결과 검토 모달)` 시안 제작 및 `docs/design/stitch-review-modal.html` 저장
+- [ ] `UI-07` 신규 Stitch 시안 플러그인 1:1 코드 구현
+  - `settingsTab.ts` 워크플로 및 가속 탭에 확정된 Stitch 카드/토글/드롭다운 UI 적용
+  - `resultPreviewModal.ts`에 확정된 검토 모달(오디오 플레이어, 세그먼트 블록, 삽입 옵션 바) 적용
+
 ### Wave 1~4 완료 내역 (GitHub Issues `#1`~`#12` 종료)
 - [x] `FEAT-01`, `UI-01` TypeScript 오류 해소, 전용 리본 아이콘(`otr-record-deck`) 적용 및 `.otr-*` 순수 CSS 복구 (2026-11-26)
 - [x] `FEAT-02`, `UI-02` 플로팅 녹음 상태 표시기(`src/floatingIndicator.ts`) 구현 — `starting`/`recording`/`paused` 표시, `idle` 및 앱 종료 시 숨김/제거 (2026-11-26)
