@@ -659,7 +659,10 @@ export default class OnTheRecordPlugin extends Plugin {
 			},
 			settingsProvider: {
 				getLocalSettings: () => this.localSettings,
-				getVaultSettings: () => ({ language: this.vaultSettings.language }),
+				getVaultSettings: () => ({
+					language: this.vaultSettings.language,
+					vocabularyPrompt: this.vaultSettings.vocabularyPrompt,
+				}),
 				resolveFullPath: (filePath) => {
 					const adapter = this.app.vault.adapter;
 					if (adapter instanceof FileSystemAdapter) {

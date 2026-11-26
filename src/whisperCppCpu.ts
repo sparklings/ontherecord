@@ -173,6 +173,7 @@ export interface WhisperInferenceOptions {
 	device?: ProviderDevice | "auto";
 	gpuLayers?: number;
 	gpuDeviceId?: number;
+	vocabularyPrompt?: string;
 }
 
 export function buildWhisperInferenceArgs(options: WhisperInferenceOptions): string[] {
@@ -196,6 +197,11 @@ export function buildWhisperInferenceArgs(options: WhisperInferenceOptions): str
 		}
 	}
 
+	// 3-QUAL-01: 한영 혼용 전문용어 및 고유명사 어휘 프롬프팅 (--prompt)
+	if (options.vocabularyPrompt && options.vocabularyPrompt.trim().length > 0) {
+		args.push("--prompt", options.vocabularyPrompt.trim());
+	}
+
 	if (options.suppressHallucinations !== false) {
 		// 3-CPU-01: 장시간 회의 전사 시 무음/잡음 구간 무한 루프(환각) 방지 최적화
 		args.push("-mc", "0"); // 이전 세그먼트 컨텍스트 누적 차단
@@ -210,6 +216,7 @@ export interface WhisperGpuExecutionOptions {
 	gpuBackend?: GpuBackend;
 	gpuLayers?: number;
 	gpuDeviceId?: number;
+	vocabularyPrompt?: string;
 }
 
 export class WhisperCppCpuRuntime {
@@ -411,6 +418,7 @@ export class WhisperCppCpuRuntime {
 				device: gpuOptions?.gpuBackend,
 				gpuLayers: gpuOptions?.gpuLayers,
 				gpuDeviceId: gpuOptions?.gpuDeviceId,
+				vocabularyPrompt: gpuOptions?.vocabularyPrompt,
 			});
 			await this.dependencies.runCommand(
 				runtimePath,

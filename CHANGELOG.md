@@ -4,6 +4,22 @@
 
 분류: 추가 / 변경 / 삭제 / 결정 / 이슈
 
+## 2026-11-26
+
+### 추가
+- **Wave 1 (`FEAT-02`, `UI-02`) Ambient Floating Recording Indicator 구현**:
+  - `src/floatingIndicator.ts`: 녹음 시작(`starting`, 소프트 퍼플 링) 및 녹음 중(`recording`, 소프트 레드 도트 + 모노스페이스 타이머), 일시정지(`paused`) 상태만 표시하고, `idle` 및 Obsidian 종료(`onunload`) 시 DOM에서 완전히 숨김/제거되는 글래스모피즘 플로팅 필 구현 (호버 시 `Pause` / `Stop` 미니 버튼 노출)
+  - 단위 테스트: `test/floatingIndicator.test.ts` 추가 및 통과 (총 113개 테스트 전건 통과)
+
+### 변경
+- **Wave 1 (`UI-03`) 우측 사이드바 제어 패널 경량화(Unobtrusive) 개편**:
+  - `src/sidebarView.ts`: 대형 스튜디오 데크와 9-bar 파형 비주얼라이저를 제거하고 1줄 컴팩트 녹음 바, Empty State 가드, 도구 미설정 복구 배너, 실시간 백그라운드 전사 큐 진행률 위젯, 오디오 상태(`전사됨`/`대기`) 뱃지로 정돈
+- **리본 아이콘 충돌 해소 및 순수 CSS 디자인 시스템 복구 (`FEAT-01`, `UI-01`)**:
+  - `src/main.ts`, `src/sidebarView.ts`: 코어 Audio recorder(`microphone`)·Search(`search`)와 겹치던 리본 아이콘을 제거하고 전용 SVG 아이콘(`otr-record-deck`) 1개로 단일화
+  - `src/settingsTab.ts`, `src/sidebarView.ts`, `src/audioPlaybackSync.ts`, `styles.css`: 미정의 Tailwind 유틸리티 클래스 및 인라인 `element.style.*` 할당을 제거하고 순수 `.otr-*` CSS 클래스 체계로 통합
+- **TypeScript 컴파일 에러 및 스키마 타입 정합성 복구 (`FEAT-01`)**:
+  - `src/settingsTab.ts`, `src/main.ts`, `src/localLlmClient.ts`, `src/orphanAudioHandler.ts`, `src/meetingNoteCreator.ts` 타입 불일치 해소 (`tsc --noEmit` 에러 0건 달성)
+
 ## 2026-11-20
 
 ### 추가

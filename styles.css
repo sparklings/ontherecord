@@ -988,3 +988,84 @@
 	width: 10px;
 	height: 10px;
 }
+
+/* --------------------------------------------------------------------------
+   8. Settings Tab Readiness Checklist & Scope Badges (FEAT-03, UI-04)
+   -------------------------------------------------------------------------- */
+.otr-readiness-banner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 10px 12px;
+	margin-bottom: 14px;
+	border-radius: var(--radius-m, 8px);
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+}
+
+.otr-readiness-items {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.otr-readiness-title {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-right: 4px;
+}
+
+.otr-readiness-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 7px;
+	border-radius: 9999px;
+	font-size: 11px;
+	font-weight: 500;
+}
+
+.otr-readiness-pill.is-ready {
+	background-color: rgba(72, 165, 106, 0.14);
+	color: var(--text-success, #48a56a);
+}
+
+.otr-readiness-pill.is-missing {
+	background-color: rgba(209, 123, 57, 0.14);
+	color: var(--text-warning, #d17b39);
+}
+
+.otr-readiness-pill svg {
+	width: 11px;
+	height: 11px;
+}
+
+.otr-scope-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: 8px;
+	padding: 2px 8px;
+	border-radius: 9999px;
+	font-size: 10px;
+	font-weight: 500;
+	vertical-align: middle;
+}
+
+.otr-scope-badge.is-vault {
+	background-color: hsla(var(--interactive-accent-rgb), 0.14);
+	color: var(--interactive-accent);
+}
+
+.otr-scope-badge.is-local {
+	background-color: var(--background-secondary-alt);
+	color: var(--text-muted);
+}
+
+.otr-scope-badge svg {
+	width: 11px;
+	height: 11px;
+}

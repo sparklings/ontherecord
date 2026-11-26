@@ -26,6 +26,8 @@ export interface VaultSettings {
 	localLlmAutoSummarize: boolean;
 	// 템플릿 기반 회의록 생성 및 조건부 자동 시작 (3-REC-09)
 	autoRecordTemplatePath: string;
+	// 어휘 프롬프팅 (3-QUAL-01)
+	vocabularyPrompt: string;
 }
 
 export interface LocalSettings {
@@ -41,7 +43,7 @@ export interface LocalSettings {
 export const DEFAULT_VAULT_SETTINGS: VaultSettings = {
 	schemaVersion: 1,
 	language: "auto",
-	defaultModelSize: "base",
+	defaultModelSize: "medium",
 	devicePreference: "auto",
 	autoDetectRecording: true,
 	autoTranscribe: true,
@@ -57,6 +59,7 @@ export const DEFAULT_VAULT_SETTINGS: VaultSettings = {
 	localLlmModel: "qwen2.5:7b",
 	localLlmAutoSummarize: false,
 	autoRecordTemplatePath: "",
+	vocabularyPrompt: "",
 };
 
 export const DEFAULT_LOCAL_SETTINGS: LocalSettings = {
@@ -199,6 +202,12 @@ export function normalizeVaultSettings(value: unknown): VaultSettings {
 			throw new Error("autoRecordTemplatePath 설정이 올바르지 않습니다.");
 		}
 		result.autoRecordTemplatePath = value.autoRecordTemplatePath.trim();
+	}
+	if (value.vocabularyPrompt !== undefined) {
+		if (typeof value.vocabularyPrompt !== "string") {
+			throw new Error("vocabularyPrompt 설정이 올바르지 않습니다.");
+		}
+		result.vocabularyPrompt = value.vocabularyPrompt.trim();
 	}
 	return result;
 }

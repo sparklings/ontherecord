@@ -35,6 +35,32 @@ function renderStatusBadge(container: HTMLElement, status: { exists: boolean; si
 	}
 }
 
+function renderScopeHeading(containerEl: HTMLElement, title: string, scope: "vault" | "local"): void {
+	const setting = new Setting(containerEl).setName(title).setHeading();
+	const badge = setting.nameEl.createSpan({ cls: `otr-scope-badge ${scope === "vault" ? "is-vault" : "is-local"}` });
+	const iconSpan = badge.createSpan({ cls: "otr-inline-icon" });
+	setIcon(iconSpan, scope === "vault" ? "cloud" : "monitor");
+	badge.createSpan({ text: scope === "vault" ? "Vault 동기화" : "이 PC 전용" });
+}
+
+function openLocalFilePicker(accept: string, onSelected: (filePath: string) => void): void {
+	const input = document.createElement("input");
+	input.type = "file";
+	input.accept = accept;
+	input.addClass("is-hidden");
+	input.onchange = () => {
+		const file = input.files?.[0] as (File & { path?: string }) | undefined;
+		if (file && typeof file.path === "string" && file.path.trim().length > 0) {
+			onSelected(file.path);
+		} else if (file) {
+			new Notice("선택한 파일의 로컬 전체 경로를 읽을 수 없습니다. 경로를 직접 붙여넣어 주세요.");
+		}
+		input.remove();
+	};
+	document.body.appendChild(input);
+	input.click();
+}
+
 /* eslint obsidianmd/settings-tab/prefer-setting-definitions: off -- Retain compatibility with minAppVersion 1.7.2. */
 export class OnTheRecordSettingTab extends PluginSettingTab {
 	private activeTab: "workflow" | "transcription" | "acceleration" = "workflow";
@@ -108,7 +134,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 	 * 탭 1: 회의록 및 녹음 워크플로 설정
 	 */
 	private renderWorkflowTab(containerEl: HTMLElement, vaultSettings: VaultSettings): void {
-		new Setting(containerEl).setName("회의록 및 녹음 워크플로").setHeading();
+		renderScopeHeading(containerEl, "회의록 및 녹음 워크플로", "vault");
 
 		new Setting(containerEl)
 			.setName("회의록 작성 시 녹음 시작 방식")
@@ -219,7 +245,31 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 	 * 탭 2: 음성 전사 모델 및 런타임 설정
 	 */
 	private renderTranscriptionTab(containerEl: HTMLElement, vaultSettings: VaultSettings, localSettings: LocalSettings | null): void {
-		new Setting(containerEl).setName("음성인식 모델 선택").setHeading();
+		// Runtime readiness 3단계 체크리스트 배너
+		const readinessBanner = containerEl.createDiv({ cls: "otr-readiness-banner" });
+		const readinessLeft = readinessBanner.createDiv({ cls: "otr-readiness-items" });
+		readinessLeft.createSpan({ text: "도구 준비 상태", cls: "otr-readiness-title" });
+
+		const tools: Array<{ label: string; ok: boolean }> = [
+			{ label: "FFmpeg", ok: checkPathExists(localSettings?.ffmpegPath ?? "").exists },
+			{ label: "whisper-cli", ok: checkPathExists(localSettings?.runtimePath ?? "").exists },
+			{ label: "Model", ok: checkPathExists(localSettings?.modelPath ?? "").exists },
+		];
+		for (const item of tools) {
+			const pill = readinessLeft.createSpan({ cls: `otr-readiness-pill ${item.ok ? "is-ready" : "is-missing"}` });
+			const icon = pill.createSpan({ cls: "otr-inline-icon" });
+			setIcon(icon, item.ok ? "check" : "alert-circle");
+			pill.createSpan({ text: item.label });
+		}
+
+		const setupBtn = readinessBanner.createEl("button", { text: "1-클릭 셋업", cls: "otr-action-badge-btn" });
+		setupBtn.onclick = async () => {
+			const cmd = `powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/sparklings/ontherecord/main/scripts/setup-tools.ps1 | iex"`;
+			await navigator.clipboard.writeText(cmd);
+			new Notice("통합 자동 셋업 명령어가 클립보드에 복사되었습니다.\nPowerShell 터미널에 붙여넣어 실행하세요.", 5000);
+		};
+
+		renderScopeHeading(containerEl, "음성인식 모델 선택", "vault");
 
 		new Setting(containerEl)
 			.setName("기본 전사 언어")
@@ -308,7 +358,19 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 
 		renderDetailBox(selectedModelId);
 
-		new Setting(containerEl).setName("기기 전사 도구 경로").setHeading();
+		new Setting(containerEl)
+			.setName("맞춤형 어휘 힌트 (--prompt)")
+			.setDesc("한영 혼용 IT 전문용어나 고유명사를 쉼표로 구분해 입력하면 오인식을 줄일 수 있습니다.")
+			.addText((text) =>
+				text
+					.setValue(vaultSettings.vocabularyPrompt ?? "")
+					.setPlaceholder("API, Obsidian, Whisper, Docker, TypeScript")
+					.onChange((value) => {
+						void this.updateVaultSettings({ vocabularyPrompt: value.trim() });
+					}),
+			);
+
+		renderScopeHeading(containerEl, "기기 전사 도구 경로", "local");
 
 		if (!localSettings) {
 			containerEl.createEl("p", {
@@ -329,6 +391,13 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					.onChange((value) => {
 						void this.updateLocalSettings({ runtimePath: value.trim() });
 					}),
+			)
+			.addButton((button) =>
+				button.setButtonText("찾아보기").onClick(() => {
+					openLocalFilePicker(".exe", (selectedPath) => {
+						void this.updateLocalSettings({ runtimePath: selectedPath }).then(() => this.display());
+					});
+				}),
 			);
 		renderStatusBadge(runtimeSetting.nameEl, runtimeStatus, "정상");
 
@@ -339,10 +408,17 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			.addText((text) =>
 				text
 					.setValue(localSettings.modelPath)
-					.setPlaceholder("예: C:\\Models\\ggml-base.bin")
+					.setPlaceholder("예: C:\\Models\\ggml-medium-q5_0.bin")
 					.onChange((value) => {
 						void this.updateLocalSettings({ modelPath: value.trim() });
 					}),
+			)
+			.addButton((button) =>
+				button.setButtonText("찾아보기").onClick(() => {
+					openLocalFilePicker(".bin,.gguf", (selectedPath) => {
+						void this.updateLocalSettings({ modelPath: selectedPath }).then(() => this.display());
+					});
+				}),
 			);
 		renderStatusBadge(modelPathSetting.nameEl, modelStatus, "준비됨");
 
@@ -357,6 +433,13 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					.onChange((value) => {
 						void this.updateLocalSettings({ ffmpegPath: value.trim() });
 					}),
+			)
+			.addButton((button) =>
+				button.setButtonText("찾아보기").onClick(() => {
+					openLocalFilePicker(".exe", (selectedPath) => {
+						void this.updateLocalSettings({ ffmpegPath: selectedPath }).then(() => this.display());
+					});
+				}),
 			);
 		renderStatusBadge(ffmpegSetting.nameEl, ffmpegStatus, "준비됨");
 
@@ -386,7 +469,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 	 * 탭 3: 하드웨어 가속 및 로컬 AI 요약 설정
 	 */
 	private renderAccelerationTab(containerEl: HTMLElement, vaultSettings: VaultSettings, localSettings: LocalSettings | null): void {
-		new Setting(containerEl).setName("하드웨어 가속 (GPU 오프로딩)").setHeading();
+		renderScopeHeading(containerEl, "하드웨어 가속 (GPU 오프로딩)", "local");
 
 		if (localSettings) {
 			new Setting(containerEl)
@@ -438,7 +521,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 				);
 		}
 
-		new Setting(containerEl).setName("로컬 AI 회의록 요약").setHeading();
+		renderScopeHeading(containerEl, "로컬 AI 회의록 요약", "vault");
 
 		new Setting(containerEl)
 			.setName("로컬 AI 요약 사용")

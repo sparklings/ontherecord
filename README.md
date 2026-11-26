@@ -4,7 +4,7 @@ Obsidian 데스크톱용 커뮤니티 플러그인 프로젝트이다. 플러그
 
 ## 현재 상태
 
-CPU 전사, 전사문 검색, 커서 기준 녹음 선택과 embed 아래 결과 삽입을 구현했다. 사용자가 설치한 런타임·모델의 알려진 로컬 폴더 검색도 `2-CPU-06`에서 완료했다. 전체 로컬 PC 검색 범위와 사용자 주도 설치 안내 가능성은 `3-CPU-02`에서 검토할 예정이다. 단계별 구현과 시험 결과는 [CHANGELOG.md](./CHANGELOG.md)와 [TODO.md](./TODO.md)에 기록한다.
+`whisper.cpp` 로컬 CPU/GPU(CUDA·Vulkan) 전사, 백그라운드 전사 대기열, Ambient Floating Recording Indicator, 경량화된 우측 사이드바 제어 패널, 노트 내 오디오 탐색 및 타임스탬프 싱크, 로컬 LLM(`localhost`) 기반 3단 회의록 요약 기능을 구현했다. 또한 5대 공식 GGML 모델 카탈로그(기본 권장 `medium-q5_0`)와 전용 리본 아이콘, 순수 CSS 디자인 시스템을 적용했다. 단계별 구현과 시험 결과는 [CHANGELOG.md](./CHANGELOG.md)와 [TODO.md](./TODO.md)에 기록한다.
 
 ## 개요
 
@@ -52,6 +52,7 @@ CPU 전사, 전사문 검색, 커서 기준 녹음 선택과 embed 아래 결과
 | 경로 | 용도 |
 |---|---|
 | `src/` | 플러그인 소스 코드 |
+| `test/` | Node.js 내장 테스트 러너 기반 단위·통합 테스트 |
 | `scripts/` | 배포와 로컬 기준선 측정 스크립트 |
 | `docs/design/` | 제품 계획·설계·공통 형식 |
 | `docs/baselines/` | `0-BASE-*` 시험 및 측정 기록 |

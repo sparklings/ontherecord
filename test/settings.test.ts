@@ -13,6 +13,8 @@ import {
 
 test("vault 설정은 기본값으로 초기화하고 저장된 값은 기본값과 병합한다", () => {
 	assert.deepEqual(normalizeVaultSettings(null), DEFAULT_VAULT_SETTINGS);
+	assert.equal(DEFAULT_VAULT_SETTINGS.defaultModelSize, "medium");
+	assert.equal(DEFAULT_VAULT_SETTINGS.vocabularyPrompt, "");
 	assert.equal(DEFAULT_VAULT_SETTINGS.recordStartMode, "auto");
 	assert.equal(DEFAULT_VAULT_SETTINGS.recordStartNotification, true);
 	assert.equal(DEFAULT_VAULT_SETTINGS.autoRecordFolder, "");
@@ -22,6 +24,7 @@ test("vault 설정은 기본값으로 초기화하고 저장된 값은 기본값
 			recordStartMode: "manual",
 			recordStartNotification: false,
 			autoRecordFolder: "Meetings",
+			vocabularyPrompt: "  Obsidian, Whisper  ",
 		}),
 		{
 			...DEFAULT_VAULT_SETTINGS,
@@ -29,6 +32,7 @@ test("vault 설정은 기본값으로 초기화하고 저장된 값은 기본값
 			recordStartMode: "manual",
 			recordStartNotification: false,
 			autoRecordFolder: "Meetings",
+			vocabularyPrompt: "Obsidian, Whisper",
 		},
 	);
 	// 하위 호환: confirm 모드는 auto + notification true로 변환
@@ -48,6 +52,7 @@ test("지원하지 않는 vault 설정 값과 미래 스키마를 거부한다",
 	assert.throws(() => normalizeVaultSettings({ recordStartMode: "invalid-mode" }));
 	assert.throws(() => normalizeVaultSettings({ recordStartNotification: "yes" }));
 	assert.throws(() => normalizeVaultSettings({ autoRecordFolder: 123 }));
+	assert.throws(() => normalizeVaultSettings({ vocabularyPrompt: 123 }));
 	assert.throws(() => normalizeVaultSettings({ schemaVersion: 2 }));
 });
 

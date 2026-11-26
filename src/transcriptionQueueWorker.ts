@@ -19,7 +19,7 @@ export interface TranscriptionEngine {
 		language: string,
 		onProgress?: (stage: string, percent?: number) => void,
 		signal?: AbortSignal,
-		gpuOptions?: { gpuBackend?: string; gpuLayers?: number; gpuDeviceId?: number },
+		gpuOptions?: { gpuBackend?: string; gpuLayers?: number; gpuDeviceId?: number; vocabularyPrompt?: string },
 	): Promise<TranscriptionResult>;
 }
 
@@ -32,7 +32,7 @@ export interface WorkerSettingsProvider {
 		gpuLayers?: number;
 		gpuDeviceId?: number;
 	} | null;
-	getVaultSettings(): { language: string };
+	getVaultSettings(): { language: string; vocabularyPrompt?: string };
 	resolveFullPath(vaultRelativePath: string): string | null;
 }
 
@@ -194,6 +194,7 @@ export class TranscriptionQueueWorker {
 					gpuBackend: localSettings.gpuBackend,
 					gpuLayers: localSettings.gpuLayers,
 					gpuDeviceId: localSettings.gpuDeviceId,
+					vocabularyPrompt: vaultSettings.vocabularyPrompt,
 				},
 			);
 

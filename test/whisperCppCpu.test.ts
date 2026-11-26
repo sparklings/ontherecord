@@ -256,3 +256,25 @@ test("buildWhisperInferenceArgs: 장시간 회의 환각 방지 파라미터(-mc
 	assert.equal(args[args.indexOf("-tp") + 1], "0.0");
 	assert.equal(args[args.indexOf("-t") + 1], "8");
 });
+
+
+test("buildWhisperInferenceArgs: vocabularyPrompt가 설정된 경우 --prompt 인자를 포함한다 (3-QUAL-01, FEAT-03)", () => {
+	const argsWithPrompt = buildWhisperInferenceArgs({
+		modelPath: "model.bin",
+		audioPath: "audio.wav",
+		language: "ko",
+		outputBase: "out",
+		vocabularyPrompt: "  API, Obsidian, Whisper  ",
+	});
+	assert.ok(argsWithPrompt.includes("--prompt"));
+	assert.equal(argsWithPrompt[argsWithPrompt.indexOf("--prompt") + 1], "API, Obsidian, Whisper");
+
+	const argsWithoutPrompt = buildWhisperInferenceArgs({
+		modelPath: "model.bin",
+		audioPath: "audio.wav",
+		language: "ko",
+		outputBase: "out",
+		vocabularyPrompt: "   ",
+	});
+	assert.equal(argsWithoutPrompt.includes("--prompt"), false);
+});
