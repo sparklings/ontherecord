@@ -91,7 +91,7 @@ export class OnTheRecordSidebarView extends ItemView {
 		// 3. Ultra-minimal compact target note & record bar (Stitch lines 259-281)
 		const contextCard = container.createDiv({ cls: "otr-context-card" });
 		const contextHeader = contextCard.createDiv({ cls: "otr-context-header-row" });
-		const labelSpan = contextHeader.createSpan({ cls: "otr-context-label", text: "TARGET NOTE" });
+		contextHeader.createSpan({ cls: "otr-context-label", text: "TARGET NOTE" });
 
 		const newNoteLink = contextHeader.createEl("button", { text: "+ New note", cls: "otr-link-btn" });
 		newNoteLink.onclick = async () => {
@@ -143,8 +143,6 @@ export class OnTheRecordSidebarView extends ItemView {
 			}
 			await this.callbacks.generateSummary(this.activeNote);
 		};
-
-		await this.refresh();
 
 		await this.refresh();
 	}
@@ -366,7 +364,7 @@ export class OnTheRecordSidebarView extends ItemView {
 				? this.app.metadataCache.getFirstLinkpathDest(item.audioPath, this.activeNote.path)
 				: null;
 			const sizeMb = linkedFile instanceof TFile ? (linkedFile.stat.size / (1024 * 1024)).toFixed(1) : "0.0";
-			itemCard.createDiv({ text: `04:12 • ${sizeMb} MB`, cls: "otr-audio-card-meta" });
+			itemCard.createDiv({ text: sizeMb !== "0.0" ? `${sizeMb} MB` : item.audioPath, cls: "otr-audio-card-meta font-mono-tabular" });
 
 			// 3. Footer Row:
 			// - item.transcribed(Done): 우측에 [Jump], [Re-transcribe] (Stitch lines 328-346)
