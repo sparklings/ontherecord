@@ -28,6 +28,10 @@
 
 ## 2026-11-27
 
+### 대기열 상태 파악 로직 간결화 및 실시간 동기화 (2026-11-27 완료)
+- [x] `SYNC-01` 전사 완료 후 사이드바에 `● 대기열 1건` 위젯이 잔존하던 상태 동기화 누락 수정 (실제 pending/processing 작업만 카운트하고 completion 시 즉각 0 갱신)
+- [x] `SYNC-02` `onItemCompleted` 및 `onItemError` 시 사이드바 진행률 위젯 닫기 및 뷰 실시간 리프레시 트리거
+
 ### Antigravity 스타일 사이드바 & 본문 클린 전사 파이프라인 개편 (2026-11-27 완료)
 - [x] `CLEAN-UI-01` 우측 사이드바 녹음 목록을 뚱뚱한 카드 박스에서 Google Antigravity 스타일의 날렵한 메시지형 인디케이터 포맷(`otr-ag-row`)으로 전면 개편
 - [x] `CLEAN-UI-02` 노트 본문 내 오디오 플레이어 2중 중복 생성 방어 (`hasAudioEmbedInMarkdown` 연동)

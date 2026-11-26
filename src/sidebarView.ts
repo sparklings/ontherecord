@@ -22,6 +22,7 @@ export interface SidebarControllerCallbacks {
 	openSettings?: () => void;
 	isToolsConfigured?: () => boolean;
 	cancelTranscription?: () => void;
+	getPendingQueueCount?: () => number;
 }
 
 export class OnTheRecordSidebarView extends ItemView {
@@ -333,6 +334,10 @@ export class OnTheRecordSidebarView extends ItemView {
 			}
 		} else if (this.playerState !== "paused") {
 			this.playerState = "idle";
+		}
+
+		if (this.callbacks.getPendingQueueCount) {
+			this.currentQueueCount = this.callbacks.getPendingQueueCount();
 		}
 
 		this.renderSetupAlert();

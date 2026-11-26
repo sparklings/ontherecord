@@ -314,9 +314,13 @@ export default class OnTheRecordPlugin extends Plugin {
 					},
 					cancelTranscription: () => {
 						this.queueWorker.stop();
-						this.queueWorker.start();
+						this.recordingQueue.clear();
 						this.updateSidebarProgress(null);
+						this.refreshSidebarViews();
 						new Notice("진행 중인 전사 작업을 취소했습니다.");
+					},
+					getPendingQueueCount: () => {
+						return this.recordingQueue.list().filter((j) => j.status === "queued" || j.status === "processing").length;
 					},
 				}),
 		);
@@ -706,9 +710,13 @@ export default class OnTheRecordPlugin extends Plugin {
 			onItemCompleted: async (item, result) => {
 				this.floatingIndicator?.setCompleted("전사 완료!");
 				await this.handleQueueItemCompleted(item, result);
+				this.updateSidebarProgress(null);
+				this.refreshSidebarViews();
 			},
 			onItemError: (item, error) => {
 				this.floatingIndicator?.setState("idle");
+				this.updateSidebarProgress(null);
+				this.refreshSidebarViews();
 				this.reportError(`'${item.filePath}' 백그라운드 전사에 실패했습니다.`, error);
 			},
 		});
@@ -814,7 +822,7 @@ export default class OnTheRecordPlugin extends Plugin {
 	}
 
 	private updateSidebarProgress(progress: WorkerProgress | null): void {
-		const queueCount = this.recordingQueue.list().length;
+		const queueCount = this.recordingQueue.list().filter((j) => j.status === "queued" || j.status === "processing").length;
 		const leaves = this.app.workspace.getLeavesOfType(OTR_SIDEBAR_VIEW_TYPE);
 		for (const leaf of leaves) {
 			if (leaf.view instanceof OnTheRecordSidebarView) {

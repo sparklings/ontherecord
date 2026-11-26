@@ -6,6 +6,12 @@
 
 ## 2026-11-27
 
+### 수정 및 상태 동기화
+- **전사 완료 후 사이드바 대기열 위젯 잔존 동기화 버그 해결**:
+  - `updateSidebarProgress`에서 대기열 수를 누적 완료된 항목까지 포함하던 `recordingQueue.list().length` 대신, 실제 대기 중/처리 중인 항목만 카운트(`status === 'queued' || 'processing'`)하도록 수정.
+  - `TranscriptionQueueWorker`의 `onItemCompleted` 및 `onItemError` 시점에 `updateSidebarProgress(null)`과 `refreshSidebarViews()`를 호출하여, 전사가 끝나는 즉시 사이드바의 `● 대기열 1건` 위젯이 즉각 사라지고 파일 상태가 `완료`로 정확히 동기화되도록 수정.
+  - 사이드바 `refresh()` 시점에도 실제 남은 대기열 건수를 실시간 동기화하여 상태 불일치 원천 차단.
+
 ### UI/UX 전면 개편
 - **Google Antigravity 스타일의 미니멀 인디케이터 사이드바 UI 도입**:
   - 기존의 세로 공간을 과도하게 차지하던 뚱뚱한 카드 박스 디자인(`.otr-audio-item-stacked`)을 전면 폐기하고, Google Antigravity의 간결한 텍스트 기반 메시지형 인디케이터(`otr-ag-row`) 포맷으로 개편.
