@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>On the Record - Review Transcription Modal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #121212; color: #dcddde; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #353535; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4a4a4a; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 bg-[#0f0f10]">
+  <div class="fixed inset-0 bg-black/70 backdrop-blur-[2px] z-0"></div>
+  
+  <!-- Review Modal Container (760px) -->
+  <div class="relative z-10 w-full max-w-[760px] bg-[#1e1e1e] rounded-xl border border-[#353535] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-[#313131] flex items-center justify-between bg-[#1a1a1a] select-none">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[#272535] border border-[#3c365c] flex items-center justify-center text-[#7b6cd9]">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <line x1="10" y1="9" x2="8" y2="9"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm font-semibold text-white tracking-wide">Review transcription result</h1>
+            <span class="text-[10px] font-mono text-[#c7beff] bg-[#342e54] border border-[#524687] px-1.5 py-0.5 rounded">Whisper GGML</span>
+          </div>
+          <p class="text-xs text-[#8c8c90] font-mono mt-0.5">Recording 1410.m4a • 04:12 • Medium (q5_0)</p>
+        </div>
+      </div>
+      <button class="w-7 h-7 rounded-md hover:bg-[#2b2b2b] text-[#999999] hover:text-white flex items-center justify-center transition-colors">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <!-- Audio Sync Control Bar -->
+    <div class="px-6 py-3 bg-[#171717] border-b border-[#2d2d2d] flex items-center gap-4">
+      <!-- Play/Pause Button -->
+      <button class="w-9 h-9 rounded-full bg-[#7b6cd9] hover:bg-[#6f5ecf] text-white flex items-center justify-center transition-colors shadow-md shrink-0">
+        <svg class="w-4 h-4 fill-current ml-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </button>
+
+      <!-- Waveform / Scrubber Area -->
+      <div class="flex-1 space-y-1">
+        <div class="flex items-center justify-between text-xs font-mono">
+          <span class="text-white">01:24 <span class="text-[#717178]">/ 04:12</span></span>
+          <span class="text-[11px] text-[#7b6cd9] flex items-center gap-1">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>
+            Synced to segment 3
+          </span>
+        </div>
+        <!-- Scrubber Track -->
+        <div class="w-full h-1.5 bg-[#2c2c2c] rounded-full overflow-hidden relative cursor-pointer">
+          <div class="h-full bg-[#7b6cd9] rounded-full" style="width: 33%;"></div>
+        </div>
+      </div>
+
+      <!-- Playback Speed -->
+      <button class="px-2.5 py-1 bg-[#252525] border border-[#353535] rounded text-xs font-mono text-[#d0d0d5] hover:bg-[#2e2e2e] transition-colors">
+        1.0x
+      </button>
+    </div>
+
+    <!-- Segment List (Editable) -->
+    <div class="overflow-y-auto px-6 py-4 space-y-2.5 flex-1">
+      <div class="text-[11px] text-[#8c8c90] flex items-center justify-between pb-1">
+        <span class="flex items-center gap-1.5">
+          <svg class="w-3 h-3 text-[#7b6cd9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Click timestamp to jump audio • Edit inline before saving
+        </span>
+        <span class="font-mono text-[10px]">5 segments</span>
+      </div>
+
+      <!-- Segment Row 1 -->
+      <div class="p-3 bg-[#252525] hover:bg-[#282828] border border-[#353535] rounded-lg transition-all flex items-start gap-3">
+        <button class="px-2 py-0.5 rounded bg-[#1e1e1e] hover:bg-[#2d2d2d] border border-[#333333] text-[11px] font-mono text-[#7b6cd9] flex items-center gap-1 shrink-0 mt-0.5">
+          <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          00:08
+        </button>
+        <div class="flex-1 text-xs text-[#e1e1e6] leading-relaxed outline-none" contenteditable="true">
+          Let us review the sprint deliverables and local whisper benchmarks.
+        </div>
+      </div>
+
+      <!-- Segment Row 2 -->
+      <div class="p-3 bg-[#252525] hover:bg-[#282828] border border-[#353535] rounded-lg transition-all flex items-start gap-3">
+        <button class="px-2 py-0.5 rounded bg-[#1e1e1e] hover:bg-[#2d2d2d] border border-[#333333] text-[11px] font-mono text-[#7b6cd9] flex items-center gap-1 shrink-0 mt-0.5">
+          <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          00:42
+        </button>
+        <div class="flex-1 text-xs text-[#e1e1e6] leading-relaxed outline-none" contenteditable="true">
+          The core ML acceleration on Apple Silicon brings transcription performance significantly ahead of real-time streaming.
+        </div>
+      </div>
+
+      <!-- Segment Row 3 (ACTIVE PLAYBACK SEGMENT) -->
+      <div class="p-3 bg-[#22212d] border-2 border-[#7b6cd9] rounded-lg transition-all flex items-start gap-3 shadow-md shadow-[#7b6cd9]/5">
+        <button class="px-2 py-0.5 rounded bg-[#342e54] border border-[#524687] text-[11px] font-mono text-[#c7beff] flex items-center gap-1 shrink-0 mt-0.5 font-semibold">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#7b6cd9] animate-pulse"></span>
+          01:24
+        </button>
+        <div class="flex-1 text-xs text-white leading-relaxed outline-none font-medium" contenteditable="true">
+          We verified latency is down to 420ms with the medium q5_0 model.
+        </div>
+      </div>
+
+      <!-- Segment Row 4 -->
+      <div class="p-3 bg-[#252525] hover:bg-[#282828] border border-[#353535] rounded-lg transition-all flex items-start gap-3">
+        <button class="px-2 py-0.5 rounded bg-[#1e1e1e] hover:bg-[#2d2d2d] border border-[#333333] text-[11px] font-mono text-[#7b6cd9] flex items-center gap-1 shrink-0 mt-0.5">
+          <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          02:15
+        </button>
+        <div class="flex-1 text-xs text-[#e1e1e6] leading-relaxed outline-none" contenteditable="true">
+          Next step is testing custom vocabulary tokens so technical terms like Obsidian, FFmpeg, and CoreML stay properly capitalized.
+        </div>
+      </div>
+    </div>
+
+    <!-- Insertion Mode Selector -->
+    <div class="px-6 py-2.5 bg-[#171717] border-t border-[#2d2d2d] flex items-center justify-between text-xs">
+      <span class="text-[#8c8c90]">Insertion mode:</span>
+      <div class="flex items-center gap-1 bg-[#222222] p-1 rounded-md border border-[#303030]">
+        <button class="px-2.5 py-1 rounded bg-[#2c2b38] text-[#c7beff] border border-[#48426d] font-medium flex items-center gap-1.5">
+          <svg class="w-3 h-3 text-[#7b6cd9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+          Replace existing block
+        </button>
+        <button class="px-2.5 py-1 rounded text-[#9999a0] hover:text-white transition-colors flex items-center gap-1.5">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+          Append below
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="px-6 py-3.5 bg-[#1a1a1a] border-t border-[#313131] flex items-center justify-between">
+      <div class="text-[11px] font-mono text-[#717178] flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-[#888890]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Target: Line 12 in 2026-11-26 1430 Weekly Sync.md
+      </div>
+      <div class="flex items-center gap-2.5">
+        <button class="px-3.5 py-1.5 rounded-md bg-[#282828] hover:bg-[#323232] border border-[#3a3a3a] text-xs text-[#d0d0d5] transition-colors">
+          Cancel
+        </button>
+        <button class="px-4 py-1.5 rounded-md bg-[#7b6cd9] hover:bg-[#6f5ecf] text-xs font-semibold text-white transition-colors shadow-md flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Insert into note
+        </button>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

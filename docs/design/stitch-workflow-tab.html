@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>On the Record Settings - Workflow Tab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #121212; color: #dcddde; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #353535; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4a4a4a; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 bg-[#0f0f10]">
+  <div class="fixed inset-0 bg-black/70 backdrop-blur-[2px] z-0"></div>
+  <div class="relative z-10 w-full max-w-[820px] bg-[#1e1e1e] rounded-xl border border-[#353535] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-[#313131] flex items-center justify-between bg-[#1a1a1a] select-none">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[#272535] border border-[#3c365c] flex items-center justify-center text-[#7b6cd9]">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm font-semibold text-white tracking-wide">On the Record</h1>
+            <span class="text-[11px] font-mono text-[#8a8a8a] bg-[#252525] px-1.5 py-0.5 rounded border border-[#333333]">v0.1.0</span>
+          </div>
+          <p class="text-xs text-[#8c8c8e]">Obsidian voice companion & offline speech-to-text</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-[11px] text-[#6e6e6e] font-mono hidden sm:inline">ESC to close</span>
+        <button class="w-7 h-7 rounded-md hover:bg-[#2b2b2b] text-[#999999] hover:text-white flex items-center justify-center transition-colors">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Segmented 3-Tab Nav -->
+    <div class="px-6 pt-3 pb-2 bg-[#1a1a1a] border-b border-[#2d2d2d]">
+      <div class="flex items-center p-1 bg-[#141414] rounded-lg border border-[#2b2b2b] text-xs font-medium text-[#8f8f92]">
+        <!-- Tab 1: Workflow (ACTIVE) -->
+        <button class="flex-1 py-1.5 px-3 rounded-md bg-[#252525] text-white shadow-sm border border-[#3b3b3b] flex items-center justify-center gap-2 font-medium transition-all">
+          <svg class="w-3.5 h-3.5 text-[#7b6cd9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <line x1="10" y1="9" x2="8" y2="9"/>
+          </svg>
+          <span class="text-white">Workflow</span>
+        </button>
+        <!-- Tab 2: Transcription & models -->
+        <button class="flex-1 py-1.5 px-3 rounded-md flex items-center justify-center gap-2 hover:text-[#d0d0d0] transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+          <span>Transcription & models</span>
+        </button>
+        <!-- Tab 3: Acceleration & AI -->
+        <button class="flex-1 py-1.5 px-3 rounded-md flex items-center justify-center gap-2 hover:text-[#d0d0d0] transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <span>Acceleration & AI</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="overflow-y-auto px-6 py-5 space-y-6 flex-1">
+      <div class="max-w-[720px] mx-auto space-y-6">
+
+        <section class="space-y-4">
+          <div class="flex items-center justify-between pb-2 border-b border-[#2d2d2d]">
+            <div>
+              <h2 class="text-sm font-semibold text-white">회의록 및 녹음 워크플로</h2>
+              <p class="text-xs text-[#8c8c90] mt-0.5">회의록 작성 시 자동 녹음 개시, 템플릿 조건 및 결과 삽입 규칙을 설정합니다.</p>
+            </div>
+            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#1e2029] border border-[#32374d] text-[#93a2d8] text-[11px]">
+              <svg class="w-3 h-3 text-[#7b6cd9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+              <span>Vault sync</span>
+            </div>
+          </div>
+
+          <!-- Setting Card 1: 녹음 시작 모드 -->
+          <div class="flex items-center justify-between p-3.5 bg-[#252525] rounded-lg border border-[#353535]">
+            <div>
+              <div class="text-xs font-medium text-white">회의록 작성 시 녹음 시작 방식</div>
+              <div class="text-[11px] text-[#8c8c90] mt-0.5">새 회의록 작성 시 자동으로 음성 녹음을 시작할지 선택합니다.</div>
+            </div>
+            <select class="bg-[#1e1e1e] border border-[#3a3a3a] text-xs text-[#e1e1e6] rounded-md px-3 py-1.5 focus:border-[#7b6cd9] focus:outline-none">
+              <option selected>새 회의록 작성 시 자동 시작 (권장)</option>
+              <option>단축키 또는 버튼으로 수동 시작</option>
+            </select>
+          </div>
+
+          <!-- Setting Card 2: 알림 토글 -->
+          <div class="flex items-center justify-between p-3.5 bg-[#252525] rounded-lg border border-[#353535]">
+            <div>
+              <div class="text-xs font-medium text-white">녹음 시작 안내 알림 표시</div>
+              <div class="text-[11px] text-[#8c8c90] mt-0.5">녹음이 시작될 때 우측 상단에 팝업 알림을 표시합니다.</div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" checked class="sr-only peer">
+              <div class="w-9 h-5 bg-[#3a3a3a] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#7b6cd9]"></div>
+            </label>
+          </div>
+
+          <!-- Setting Card 3: 보관 폴더 경로 -->
+          <div class="flex items-center justify-between p-3.5 bg-[#252525] rounded-lg border border-[#353535]">
+            <div>
+              <div class="text-xs font-medium text-white">회의록 마크다운 노트 보관 폴더</div>
+              <div class="text-[11px] text-[#8c8c90] mt-0.5">이 폴더 하위에 새 마크다운 문서를 생성했을 때만 녹음 시작 규칙을 적용합니다.</div>
+            </div>
+            <input type="text" value="Recording" class="w-48 bg-[#1e1e1e] border border-[#3a3a3a] rounded-md px-3 py-1.5 text-xs text-[#e1e1e6] font-mono focus:border-[#7b6cd9] focus:outline-none" placeholder="예: Meetings 또는 회의록">
+          </div>
+
+          <!-- Setting Card 4: 조건부 템플릿 -->
+          <div class="flex items-center justify-between p-3.5 bg-[#252525] rounded-lg border border-[#353535]">
+            <div>
+              <div class="text-xs font-medium text-white">조건부 자동 시작 템플릿 파일</div>
+              <div class="text-[11px] text-[#8c8c90] mt-0.5">지정한 템플릿과 일치하는 문서가 생성되었을 때만 녹음이 자동 시작됩니다.</div>
+            </div>
+            <input type="text" value="" class="w-56 bg-[#1e1e1e] border border-[#3a3a3a] rounded-md px-3 py-1.5 text-xs text-[#e1e1e6] font-mono focus:border-[#7b6cd9] focus:outline-none" placeholder="예: Templates/회의록 템플릿.md">
+          </div>
+
+          <!-- Setting Card 5: 탭 닫힘 동작 -->
+          <div class="flex items-center justify-between p-3.5 bg-[#252525] rounded-lg border border-[#353535]">
+            <div>
+              <div class="text-xs font-medium text-white">녹음 중 문서 탭 닫힘 시 동작</div>
+              <div class="text-[11px] text-[#8c8c90] mt-0.5">녹음 중인 탭이 닫혔을 때 녹음 파일 유실을 방지하는 안전 정책입니다.</div>
+            </div>
+            <select class="bg-[#1e1e1e] border border-[#3a3a3a] text-xs text-[#e1e1e6] rounded-md px-3 py-1.5 focus:border-[#7b6cd9] focus:outline-none">
+              <option selected>녹음 안전 중지 후 자동 연결 (권장)</option>
+              <option>녹음 계속 진행 (백그라운드)</option>
+            </select>
+          </div>
+
+          <!-- Setting Card 6: 자동 전사 시작 -->
+          <div class="flex items-center justify-between p-3.5 bg-[#252525] rounded-lg border border-[#353535]">
+            <div>
+              <div class="text-xs font-medium text-white">녹음 종료 후 자동 전사 시작</div>
+              <div class="text-[11px] text-[#8c8c90] mt-0.5">녹음이 중지되면 백그라운드 큐로 넘겨 자동으로 텍스트 변환을 개시합니다.</div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" checked class="sr-only peer">
+              <div class="w-9 h-5 bg-[#3a3a3a] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#7b6cd9]"></div>
+            </label>
+          </div>
+
+          <!-- Setting Card 7: 결과 반영 방식 -->
+          <div class="flex items-center justify-between p-3.5 bg-[#252525] rounded-lg border border-[#353535]">
+            <div>
+              <div class="text-xs font-medium text-white">전사 결과 노트 반영 방식</div>
+              <div class="text-[11px] text-[#8c8c90] mt-0.5">전사 완료 시 노트 본문에 반영하는 절차를 지정합니다.</div>
+            </div>
+            <select class="bg-[#1e1e1e] border border-[#3a3a3a] text-xs text-[#e1e1e6] rounded-md px-3 py-1.5 focus:border-[#7b6cd9] focus:outline-none">
+              <option selected>오디오 임베드 아래 자동 삽입 (권장)</option>
+              <option>미리보기 모달로 검토 후 승인 삽입</option>
+            </select>
+          </div>
+
+          <!-- Setting Card 8: 저장 안정화 시간 -->
+          <div class="flex items-center justify-between p-3.5 bg-[#252525] rounded-lg border border-[#353535]">
+            <div>
+              <div class="text-xs font-medium text-white">오디오 저장 완료 대기 시간 (초)</div>
+              <div class="text-[11px] text-[#8c8c90] mt-0.5">녹음기가 파일 쓰기를 완전히 마칠 때까지 대기하는 시간입니다 (기본값: 5초).</div>
+            </div>
+            <input type="number" value="5" min="1" max="60" class="w-20 bg-[#1e1e1e] border border-[#3a3a3a] rounded-md px-3 py-1.5 text-xs text-[#e1e1e6] font-mono focus:border-[#7b6cd9] focus:outline-none text-right">
+          </div>
+
+        </section>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-6 py-3 bg-[#181818] border-t border-[#2d2d2d] flex items-center justify-between text-xs text-[#7b7b80]">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="text-[#9999a0]">Offline engine status: Operational</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="https://github.com/sparklings/ontherecord/wiki" target="_blank" class="text-[#7b6cd9] hover:underline">Documentation</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
