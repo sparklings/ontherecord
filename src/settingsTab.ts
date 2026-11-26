@@ -269,11 +269,9 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			pill.createSpan({ text: item.label });
 		}
 
-		const setupBtn = readinessBanner.createEl("button", { text: "1-클릭 셋업", cls: "otr-action-badge-btn" });
-		setupBtn.onclick = async () => {
-			const cmd = `powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/sparklings/ontherecord/main/scripts/setup-tools.ps1 | iex"`;
-			await navigator.clipboard.writeText(cmd);
-			new Notice("통합 자동 셋업 명령어가 클립보드에 복사되었습니다.\nPowerShell 터미널에 붙여넣어 실행하세요.", 5000);
+		const guideLinkBtn = readinessBanner.createEl("button", { text: "설치 가이드", cls: "otr-action-badge-btn" });
+		guideLinkBtn.onclick = () => {
+			window.open("https://github.com/sparklings/ontherecord/wiki/Installation-and-Setup", "_blank");
 		};
 
 		renderScopeHeading(containerEl, "음성인식 모델 선택", "vault");
@@ -458,17 +456,6 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			)
 			.addButton((button) =>
 				button.setButtonText("시험 시작").onClick(() => this.testCpuSetup()),
-			);
-
-		new Setting(containerEl)
-			.setName("1-클릭 통합 자동 셋업")
-			.setDesc("터미널에서 런타임, 기본 모델, FFmpeg를 원클릭 설치하는 명령어를 복사합니다.")
-			.addButton((button) =>
-				button.setButtonText("명령어 복사").onClick(async () => {
-					const cmd = `powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/sparklings/ontherecord/main/scripts/setup-tools.ps1 | iex"`;
-					await navigator.clipboard.writeText(cmd);
-					new Notice("통합 자동 셋업 명령어가 클립보드에 복사되었습니다.", 5000);
-				}),
 			);
 	}
 

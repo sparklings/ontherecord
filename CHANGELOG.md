@@ -24,6 +24,9 @@
   - 단위 테스트: `test/floatingIndicator.test.ts` 추가 및 통과
 
 ### 변경
+- **외부 도구 설치 안내를 GitHub Wiki로 일원화 (`src/settingsTab.ts`, `docs/wiki/Installation-and-Setup.md`)**:
+  - 비공개 저장소 `404` 오류 및 Obsidian 플러그인 의존성 설치 금지 정책과의 충돌을 방지하기 위해 설정 탭의 원격 PowerShell 스크립트(`irm ... | iex`) 복사 버튼을 제거하고 GitHub Wiki 설치 가이드 링크로 대체
+  - `docs/wiki/Installation-and-Setup.md`를 공식 수동 설치 절차(`winget`, `whisper.cpp` 릴리스, Hugging Face 모델, `[도구 검색]`/`[찾아보기]`) 중심으로 정비
 - **Wave 4 (`3-PROD-03`) Obsidian 커뮤니티 플러그인 린트 규격 준수 (`eslint src/` 오류 0건 달성)**:
   - `src/orphanAudioModal.ts`, `styles.css`: 인라인 `element.style.*` 할당을 `.otr-orphan-list`, `.otr-orphan-item` CSS 클래스로 이전하고 비동기 클릭 핸들러의 `no-misused-promises` 오류 수정
   - `src/noteAudioExplorer.ts`, `src/noteMetadataHandler.ts`, `src/meetingNoteCreator.ts`: `any` 타입 제거, 템플릿 리터럴 배열 처리 및 정규식 이스케이프 정리

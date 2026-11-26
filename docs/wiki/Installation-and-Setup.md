@@ -1,40 +1,38 @@
-# 1. 설치 및 외부 도구 셋업 (Installation & Setup)
+# 1. 설치 및 외부 도구 준비 (Installation & Setup)
 
-On the Record는 Obsidian의 보안 및 커뮤니티 정책을 100% 준수합니다.  
-플러그인 자체에는 무거운 바이너리를 포함하지 않으므로, 음성 전사를 위해 로컬 PC에 세 가지 도구가 필요합니다:
+On the Record는 Obsidian 커뮤니티 플러그인 정책을 준수하기 위해 실행 파일이나 AI 모델을 플러그인 내부에 포함하거나 자동 다운로드·설치하지 않습니다.  
+로컬 음성 전사를 사용하려면 PC에 아래 세 가지 도구를 직접 준비한 뒤 플러그인 설정에서 경로를 연결해야 합니다.
 
-1. **FFmpeg**: 회의 녹음 오디오(.m4a, .mp3, .wav 등)를 whisper.cpp 규격(16kHz 모노 PCM WAV)으로 손실 없이 정규화합니다.
-2. **whisper.cpp (`whisper-cli.exe`)**: 고성능 오픈소스 C++ 음성 인식 엔진입니다.
-3. **GGML 음성 모델 (`ggml-*.bin`)**: 한국어 음성을 텍스트로 변환하는 AI 모델 가중치 파일입니다.
-
----
-
-## 🛠️ 방법 1: 원클릭 자동 셋업 스크립트 (가장 추천 ⭐)
-
-초보 사용자도 명령어 한 줄로 모든 도구를 안전하게 자동 구성할 수 있습니다.
-
-1. 플러그인 설정 화면 하단의 **[명령어 복사]** 버튼을 누릅니다.
-2. **Windows PowerShell** 터미널을 실행하고 붙여넣어 실행합니다:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/sparklings/ontherecord/main/scripts/setup-tools.ps1 | iex"
-   ```
-3. 스크립트가 공식 배포본에서 다운로드하여 다음 표준 경로(`%LOCALAPPDATA%\on-the-record`)에 배치합니다:
-   - 런타임: `%LOCALAPPDATA%\on-the-record\tools\whisper-cli.exe`
-   - 모델: `%LOCALAPPDATA%\on-the-record\models\ggml-medium-q5_0.bin`
-   - 설정: `%LOCALAPPDATA%\on-the-record\local-settings.json`
+1. **FFmpeg**: 오디오 파일(`.m4a`, `.mp3`, `.wav`, `.aac`, `.ogg`)을 `whisper.cpp` 규격(16 kHz 모노 PCM WAV)으로 변환합니다.
+2. **whisper.cpp (`whisper-cli.exe`)**: 로컬 CPU/GPU 음성 인식 실행 파일입니다.
+3. **GGML 음성 모델 (`ggml-*.bin`)**: 전사에 사용되는 양자화 Whisper 모델 파일입니다.
 
 ---
 
-## 📦 방법 2: 수동 셋업 가이드
+## 표준 설치 절차 (Windows x64)
 
-기존에 설치된 FFmpeg나 whisper.cpp를 직접 사용하고 싶은 경우:
+### 1단계: FFmpeg 설치
+Windows PowerShell 또는 터미널에서 `winget`으로 설치하거나 공식 배포본을 내려받습니다:
+```powershell
+winget install Gyan.FFmpeg
+```
 
-1. **FFmpeg 설치**:
-   - `winget install Gyan.FFmpeg` 또는 공식 홈페이지에서 다운로드
-2. **whisper.cpp 다운로드**:
-   - [ggerganov/whisper.cpp 릴리즈](https://github.com/ggerganov/whisper.cpp/releases)에서 Windows용 바이너리 zip 다운로드
-3. **모델 다운로드**:
-   - [Hugging Face ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp/tree/main)에서 원하는 양자화 모델(`ggml-medium-q5_0.bin` 권장) 다운로드
-4. **플러그인 설정에서 경로 지정**:
-   - Obsidian `설정` → `On the Record` → `전사 & 모델` 탭의 `기기 전사 도구 경로`에서 각 파일 경로를 입력하거나 `[찾아보기]` 버튼으로 선택합니다.
-   - 상단 `도구 준비 상태` 배너 및 각 항목 옆 상태 배지(`정상` / `준비됨`)로 파일 확인 여부를 점검할 수 있습니다.
+### 2단계: `whisper.cpp` 런타임 준비
+1. [ggerganov/whisper.cpp Releases](https://github.com/ggerganov/whisper.cpp/releases)에서 Windows x64용 바이너리 압축 파일(`whisper-bin-x64.zip`, 기준 버전 `b5454` / `v1.9.5`)을 다운로드합니다.
+2. 권장 폴더(`%LOCALAPPDATA%\on-the-record\tools\`) 또는 원하는 로컬 폴더에 압축을 해제합니다. (`whisper-cli.exe` 확인)
+
+### 3단계: GGML 모델 다운로드
+1. [Hugging Face ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp/tree/main)에서 모델 파일을 다운로드합니다.
+   - **기본 권장 모델**: `ggml-medium-q5_0.bin` (514 MB)
+   - 경량 모델: `ggml-small-q5_1.bin` (466 MB) / `ggml-base-q5_1.bin` (148 MB)
+2. 권장 폴더(`%LOCALAPPDATA%\on-the-record\models\`)에 저장합니다.
+
+### 4단계: 플러그인 설정에서 경로 연결
+1. Obsidian **설정 → On the Record → 전사 & 모델** 탭으로 이동합니다.
+2. **`[도구 검색]`** 버튼을 눌러 알려진 로컬 폴더에서 도구를 자동 탐지·적용하거나, 각 항목 옆의 **`[찾아보기]`** 버튼으로 파일 경로를 직접 지정합니다.
+3. 상단 **도구 준비 상태** 배너에서 `FFmpeg`, `whisper-cli`, `Model` 3개 항목이 모두 녹색으로 표시되면 **`[시험 시작]`** 버튼으로 동작을 확인합니다.
+
+---
+
+## 참고: 저장소 내 로컬 셋업 스크립트
+소스를 직접 클론한 개발 환경에서는 저장소에 포함된 [`scripts/setup-tools.ps1`](../../scripts/setup-tools.ps1) 스크립트를 로컬에서 직접 실행하여 기준 도구를 구성할 수 있습니다.
