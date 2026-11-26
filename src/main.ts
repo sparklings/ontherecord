@@ -854,7 +854,8 @@ export default class OnTheRecordPlugin extends Plugin {
 	private async handleQueueItemCompleted(item: QueuedRecording, result: TranscriptionResult): Promise<void> {
 		const filename = item.filePath.split("/").pop() ?? item.filePath;
 		const targets = this.findAudioEmbedTargets(item.filePath);
-		const formattedMarkdown = formatResultMarkdown(result, { includeTimestamps: true });
+		const rawMarkdown = formatResultMarkdown(result, { includeTimestamps: true });
+		const formattedMarkdown = `### 🎙️ 음성 전사\n\n${rawMarkdown}`;
 
 		if (targets.length === 0) {
 			const activeFile = this.app.workspace.getActiveFile();
