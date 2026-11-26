@@ -29,7 +29,7 @@ import type { AudioEmbedPosition } from "./resultPreview.ts";
 
 import { AudioEmbedTargetPickerModal, ExistingResultModal, ResultPreviewModal } from "./resultPreviewModal.ts";
 import type { AudioEmbedTarget } from "./resultPreviewModal.ts";
-import { applyAudioEmbedInsertion, formatResultMarkdown, hasExistingResult, prioritizeAudioEmbeds } from "./resultPreview.ts";
+import { applyAudioEmbedInsertion, formatResultMarkdown, hasExistingResult, prioritizeAudioEmbeds, wrapResultBlock } from "./resultPreview.ts";
 import type { ExistingResultChoice } from "./resultPreview.ts";
 import type { TranscriptionResult } from "./provider.ts";
 import type { CpuSmokeTestStage } from "./whisperCppCpu.ts";
@@ -489,13 +489,22 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		// S-09: 코어 녹음기가 생성 직후 새 탭으로 오디오 파일을 여는 동작 자동 닫기
 		this.registerEvent(
-			this.app.workspace.on("active-leaf-change", (leaf) => {
+			this.app.workspace.on("active-leaf-change", async (leaf) => {
 				if (leaf && leaf.view instanceof MarkdownView === false) {
 					const activeFile = this.app.workspace.getActiveFile();
 					if (activeFile && this.tabCloseHandler?.shouldAutoCloseAudioLeaf(activeFile.path)) {
+						const recentSession = this.tabCloseHandler.getRecentlyStoppedSession();
 						leaf.detach();
+						if (recentSession) {
+							const targetFile = this.app.vault.getAbstractFileByPath(recentSession.notePath);
+							if (targetFile instanceof TFile) {
+								const targetLeaf = this.app.workspace.getLeaf(false);
+								await targetLeaf.openFile(targetFile);
+							}
+						}
 					}
 				}
+				this.refreshSidebarViews();
 			}),
 		);
 
@@ -782,7 +791,10 @@ export default class OnTheRecordPlugin extends Plugin {
 
 	private async pauseCurrentRecording(): Promise<void> {
 		if (!this.sessionManager.isRecording()) return;
-		await this.sessionManager.stopSession();
+		const session = await this.sessionManager.stopSession();
+		if (session) {
+			this.tabCloseHandler?.setRecentlyStoppedSession(session);
+		}
 		this.recordingStatusBar.stop();
 		this.floatingIndicator?.setState("paused");
 		this.refreshSidebarViews();
@@ -806,6 +818,9 @@ export default class OnTheRecordPlugin extends Plugin {
 			return;
 		}
 		const session = await this.sessionManager.stopSession();
+		if (session) {
+			this.tabCloseHandler?.setRecentlyStoppedSession(session);
+		}
 		this.recordingStatusBar.stop();
 		this.floatingIndicator?.setState("idle");
 		this.refreshSidebarViews();
@@ -819,14 +834,34 @@ export default class OnTheRecordPlugin extends Plugin {
 	private async handleQueueItemCompleted(item: QueuedRecording, result: TranscriptionResult): Promise<void> {
 		const filename = item.filePath.split("/").pop() ?? item.filePath;
 		const targets = this.findAudioEmbedTargets(item.filePath);
+		const formattedMarkdown = formatResultMarkdown(result, { includeTimestamps: true });
 
 		if (targets.length === 0) {
-			new Notice(`[On the Record] '${filename}' 전사가 완료되었습니다. (노트 임베드 미연결)`, 7000);
+			const activeFile = this.app.workspace.getActiveFile();
+			if (activeFile && activeFile.extension.toLowerCase() === "md") {
+				await this.app.vault.process(activeFile, (content) => {
+					const embedTag = `![[${item.filePath}]]`;
+					const block = wrapResultBlock(item.filePath, formattedMarkdown);
+					return `${content.trimEnd()}\n\n${embedTag}\n\n${block}\n`;
+				});
+				new Notice(`[On the Record] '${filename}' 전사 결과가 활성 노트(${activeFile.name})에 삽입되었습니다.`, 6000);
+				return;
+			}
+			const baseName = filename.replace(/\.[^/.]+$/, "");
+			const newNotePath = `${baseName} 전사록.md`;
+			const noteContent = `# ${baseName}\n\n![[${item.filePath}]]\n\n${wrapResultBlock(item.filePath, formattedMarkdown)}\n`;
+			try {
+				const created = await this.app.vault.create(newNotePath, noteContent);
+				const leaf = this.app.workspace.getLeaf(false);
+				await leaf.openFile(created);
+				new Notice(`[On the Record] '${filename}' 전사 완료: 새 노트(${newNotePath})에 저장되었습니다.`, 7000);
+			} catch (error) {
+				this.reportError(`전사 결과 저장 실패: ${newNotePath}`, error);
+			}
 			return;
 		}
 
 		const target = targets[0];
-		const formattedMarkdown = formatResultMarkdown(result, { includeTimestamps: true });
 
 		if (this.vaultSettings.transcriptionInsertMode === "auto") {
 			try {

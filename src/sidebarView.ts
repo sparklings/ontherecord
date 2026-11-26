@@ -4,6 +4,7 @@ import { OTR_SIDEBAR_VIEW_TYPE } from "./sidebarTypes.ts";
 import { parseAudioEmbedsFromMarkdown, jumpToLineInActiveEditor } from "./noteAudioExplorer.ts";
 import type { AudioEmbedItem } from "./noteAudioExplorer.ts";
 import type { WorkerProgress } from "./transcriptionQueueWorker.ts";
+import { isSupportedAudioExtension } from "./audioFiles.ts";
 
 export { OTR_SIDEBAR_VIEW_TYPE };
 
@@ -72,7 +73,7 @@ export class OnTheRecordSidebarView extends ItemView {
 		setIcon(titleIcon, "otr-record-deck");
 		const titleStack = titleGroup.createDiv({ cls: "otr-sidebar-title-stack" });
 		titleStack.createSpan({ text: "On the Record" });
-		titleStack.createSpan({ text: "Obsidian voice companion", cls: "otr-sidebar-subtitle" });
+		titleStack.createSpan({ text: "음성 녹음 및 로컬 전사", cls: "otr-sidebar-subtitle" });
 
 		const headerActions = headerEl.createDiv({ cls: "otr-sidebar-header-actions" });
 		const refreshBtn = headerActions.createEl("button", { cls: "otr-icon-btn", title: "새로고침" });
@@ -80,7 +81,7 @@ export class OnTheRecordSidebarView extends ItemView {
 		refreshBtn.onclick = () => void this.refresh();
 
 		if (this.callbacks.openSettings) {
-			const settingsBtn = headerActions.createEl("button", { cls: "otr-icon-btn", title: "플러그인 설정" });
+			const settingsBtn = headerActions.createEl("button", { cls: "otr-icon-btn", title: "플러그인 설정 열기" });
 			setIcon(settingsBtn, "settings");
 			settingsBtn.onclick = () => this.callbacks.openSettings?.();
 		}
@@ -88,12 +89,12 @@ export class OnTheRecordSidebarView extends ItemView {
 		// 2. 도구 미설정 복구 배너 (필요 시에만 노출)
 		this.setupAlertEl = container.createDiv({ cls: "otr-setup-alert is-hidden" });
 
-		// 3. Ultra-minimal compact target note & record bar (Stitch lines 259-281)
+		// 3. Ultra-minimal compact target note & record bar
 		const contextCard = container.createDiv({ cls: "otr-context-card" });
 		const contextHeader = contextCard.createDiv({ cls: "otr-context-header-row" });
-		contextHeader.createSpan({ cls: "otr-context-label", text: "TARGET NOTE" });
+		contextHeader.createSpan({ cls: "otr-context-label", text: "대상 노트" });
 
-		const newNoteLink = contextHeader.createEl("button", { text: "+ New note", cls: "otr-link-btn" });
+		const newNoteLink = contextHeader.createEl("button", { text: "+ 새 회의록", cls: "otr-link-btn" });
 		newNoteLink.onclick = async () => {
 			const newFile = await this.callbacks.createNewMeetingNote();
 			if (newFile) {
@@ -106,42 +107,42 @@ export class OnTheRecordSidebarView extends ItemView {
 		this.activeNoteContainerEl = noteBodyRow.createDiv({ cls: "otr-context-filebox" });
 		const noteIcon = this.activeNoteContainerEl.createSpan({ cls: "otr-inline-icon" });
 		setIcon(noteIcon, "file-text");
-		this.activeNoteNameEl = this.activeNoteContainerEl.createSpan({ text: "No active note", cls: "otr-context-filename" });
+		this.activeNoteNameEl = this.activeNoteContainerEl.createSpan({ text: "선택된 노트 없음", cls: "otr-context-filename" });
 		this.noteActionBarEl = noteBodyRow.createDiv({ cls: "otr-compact-record-actions" });
 
 		// 4. 실시간 백그라운드 전사 큐 진행률 위젯 (진행 중일 때만 노출)
 		this.queueWidgetEl = container.createDiv({ cls: "otr-queue-widget is-hidden" });
 
-		// 5. 본문 오디오 임베드 목록 섹션 (Stitch lines 304-312)
+		// 5. 본문 오디오 임베드 목록 섹션
 		const explorerSection = container.createDiv({ cls: "otr-explorer-section" });
 		const explorerHeader = explorerSection.createDiv({ cls: "otr-explorer-header" });
 		const explorerTitle = explorerHeader.createDiv({ cls: "otr-explorer-title" });
-		explorerTitle.createSpan({ text: "Note audio" });
+		explorerTitle.createSpan({ text: "노트 내 녹음 파일" });
 		this.audioCountBadgeEl = explorerTitle.createSpan({ cls: "otr-pill-count", text: "0" });
 
-		explorerHeader.createSpan({ text: "In this file", cls: "otr-explorer-subtext" });
+		explorerHeader.createSpan({ text: "녹음 목록", cls: "otr-explorer-subtext" });
 
 		this.audioListContainerEl = explorerSection.createDiv({ cls: "otr-audio-list" });
 
-		// 6. 하단 퀵 액션 스트립 (Stitch lines 384-401)
+		// 6. 하단 퀵 액션 스트립 (복잡한 AI 요약 제거, 핵심 기능 집중)
 		const quickStrip = container.createDiv({ cls: "otr-quick-tools-strip" });
 
 		const pickAudioBtn = quickStrip.createEl("button", { cls: "otr-tool-btn" });
 		const folderIcon = pickAudioBtn.createSpan({ cls: "otr-inline-icon" });
 		setIcon(folderIcon, "folder-open");
-		pickAudioBtn.createSpan({ text: "Select file" });
+		pickAudioBtn.createSpan({ text: "오디오 파일 전사" });
 		pickAudioBtn.onclick = () => this.callbacks.openAudioPicker();
 
-		const aiSummaryBtn = quickStrip.createEl("button", { cls: "otr-tool-btn" });
-		const sparkIcon = aiSummaryBtn.createSpan({ cls: "otr-inline-icon" });
-		setIcon(sparkIcon, "sparkles");
-		aiSummaryBtn.createSpan({ text: "AI summary" });
-		aiSummaryBtn.onclick = async () => {
-			if (!this.activeNote) {
-				new Notice("요약할 회의록 노트를 먼저 여세요.");
-				return;
+		const newNoteBtn = quickStrip.createEl("button", { cls: "otr-tool-btn" });
+		const notePlusIcon = newNoteBtn.createSpan({ cls: "otr-inline-icon" });
+		setIcon(notePlusIcon, "file-plus");
+		newNoteBtn.createSpan({ text: "새 회의록 작성" });
+		newNoteBtn.onclick = async () => {
+			const newFile = await this.callbacks.createNewMeetingNote();
+			if (newFile) {
+				this.activeNote = newFile;
+				await this.refresh();
 			}
-			await this.callbacks.generateSummary(this.activeNote);
 		};
 
 		await this.refresh();
@@ -194,23 +195,23 @@ export class OnTheRecordSidebarView extends ItemView {
 			// Empty State: 노트가 없으면 녹음 버튼을 비활성화
 			const disabledBtn = this.noteActionBarEl.createEl("button", {
 				cls: "otr-compact-rec-btn is-disabled",
-				title: "Open or create a note first",
+				title: "먼저 노트를 열거나 작성하세요",
 			});
 			disabledBtn.disabled = true;
 			const dot = disabledBtn.createSpan({ cls: "otr-compact-rec-dot" });
 			dot.setAttribute("aria-hidden", "true");
-			disabledBtn.createSpan({ text: "Record" });
+			disabledBtn.createSpan({ text: "녹음 시작" });
 			return;
 		}
 
 		if (this.playerState === "idle") {
 			const recBtn = this.noteActionBarEl.createEl("button", {
 				cls: "otr-compact-rec-btn",
-				title: "Record into active note",
+				title: "현재 활성 노트에서 녹음 시작",
 			});
 			const dot = recBtn.createSpan({ cls: "otr-compact-rec-dot" });
 			dot.setAttribute("aria-hidden", "true");
-			recBtn.createSpan({ text: "Record" });
+			recBtn.createSpan({ text: "녹음 시작" });
 			recBtn.onclick = async () => {
 				if (!this.activeNote) return;
 				await this.callbacks.startRecording(this.activeNote);
@@ -218,11 +219,11 @@ export class OnTheRecordSidebarView extends ItemView {
 		} else {
 			const activeBtn = this.noteActionBarEl.createEl("button", {
 				cls: "otr-compact-rec-btn is-recording",
-				title: "Stop recording and attach to note",
+				title: "녹음 중지 및 노트 본문 삽입",
 			});
 			const dot = activeBtn.createSpan({ cls: "otr-compact-rec-dot pulse" });
 			dot.setAttribute("aria-hidden", "true");
-			activeBtn.createSpan({ text: this.playerState === "paused" ? "Paused" : "Recording" });
+			activeBtn.createSpan({ text: this.playerState === "paused" ? "일시정지" : "녹음 중지" });
 			activeBtn.onclick = async () => {
 				await this.callbacks.stopRecording();
 				await this.refresh();
@@ -289,6 +290,22 @@ export class OnTheRecordSidebarView extends ItemView {
 			} catch {
 				this.audioItems = [];
 			}
+		} else if (activeFile && isSupportedAudioExtension(activeFile.extension)) {
+			// 활성 탭이 오디오 파일인 경우 즉시 인식
+			this.activeNote = null;
+			if (this.activeNoteNameEl) {
+				this.activeNoteNameEl.setText(`[오디오] ${activeFile.name}`);
+				this.activeNoteNameEl.removeClass("is-empty");
+			}
+			this.audioItems = [
+				{
+					audioPath: activeFile.path,
+					filename: activeFile.name,
+					lineNumber: 1,
+					rawLineText: `![[${activeFile.name}]]`,
+					transcribed: false,
+				},
+			];
 		} else {
 			const recordingNotePath = this.callbacks.getActiveSessionNotePath();
 			if (recordingNotePath) {
@@ -303,7 +320,7 @@ export class OnTheRecordSidebarView extends ItemView {
 			} else {
 				this.activeNote = null;
 				if (this.activeNoteNameEl) {
-					this.activeNoteNameEl.setText("열린 회의록 없음");
+					this.activeNoteNameEl.setText("선택된 회의록 없음");
 					this.activeNoteNameEl.addClass("is-empty");
 				}
 				this.audioItems = [];
@@ -334,7 +351,7 @@ export class OnTheRecordSidebarView extends ItemView {
 
 		if (this.audioItems.length === 0) {
 			const emptyEl = this.audioListContainerEl.createDiv({ cls: "otr-audio-empty" });
-			emptyEl.setText(this.activeNote ? "노트에 삽입된 오디오가 없습니다." : "회의록을 열거나 '+ 새 회의록'을 눌러 시작하세요.");
+			emptyEl.setText(this.activeNote ? "노트에 삽입된 녹음 파일이 없습니다." : "회의록을 열거나 '+ 새 회의록'을 눌러 시작하세요.");
 			return;
 		}
 
@@ -344,7 +361,7 @@ export class OnTheRecordSidebarView extends ItemView {
 			// 1. Top Row: Line Tag + Filename (left) vs Done/Pending Pill (right)
 			const topRow = itemCard.createDiv({ cls: "otr-audio-card-top" });
 			const leftGroup = topRow.createDiv({ cls: "otr-audio-card-left" });
-			leftGroup.createSpan({ cls: "otr-line-tag", text: `Line ${item.lineNumber}` });
+			leftGroup.createSpan({ cls: "otr-line-tag", text: `${item.lineNumber}행` });
 			const titleSpan = leftGroup.createSpan({ cls: "otr-audio-item-title", text: item.filename });
 			titleSpan.title = item.audioPath;
 
@@ -357,29 +374,27 @@ export class OnTheRecordSidebarView extends ItemView {
 			} else {
 				statusSpan.createSpan({ cls: "otr-status-badge-dot" });
 			}
-			statusSpan.createSpan({ text: item.transcribed ? "Done" : "Pending" });
+			statusSpan.createSpan({ text: item.transcribed ? "전사 완료" : "전사 대기" });
 
 			// 2. Meta Row: 파일 크기 및 재생 시간 (MB)
 			const linkedFile = this.activeNote
 				? this.app.metadataCache.getFirstLinkpathDest(item.audioPath, this.activeNote.path)
-				: null;
+				: this.app.vault.getAbstractFileByPath(item.audioPath);
 			const sizeMb = linkedFile instanceof TFile ? (linkedFile.stat.size / (1024 * 1024)).toFixed(1) : "0.0";
 			itemCard.createDiv({ text: sizeMb !== "0.0" ? `${sizeMb} MB` : item.audioPath, cls: "otr-audio-card-meta font-mono-tabular" });
 
 			// 3. Footer Row:
-			// - item.transcribed(Done): 우측에 [Jump], [Re-transcribe] (Stitch lines 328-346)
-			// - !item.transcribed(Pending): 좌측에 [Jump], 우측에 보라색 [Transcribe] (Stitch lines 363-380)
 			const footerRow = itemCard.createDiv({
 				cls: `otr-audio-card-footer ${item.transcribed ? "is-done-footer" : "is-pending-footer"}`,
 			});
 
 			const jumpBtn = footerRow.createEl("button", {
 				cls: "otr-card-btn",
-				title: `Jump to embed at line ${item.lineNumber}`,
+				title: `${item.lineNumber}행 위치로 본문 스크롤`,
 			});
 			const jumpIcon = jumpBtn.createSpan({ cls: "otr-inline-icon" });
 			setIcon(jumpIcon, "external-link");
-			jumpBtn.createSpan({ text: "Jump" });
+			jumpBtn.createSpan({ text: "본문 이동" });
 			jumpBtn.onclick = () => {
 				jumpToLineInActiveEditor(this.app, item.lineNumber);
 			};
@@ -387,28 +402,28 @@ export class OnTheRecordSidebarView extends ItemView {
 			if (item.transcribed) {
 				const retranscribeBtn = footerRow.createEl("button", {
 					cls: "otr-card-btn",
-					title: `Re-transcribe '${item.filename}'`,
+					title: `'${item.filename}' 다시 전사하기`,
 				});
 				const reIcon = retranscribeBtn.createSpan({ cls: "otr-inline-icon" });
 				setIcon(reIcon, "refresh-cw");
-				retranscribeBtn.createSpan({ text: "Re-transcribe" });
+				retranscribeBtn.createSpan({ text: "다시 전사" });
 				retranscribeBtn.onclick = async () => {
 					retranscribeBtn.disabled = true;
 					await this.callbacks.enqueueAudioTranscription(item.audioPath);
-					new Notice(`[${item.filename}] Added to transcription queue.`);
+					new Notice(`[${item.filename}] 대기열에 다시 추가되었습니다.`);
 				};
 			} else {
 				const transcribeBtn = footerRow.createEl("button", {
 					cls: "otr-action-badge-btn",
-					title: `Start transcribing '${item.filename}' now`,
+					title: `'${item.filename}' 음성 전사 시작`,
 				});
 				const micIcon = transcribeBtn.createSpan({ cls: "otr-inline-icon" });
 				setIcon(micIcon, "mic");
-				transcribeBtn.createSpan({ text: "Transcribe" });
+				transcribeBtn.createSpan({ text: "전사 시작" });
 				transcribeBtn.onclick = async () => {
 					transcribeBtn.disabled = true;
 					await this.callbacks.enqueueAudioTranscription(item.audioPath);
-					new Notice(`[${item.filename}] Queued for background transcription.`);
+					new Notice(`[${item.filename}] 백그라운드 전사 대기열에 추가되었습니다.`);
 				};
 			}
 		}

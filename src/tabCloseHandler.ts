@@ -75,6 +75,13 @@ export class TabCloseHandler {
 		return this.recentlyStoppedSession.session;
 	}
 
+	setRecentlyStoppedSession(session: ActiveRecordingSession): void {
+		this.recentlyStoppedSession = {
+			session,
+			stoppedAt: Date.now(),
+		};
+	}
+
 	/**
 	 * 탭(leaf)이 닫힐 때 호출된다.
 	 * 닫히는 탭의 노트가 현재 녹음 중인 노트와 일치하면 설정에 따라 녹음을 안전 중지한다.

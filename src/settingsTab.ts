@@ -272,10 +272,10 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 	}
 
 	/**
-	 * 탭 2: 음성 전사 모델 및 런타임 설정
+	 * 탭 2: 음성 전사 모델 및 런타임 설정 (필수 도구 경로 최상단 배치 및 한국어 정리)
 	 */
 	private renderTranscriptionTab(containerEl: HTMLElement, vaultSettings: VaultSettings, localSettings: LocalSettings | null): void {
-		// Runtime readiness 3단계 체크리스트 배너
+		// 1. 도구 준비 상태 배너 + 즉시 진단/자동 검색 버튼 (최상단)
 		const readinessBanner = containerEl.createDiv({ cls: "otr-readiness-banner" });
 		const readinessLeft = readinessBanner.createDiv({ cls: "otr-readiness-items" });
 		readinessLeft.createSpan({ text: "도구 준비 상태", cls: "otr-readiness-title" });
@@ -292,12 +292,116 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			pill.createSpan({ text: item.label });
 		}
 
-		const guideLinkBtn = readinessBanner.createEl("button", { text: "설치 가이드", cls: "otr-action-badge-btn" });
-		guideLinkBtn.onclick = () => {
-			window.open("https://github.com/sparklings/ontherecord/wiki/Installation-and-Setup", "_blank");
+		const actionBtnGroupTop = readinessBanner.createDiv({ cls: "otr-tool-actions-group" });
+
+		const discoverBtn = actionBtnGroupTop.createEl("button", {
+			cls: "otr-tool-action-btn",
+			text: "도구 자동 검색",
+		});
+		const searchIcon = discoverBtn.createSpan({ cls: "otr-inline-icon" });
+		setIcon(searchIcon, "search");
+		discoverBtn.prepend(searchIcon);
+		discoverBtn.onclick = () => this.discoverCpuSetup();
+
+		const testBtn = actionBtnGroupTop.createEl("button", {
+			cls: "otr-tool-action-btn mod-primary",
+			text: "시험 전사 실행",
+		});
+		const playIcon = testBtn.createSpan({ cls: "otr-inline-icon" });
+		setIcon(playIcon, "play");
+		testBtn.prepend(playIcon);
+		testBtn.onclick = () => this.testCpuSetup();
+
+		// 2. 기기 전사 도구 경로 3종 (최상단 배치하여 스크롤 없이 즉시 설정 가능)
+		renderScopeHeading(containerEl, "기기 전사 도구 경로", "local");
+
+		if (!localSettings) {
+			containerEl.createEl("p", {
+				text: this.localSettingsError ?? "PC별 설정을 불러올 수 없습니다.",
+				cls: "mod-warning",
+			});
+			return;
+		}
+
+		const toolsStack = containerEl.createDiv({ cls: "otr-tools-stack" });
+
+		const renderToolCard = (options: {
+			title: string;
+			versionHint: string;
+			filePath: string;
+			accept: string;
+			placeholder: string;
+			onSave: (path: string) => Promise<void>;
+		}) => {
+			const status = checkPathExists(options.filePath);
+			const card = toolsStack.createDiv({ cls: "otr-tool-card" });
+
+			const topRow = card.createDiv({ cls: "otr-tool-card-top" });
+			const leftGroup = topRow.createDiv({ cls: "otr-tool-card-left" });
+			leftGroup.createSpan({ text: options.title, cls: "otr-tool-card-title" });
+
+			const pill = leftGroup.createSpan({
+				cls: `otr-status-badge ${status.exists ? "is-ready" : "is-missing"}`,
+			});
+			pill.createSpan({ cls: "otr-status-badge-dot" });
+			pill.createSpan({ text: status.exists ? "준비 완료" : "미설치" });
+
+			topRow.createSpan({ text: options.versionHint, cls: "otr-tool-card-hint font-mono-tabular" });
+
+			const inputRow = card.createDiv({ cls: "otr-tool-card-input-row" });
+			const inputEl = inputRow.createEl("input", {
+				type: "text",
+				cls: "otr-tool-card-input font-mono-tabular",
+			});
+			inputEl.value = options.filePath;
+			inputEl.placeholder = options.placeholder;
+			inputEl.onchange = () => {
+				void options.onSave(inputEl.value.trim());
+			};
+
+			const browseBtn = inputRow.createEl("button", {
+				text: "찾아보기...",
+				cls: "otr-tool-browse-btn",
+			});
+			browseBtn.onclick = () => {
+				openLocalFilePicker(options.accept, (selectedPath) => {
+					void options.onSave(selectedPath).then(() => this.display());
+				});
+			};
 		};
 
-		renderScopeHeading(containerEl, "음성인식 모델 선택", "vault");
+		// 1. Whisper runtime executable
+		renderToolCard({
+			title: "Whisper 런타임 실행 파일",
+			versionHint: "whisper.cpp v1.5.4+",
+			filePath: localSettings.runtimePath,
+			accept: ".exe",
+			placeholder: "예: C:\\Tools\\whisper-cli.exe",
+			onSave: (val) => this.updateLocalSettings({ runtimePath: val }),
+		});
+
+		// 2. GGML model file
+		renderToolCard({
+			title: "음성인식 모델 파일 (GGML)",
+			versionHint: "ggml-medium-q5_0.bin",
+			filePath: localSettings.modelPath,
+			accept: ".bin,.gguf",
+			placeholder: "예: C:\\Models\\ggml-medium-q5_0.bin",
+			onSave: (val) => this.updateLocalSettings({ modelPath: val }),
+		});
+
+		// 3. FFmpeg executable
+		renderToolCard({
+			title: "FFmpeg 실행 파일",
+			versionHint: "ffmpeg 6.0+",
+			filePath: localSettings.ffmpegPath,
+			accept: ".exe",
+			placeholder: "예: C:\\Tools\\ffmpeg.exe",
+			onSave: (val) => this.updateLocalSettings({ ffmpegPath: val }),
+		});
+
+		// 3. 기본 전사 언어 및 모델 선택
+		renderScopeHeading(containerEl, "전사 언어 및 모델 설정", "vault");
 
 		new Setting(containerEl)
 			.setName("기본 전사 언어")
@@ -313,7 +417,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		// 2열 정밀 모델 셀렉터 그리드 (Stitch 2x2 + Large-v3 풀폭)
+		// 2열 정밀 모델 셀렉터 그리드
 		const modelGrid = containerEl.createDiv({ cls: "otr-model-grid" });
 		const selectedModelId = vaultSettings.defaultModelSize || "medium";
 
@@ -377,7 +481,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			};
 		}
 
-		// Stitch 스타일 풀폭 맞춤형 어휘 힌트 카드
+		// 맞춤형 어휘 힌트 카드
 		const vocabCard = containerEl.createDiv({ cls: "otr-vocab-card" });
 		const vocabTop = vocabCard.createDiv({ cls: "otr-vocab-top" });
 		const vocabInfo = vocabTop.createDiv();
@@ -397,121 +501,6 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		vocabInput.oninput = () => {
 			void this.updateVaultSettings({ vocabularyPrompt: vocabInput.value.trim() });
 		};
-
-		renderScopeHeading(containerEl, "기기 전사 도구 경로", "local");
-
-		if (!localSettings) {
-			containerEl.createEl("p", {
-				text: this.localSettingsError ?? "PC별 설정을 불러올 수 없습니다.",
-				cls: "mod-warning",
-			});
-			return;
-		}
-
-		// Stitch 도구 카드 3종 컨테이너 (Stitch lines 343-406)
-		const toolsStack = containerEl.createDiv({ cls: "otr-tools-stack" });
-
-		const renderToolCard = (options: {
-			title: string;
-			versionHint: string;
-			filePath: string;
-			accept: string;
-			placeholder: string;
-			onSave: (path: string) => Promise<void>;
-		}) => {
-			const status = checkPathExists(options.filePath);
-			const card = toolsStack.createDiv({ cls: "otr-tool-card" });
-
-			const topRow = card.createDiv({ cls: "otr-tool-card-top" });
-			const leftGroup = topRow.createDiv({ cls: "otr-tool-card-left" });
-			leftGroup.createSpan({ text: options.title, cls: "otr-tool-card-title" });
-
-			const pill = leftGroup.createSpan({
-				cls: `otr-status-badge ${status.exists ? "is-ready" : "is-missing"}`,
-			});
-			pill.createSpan({ cls: "otr-status-badge-dot" });
-			pill.createSpan({ text: status.exists ? "Ready" : "Missing" });
-
-			topRow.createSpan({ text: options.versionHint, cls: "otr-tool-card-hint font-mono-tabular" });
-
-			const inputRow = card.createDiv({ cls: "otr-tool-card-input-row" });
-			const inputEl = inputRow.createEl("input", {
-				type: "text",
-				cls: "otr-tool-card-input font-mono-tabular",
-			});
-			inputEl.value = options.filePath;
-			inputEl.placeholder = options.placeholder;
-			inputEl.onchange = () => {
-				void options.onSave(inputEl.value.trim());
-			};
-
-			const browseBtn = inputRow.createEl("button", {
-				text: "Browse...",
-				cls: "otr-tool-browse-btn",
-			});
-			browseBtn.onclick = () => {
-				openLocalFilePicker(options.accept, (selectedPath) => {
-					void options.onSave(selectedPath).then(() => this.display());
-				});
-			};
-		};
-
-		// 1. Whisper runtime executable
-		renderToolCard({
-			title: "Whisper runtime executable",
-			versionHint: "whisper.cpp v1.5.4+",
-			filePath: localSettings.runtimePath,
-			accept: ".exe",
-			placeholder: "예: C:\\Tools\\whisper-cli.exe",
-			onSave: (val) => this.updateLocalSettings({ runtimePath: val }),
-		});
-
-		// 2. GGML model file
-		renderToolCard({
-			title: "GGML model file",
-			versionHint: "ggml-medium-q5_0.bin",
-			filePath: localSettings.modelPath,
-			accept: ".bin,.gguf",
-			placeholder: "예: C:\\Models\\ggml-medium-q5_0.bin",
-			onSave: (val) => this.updateLocalSettings({ modelPath: val }),
-		});
-
-		// 3. FFmpeg executable
-		renderToolCard({
-			title: "FFmpeg executable",
-			versionHint: "ffmpeg 6.0+",
-			filePath: localSettings.ffmpegPath,
-			accept: ".exe",
-			placeholder: "예: C:\\Tools\\ffmpeg.exe",
-			onSave: (val) => this.updateLocalSettings({ ffmpegPath: val }),
-		});
-
-		// Stitch 도구 하단 액션 바 (Stitch lines 408-428)
-		const actionRow = containerEl.createDiv({ cls: "otr-tool-actions-row" });
-		actionRow.createSpan({
-			text: "경로는 Obsidian 시작 시 자동으로 유효성을 검사합니다.",
-			cls: "otr-tool-actions-desc",
-		});
-
-		const actionBtnGroup = actionRow.createDiv({ cls: "otr-tool-actions-group" });
-
-		const discoverBtn = actionBtnGroup.createEl("button", {
-			cls: "otr-tool-action-btn",
-			text: "도구 자동 검색",
-		});
-		const searchIcon = discoverBtn.createSpan({ cls: "otr-inline-icon" });
-		setIcon(searchIcon, "search");
-		discoverBtn.prepend(searchIcon);
-		discoverBtn.onclick = () => this.discoverCpuSetup();
-
-		const testBtn = actionBtnGroup.createEl("button", {
-			cls: "otr-tool-action-btn mod-primary",
-			text: "시험 전사 실행",
-		});
-		const playIcon = testBtn.createSpan({ cls: "otr-inline-icon" });
-		setIcon(playIcon, "play");
-		testBtn.prepend(playIcon);
-		testBtn.onclick = () => this.testCpuSetup();
 	}
 
 	/**
