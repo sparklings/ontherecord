@@ -4,7 +4,7 @@ Obsidian 데스크톱용 커뮤니티 플러그인 프로젝트이다. 플러그
 
 ## 현재 상태
 
-로컬 `whisper.cpp` CPU/GPU(CUDA·Vulkan) 전사, 백그라운드 전사 대기열, 플로팅 녹음 상태 표시기, 사이드바 제어 패널, 노트 내 오디오 탐색, 로컬 LLM(`localhost`) 요약, 5종 GGML 모델 카탈로그(기본값 `medium`), 파일 선택기 및 `--prompt` 어휘 힌트 전달 기능을 구현했다. 단계별 구현과 시험 결과는 [CHANGELOG.md](./CHANGELOG.md)와 [TODO.md](./TODO.md)에 기록한다.
+로컬 `whisper.cpp` CPU/GPU(CUDA·Vulkan) 전사, 백그라운드 전사 대기열, 플로팅 녹음 상태 표시기, 사이드바 제어 패널, 노트 내 오디오 탐색, 검토 모달 오디오 싱크 재생 및 세그먼트 인라인 편집, 로컬 LLM(`localhost`) 요약, 5종 GGML 모델 카탈로그(기본값 `medium`), 파일 선택기 및 `--prompt` 어휘 힌트 전달 기능을 구현했다. 단계별 구현과 시험 결과는 [CHANGELOG.md](./CHANGELOG.md)와 [TODO.md](./TODO.md)에 기록한다.
 
 ## 개요
 

@@ -1069,3 +1069,171 @@
 	width: 11px;
 	height: 11px;
 }
+
+/* --------------------------------------------------------------------------
+   9. Transcript Review & Audio Sync Modal (FEAT-04, UI-04)
+   -------------------------------------------------------------------------- */
+.otr-review-modal .modal {
+	width: 680px;
+	max-width: 92vw;
+}
+
+.otr-review-subtitle {
+	font-size: 12px;
+	color: var(--text-muted);
+	margin-bottom: 10px;
+}
+
+.otr-review-warning {
+	font-size: 12px;
+	color: var(--text-warning, #d17b39);
+	margin: 4px 0 8px;
+}
+
+.otr-audio-sync-bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 12px;
+	margin-bottom: 10px;
+	border-radius: var(--radius-m, 8px);
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+}
+
+.otr-sync-play-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	border: none;
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.otr-sync-play-btn:hover {
+	background-color: var(--interactive-accent-hover);
+}
+
+.otr-sync-play-btn svg {
+	width: 14px;
+	height: 14px;
+}
+
+.otr-sync-time {
+	font-family: var(--font-monospace);
+	font-variant-numeric: tabular-nums;
+	font-size: 11px;
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
+.otr-sync-seekbar {
+	flex: 1;
+	cursor: pointer;
+	accent-color: var(--interactive-accent);
+}
+
+.otr-sync-speed-btn {
+	padding: 3px 8px;
+	border-radius: var(--radius-s, 4px);
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-family: var(--font-monospace);
+	font-size: 11px;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.otr-review-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 6px;
+}
+
+.otr-review-hint {
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.otr-segment-list {
+	max-height: 340px;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 8px;
+	margin-bottom: 14px;
+	border-radius: var(--radius-m, 8px);
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+}
+
+.otr-segment-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 8px;
+	border-radius: var(--radius-s, 6px);
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.otr-segment-row.is-active {
+	border-color: var(--interactive-accent);
+	border-left-width: 3px;
+	background-color: hsla(var(--interactive-accent-rgb), 0.08);
+}
+
+.otr-segment-ts-btn {
+	padding: 3px 6px;
+	border-radius: var(--radius-s, 4px);
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary-alt);
+	color: var(--text-accent);
+	font-family: var(--font-monospace);
+	font-size: 11px;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.otr-segment-ts-btn:hover {
+	border-color: var(--interactive-accent);
+}
+
+.otr-segment-input {
+	flex: 1;
+	width: 100%;
+	resize: vertical;
+	border: none;
+	background: transparent;
+	color: var(--text-normal);
+	font-size: 13px;
+	line-height: 1.45;
+	padding: 2px 4px;
+}
+
+.otr-segment-input:focus {
+	outline: none;
+	background-color: var(--background-secondary);
+	border-radius: var(--radius-s, 4px);
+}
+
+.otr-segment-fallback-area {
+	width: 100%;
+	resize: vertical;
+}
+
+.otr-review-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}

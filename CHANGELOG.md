@@ -7,6 +7,8 @@
 ## 2026-11-26
 
 ### 추가
+- **Wave 3 (`FEAT-04`, `UI-04` 검토 모달) 전사 결과 검토 모달 오디오 싱크 재생 및 인라인 편집 구현**:
+  - `src/resultPreviewModal.ts`, `src/main.ts`, `styles.css`: 모달 상단 미니 오디오 플레이어(`play`/`pause`, 시크바, `1.0x`~`2.0x` 재생 속도 전환), 타임스탬프 클릭 시 해당 위치 점프 재생, 재생 위치에 따른 활성 세그먼트 강조, 세그먼트별 인라인 텍스트 편집 및 원문 복사 버튼 추가
 - **Wave 2 (`FEAT-03`, `UI-04` 설정부, `3-QUAL-01`) 환경설정 및 어휘 프롬프트 연동**:
   - `src/settings.ts`, `src/whisperCppCpu.ts`, `src/transcriptionQueueWorker.ts`, `src/main.ts`: `DEFAULT_VAULT_SETTINGS.defaultModelSize` 기본값을 `base`에서 `medium`으로 변경하고 `vocabularyPrompt` 설정을 추가해 `whisper-cli` 실행 시 `--prompt` 인자로 전달하도록 연결
   - `src/settingsTab.ts`, `styles.css`: `전사 & 모델` 탭 상단에 `FFmpeg`·`whisper-cli`·`Model` 준비 상태 배너와 `1-클릭 셋업` 복사 버튼 추가, 섹션별 `Vault 동기화` / `이 PC 전용` 범위 배지 표시, 로컬 파일 선택기(`찾아보기` 버튼) 및 어휘 힌트 입력란 추가

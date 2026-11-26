@@ -1017,7 +1017,7 @@ export default class OnTheRecordPlugin extends Plugin {
 
 	private async previewAndInsertResult(result: TranscriptionResult, audioPath: string, target: AudioEmbedTarget): Promise<void> {
 		const targetName = `${target.note.path} · ${target.embed.position.start.line + 1}행`;
-		const approved = await new ResultPreviewModal(this.app, result, targetName).prompt();
+		const approved = await new ResultPreviewModal(this.app, result, targetName, target.audioFile).prompt();
 		if (!approved) {
 			new Notice("취소했습니다. 노트는 수정되지 않았습니다.");
 			return;
