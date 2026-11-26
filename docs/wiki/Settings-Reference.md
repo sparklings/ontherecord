@@ -33,17 +33,21 @@ On the Record의 모든 설정 옵션에 대한 상세 레퍼런스입니다.
 - **기본 전사 언어 (`language`)**:
   - `한국어(ko)` (권장) / `다국어 자동 감지(auto)` / `영어(en)`
 - **음성인식 모델 크기 (`defaultModelSize`)**:
-  - `Medium` (공식 권장) / `Small` / `Base`
+  - `Medium` (기본 권장) / `Small` / `Base` / `Large-v3-Turbo` / `Large-v3`
+- **맞춤형 어휘 힌트 (`vocabularyPrompt`)**:
+  - 한영 혼용 IT 전문용어 및 고유명사를 쉼표로 구분해 등록하면 `whisper-cli --prompt` 인자로 전달됩니다.
 - **연산 프로세서 선호도 (`devicePreference`)**:
   - `자동 선택` / `GPU 가속기 우선` / `CPU 전용`
 
 ---
 
-## 3. 이 기기의 전사 도구 경로 및 상태 (PC 로컬 격리)
+## 3. 이 기기의 전사 도구 경로 및 상태 (`이 PC 전용`)
 
-- **런타임 실행 파일 (`runtimePath`)**: `whisper-cli.exe` 절대 경로
-- **모델 파일 (`modelPath`)**: `ggml-*.bin` 모델 절대 경로
-- **FFmpeg 실행 파일 (`ffmpegPath`)**: `ffmpeg.exe` 절대 경로
-- **상태 뱃지 판독법**:
-  - `● 준비됨 · 142.5 MB` (부드러운 녹색 캡슐): 정상 로드 완료
-  - `● 파일 없음` (부드러운 적색 캡슐): 경로 누락 또는 파일 없음
+- **도구 준비 상태 배너**: `전사 & 모델` 탭 상단에서 `FFmpeg`, `whisper-cli`, `Model`의 준비 여부를 확인하고 `1-클릭 셋업` 명령어를 복사할 수 있습니다.
+- **런타임 실행 파일 (`runtimePath`)**: `whisper-cli.exe` 절대 경로 (`[찾아보기]` 선택 가능)
+- **모델 파일 (`modelPath`)**: `ggml-*.bin` 모델 절대 경로 (`[찾아보기]` 선택 가능)
+- **FFmpeg 실행 파일 (`ffmpegPath`)**: `ffmpeg.exe` 절대 경로 (`[찾아보기]` 선택 가능)
+- **로컬 AI 회의록 요약 (`enableLocalLlm`, `localLlmEndpoint`, `localLlmModel`)**:
+  - `localhost` / `127.0.0.1` 전용 Ollama 및 OpenAI 호환 서버 연동 설정
+
+*(참고: 설정 화면은 `워크플로`, `전사 & 모델`, `가속 & AI` 3단 탭으로 구성되며, 각 섹션에 `Vault 동기화` 또는 `이 PC 전용` 범위 배지가 표시됩니다.)*

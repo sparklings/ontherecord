@@ -6,6 +6,12 @@
 
 ## 2026-11-26
 
+### 점검
+- **Wave 1~3 완료 후 전체 산출물 및 문서 일관성 점검**:
+  - 코드·테스트·빌드 충돌 여부 확인: `tsc --noEmit` 오류 0건, 단위·통합 테스트 114건 전체 통과, 프로덕션 번들 빌드 이상 없음.
+  - 문서 간 상충 해소: `docs/wiki/Installation-and-Setup.md`의 레거시 `-dev` 경로를 표준 `%LOCALAPPDATA%\on-the-record` 경로로 통일하고, `docs/SETTINGS_GUIDE.md`의 모델 파일 크기 표기(`q5_0` `medium` 514 MB 등)를 `src/modelCatalog.ts`와 일치시킴. `docs/wiki/Settings-Reference.md` 및 `Workflow-Guide.md`에 플로팅 상태 표시기, 어휘 힌트(`--prompt`), 파일 선택기, 검토 모달 오디오 싱크 내용을 반영.
+  - 잔여 후속 항목 확인: GitHub Open Issues 0건(Wave 1~3 관련 `#1`~`#12` 종료 확인), `TODO.md`상 잔여 과제는 Wave 4(`3-PROD-03` 린트 규격 정리, `3-GPU-01` CUDA 실측 등)로 일관되게 유지.
+
 ### 추가
 - **Wave 3 (`FEAT-04`, `UI-04` 검토 모달) 전사 결과 검토 모달 오디오 싱크 재생 및 인라인 편집 구현**:
   - `src/resultPreviewModal.ts`, `src/main.ts`, `styles.css`: 모달 상단 미니 오디오 플레이어(`play`/`pause`, 시크바, `1.0x`~`2.0x` 재생 속도 전환), 타임스탬프 클릭 시 해당 위치 점프 재생, 재생 위치에 따른 활성 세그먼트 강조, 세그먼트별 인라인 텍스트 편집 및 원문 복사 버튼 추가

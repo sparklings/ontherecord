@@ -18,9 +18,9 @@ On the Record는 Obsidian의 보안 및 커뮤니티 정책을 100% 준수합니
    ```powershell
    powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/sparklings/ontherecord/main/scripts/setup-tools.ps1 | iex"
    ```
-3. 스크립트가 공식 배포본에서 안전하게 다운로드하여 다음 위치에 배치합니다:
-   - 런타임: `%LOCALAPPDATA%\on-the-record-dev\runtimes\whisper.cpp-b5454-x64-cpu\Release\whisper-cli.exe`
-   - 모델: `%LOCALAPPDATA%\on-the-record-dev\models\ggml-base-q5_1.bin`
+3. 스크립트가 공식 배포본에서 다운로드하여 다음 표준 경로(`%LOCALAPPDATA%\on-the-record`)에 배치합니다:
+   - 런타임: `%LOCALAPPDATA%\on-the-record\tools\whisper-cli.exe`
+   - 모델: `%LOCALAPPDATA%\on-the-record\models\ggml-medium-q5_0.bin`
    - 설정: `%LOCALAPPDATA%\on-the-record\local-settings.json`
 
 ---
@@ -36,5 +36,5 @@ On the Record는 Obsidian의 보안 및 커뮤니티 정책을 100% 준수합니
 3. **모델 다운로드**:
    - [Hugging Face ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp/tree/main)에서 원하는 양자화 모델(`ggml-medium-q5_0.bin` 권장) 다운로드
 4. **플러그인 설정에서 경로 지정**:
-   - Obsidian `설정` → `On the Record` → `이 기기의 전사 도구 경로 및 상태`에서 각 파일의 경로를 입력합니다.
-   - 올바르게 지정되면 녹색 알약 뱃지(`● 준비됨`)가 표시됩니다.
+   - Obsidian `설정` → `On the Record` → `전사 & 모델` 탭의 `기기 전사 도구 경로`에서 각 파일 경로를 입력하거나 `[찾아보기]` 버튼으로 선택합니다.
+   - 상단 `도구 준비 상태` 배너 및 각 항목 옆 상태 배지(`정상` / `준비됨`)로 파일 확인 여부를 점검할 수 있습니다.
