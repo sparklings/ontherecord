@@ -136,15 +136,7 @@ export function getCurrentLocale(): SupportedLocale {
 			}
 		}
 
-		// 2. Obsidian localStorage 설정 확인
-		if (typeof window !== "undefined" && window.localStorage) {
-			const obsidianLang = window.localStorage.getItem("language");
-			if (obsidianLang && obsidianLang.toLowerCase().startsWith("ko")) {
-				return "ko";
-			}
-		}
-
-		// 3. 시스템 및 브라우저 기본 로케일 확인
+		// 2. 시스템 및 브라우저 기본 로케일 확인
 		if (typeof navigator !== "undefined" && navigator.language) {
 			if (navigator.language.toLowerCase().startsWith("ko")) {
 				return "ko";

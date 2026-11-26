@@ -24,6 +24,11 @@
   - 단위 테스트: `test/floatingIndicator.test.ts` 추가 및 통과
 
 ### 변경
+- **Wave 4 (`3-PROD-03`) Obsidian 커뮤니티 플러그인 린트 규격 준수 (`eslint src/` 오류 0건 달성)**:
+  - `src/orphanAudioModal.ts`, `styles.css`: 인라인 `element.style.*` 할당을 `.otr-orphan-list`, `.otr-orphan-item` CSS 클래스로 이전하고 비동기 클릭 핸들러의 `no-misused-promises` 오류 수정
+  - `src/noteAudioExplorer.ts`, `src/noteMetadataHandler.ts`, `src/meetingNoteCreator.ts`: `any` 타입 제거, 템플릿 리터럴 배열 처리 및 정규식 이스케이프 정리
+  - `src/main.ts`, `src/settingsTab.ts`: `WorkspaceLeaf.prototype.detach` 래핑 타입 안전화, `Reflect.get` 반환 타입 명시, `createEl()` 사용 통일
+  - `src/audioPlaybackSync.ts`, `src/resultPreviewModal.ts`, `src/recordingStatusBar.ts`, `src/localLlmClient.ts`, `src/i18n.ts`: `createFragment()`/`createSpan()` 사용, `window.*` 타이머 호환성 유지, `localStorage` 직접 참조 제거 (`eslint` 0 errors, `tsc` 0 errors, 테스트 114건 통과)
 - **Wave 1 (`UI-03`) 우측 사이드바 제어 패널 구조 변경**:
   - `src/sidebarView.ts`: 기존 대형 타이머 및 파형 영역을 제거하고 1줄 녹음 컨트롤 바, 활성 노트 부재 시 버튼 비활성화, 도구 미설정 안내 배너, 전사 대기열 진행률 위젯, 오디오 상태(`전사됨`/`대기`) 배지로 재구성
 - **리본 아이콘 변경 및 CSS 클래스 정리 (`FEAT-01`, `UI-01`)**:

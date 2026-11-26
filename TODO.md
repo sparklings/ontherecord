@@ -310,5 +310,5 @@
 - [ ] `3-UX-16` 설정 탭 내 자가 진단(Self-Diagnostics) 도구 및 원클릭 문제해결 진단 리포트 생성기 (`NFR-05`)
   - 사용자 환경(FFmpeg 실행 가능 여부, whisper.cpp 런타임 권한, 디스크 여유 공간 2GB 확보 여부)을 1-클릭으로 자동 점검하는 자가 진단 패널 제공.
   - 문제 발생 시 개발자에게 전달할 수 있도록 개인정보 및 대화 내용을 100% 마스킹한 익명 진단 로그(OS, CPU/GPU, 모델, 에러 스택) 복사 버튼 구현.
-- [ ] `3-PROD-03` Obsidian 커뮤니티 플러그인 공식 심사 가이드라인 100% 지속 준수 (`NFR-06`)
+- [x] `3-PROD-03` Obsidian 커뮤니티 플러그인 공식 심사 가이드라인 100% 지속 준수 (`NFR-06`) → Wave 4(2026-11-26)에서 `eslint src/` 오류 34건 전체 해소(0 errors 달성: `no-static-styles-assignment`, `no-unsafe-*`, `prefer-create-el`, `prefer-window-timers`, `prefer-get-language`). `localLlmClient.ts`의 `fetch` 경고 및 한국어 내 영문 대소문자 `sentence-case` 경고는 Node.js 테스트 호환 및 고유명사 표기 사유로 추적 유지.
   - 공식 디렉터리 등재 심사 요건을 영구 준수하여 `innerHTML` 배제, 안전한 `createEl` DOM 조작, 컴포넌트 언로드 시 모든 타이머/감시자/이벤트 리스너 완전 해제(`registerEvent`, `registerInterval`)를 보증하는 린트 및 무결성 검증 체계 유지.

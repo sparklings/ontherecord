@@ -471,17 +471,20 @@ export default class OnTheRecordPlugin extends Plugin {
 		});
 
 		// 3-REC-02: WorkspaceLeaf.prototype.detach 후킹하여 탭 닫힘 감지
-		const originalDetach = WorkspaceLeaf.prototype.detach;
-		const pluginInstance = this;
+		const leafProto = WorkspaceLeaf.prototype as unknown as {
+			detach: (this: WorkspaceLeaf) => void;
+		};
+		const originalDetach = leafProto.detach;
+		const handleClose = (notePath: string) => this.tabCloseHandler?.handleLeafClose(notePath);
 		this.register(() => {
-			WorkspaceLeaf.prototype.detach = originalDetach;
+			leafProto.detach = originalDetach;
 		});
-		WorkspaceLeaf.prototype.detach = function (this: WorkspaceLeaf) {
+		leafProto.detach = function (this: WorkspaceLeaf) {
 			const view = this.view;
 			if (view instanceof MarkdownView && view.file) {
-				void pluginInstance.tabCloseHandler?.handleLeafClose(view.file.path);
+				void handleClose(view.file.path);
 			}
-			return originalDetach.apply(this);
+			originalDetach.call(this);
 		};
 
 		// S-09: 코어 녹음기가 생성 직후 새 탭으로 오디오 파일을 여는 동작 자동 닫기
@@ -489,7 +492,7 @@ export default class OnTheRecordPlugin extends Plugin {
 			this.app.workspace.on("active-leaf-change", (leaf) => {
 				if (leaf && leaf.view instanceof MarkdownView === false) {
 					const activeFile = this.app.workspace.getActiveFile();
-					if (activeFile && pluginInstance.tabCloseHandler?.shouldAutoCloseAudioLeaf(activeFile.path)) {
+					if (activeFile && this.tabCloseHandler?.shouldAutoCloseAudioLeaf(activeFile.path)) {
 						leaf.detach();
 					}
 				}
@@ -934,7 +937,7 @@ export default class OnTheRecordPlugin extends Plugin {
 			}
 		}
 		if (leaf) {
-			workspace.revealLeaf(leaf);
+			void workspace.revealLeaf(leaf);
 		}
 	}
 

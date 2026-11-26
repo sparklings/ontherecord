@@ -44,20 +44,19 @@ function renderScopeHeading(containerEl: HTMLElement, title: string, scope: "vau
 }
 
 function openLocalFilePicker(accept: string, onSelected: (filePath: string) => void): void {
-	const input = document.createElement("input");
+	const input = document.body.createEl("input", { cls: "is-hidden" });
 	input.type = "file";
 	input.accept = accept;
-	input.addClass("is-hidden");
 	input.onchange = () => {
-		const file = input.files?.[0] as (File & { path?: string }) | undefined;
-		if (file && typeof file.path === "string" && file.path.trim().length > 0) {
-			onSelected(file.path);
+		const file = input.files?.[0];
+		const selectedPath: unknown = file ? Reflect.get(file, "path") : undefined;
+		if (typeof selectedPath === "string" && selectedPath.trim().length > 0) {
+			onSelected(selectedPath);
 		} else if (file) {
 			new Notice("선택한 파일의 로컬 전체 경로를 읽을 수 없습니다. 경로를 직접 붙여넣어 주세요.");
 		}
 		input.remove();
 	};
-	document.body.appendChild(input);
 	input.click();
 }
 

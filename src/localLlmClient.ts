@@ -60,7 +60,8 @@ export async function testLocalLlmConnection(endpoint: string, timeoutMs = 3500)
 
 	const base = normalizeEndpointUrl(endpoint);
 	const controller = new AbortController();
-	const timer = setTimeout(() => controller.abort(), timeoutMs);
+	const timerHost = typeof window !== "undefined" ? window : globalThis;
+	const timer = timerHost.setTimeout(() => controller.abort(), timeoutMs);
 
 	// 1. Ollama tags API 시도: GET /api/tags
 	try {
@@ -69,7 +70,7 @@ export async function testLocalLlmConnection(endpoint: string, timeoutMs = 3500)
 			signal: controller.signal,
 		});
 		if (ollamaRes.ok) {
-			clearTimeout(timer);
+			timerHost.clearTimeout(timer);
 			const data = (await ollamaRes.json()) as { models?: Array<{ name?: string }> };
 			const models = (data.models ?? [])
 				.map((m) => m.name)
@@ -91,7 +92,7 @@ export async function testLocalLlmConnection(endpoint: string, timeoutMs = 3500)
 			signal: controller.signal,
 		});
 		if (openaiRes.ok) {
-			clearTimeout(timer);
+			timerHost.clearTimeout(timer);
 			const data = (await openaiRes.json()) as { data?: Array<{ id?: string }> };
 			const models = (data.data ?? [])
 				.map((m) => m.id)
@@ -103,7 +104,7 @@ export async function testLocalLlmConnection(endpoint: string, timeoutMs = 3500)
 			};
 		}
 	} catch (err: unknown) {
-		clearTimeout(timer);
+		timerHost.clearTimeout(timer);
 		const message = err instanceof Error ? err.message : String(err);
 		return {
 			ok: false,
@@ -112,7 +113,7 @@ export async function testLocalLlmConnection(endpoint: string, timeoutMs = 3500)
 			error: `로컬 LLM 서버 연결 실패 (${base}): ${message}. Ollama나 LM Studio가 실행 중인지 확인하세요.`,
 		};
 	} finally {
-		clearTimeout(timer);
+		timerHost.clearTimeout(timer);
 	}
 
 	return {
@@ -142,7 +143,8 @@ export async function generateMeetingSummary(options: GenerateSummaryOptions): P
 
 	// 내부 타임아웃 컨트롤러 생성
 	const timeoutController = new AbortController();
-	const timer = setTimeout(() => timeoutController.abort(), timeoutMs);
+	const timerHost = typeof window !== "undefined" ? window : globalThis;
+	const timer = timerHost.setTimeout(() => timeoutController.abort(), timeoutMs);
 
 	const handleAbort = () => timeoutController.abort();
 	if (abortSignal) {
@@ -177,7 +179,7 @@ export async function generateMeetingSummary(options: GenerateSummaryOptions): P
 						return data.message.content.trim();
 					}
 				}
-			} catch (ollamaErr) {
+			} catch {
 				// 타임아웃이면 바로 throw
 				if (timeoutController.signal.aborted) {
 					throw new Error("로컬 LLM 요약 생성 시간이 초과되었습니다 (타임아웃).");
@@ -224,7 +226,7 @@ export async function generateMeetingSummary(options: GenerateSummaryOptions): P
 		}
 		throw err;
 	} finally {
-		clearTimeout(timer);
+		timerHost.clearTimeout(timer);
 		if (abortSignal) {
 			abortSignal.removeEventListener("abort", handleAbort);
 		}

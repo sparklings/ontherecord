@@ -74,7 +74,7 @@ export function parseRecordingsFromBody(markdown: string): ParsedRecordingItem[]
 			sizeMb = parseFloat(sizeMatch[1]) || 0;
 		}
 
-		const dateMatch = /·\s*([0-9]{4}-[0-9]{2}-[0-9]{2}[^\(\n]*)/.exec(restOfLine);
+		const dateMatch = /·\s*([0-9]{4}-[0-9]{2}-[0-9]{2}[^(\n]*)/.exec(restOfLine);
 		if (dateMatch) {
 			dateTimeText = dateMatch[1].trim();
 		}
@@ -353,7 +353,14 @@ export function updateFrontmatterRecordings(
 	// 기존 키 중 recording 관련 제외하고 먼저 보존
 	for (const [k, v] of Object.entries(updatedYamlMap)) {
 		if (!k.startsWith("recording_") && k !== "recordings") {
-			newYamlLines.push(`${k}: ${v}`);
+			if (Array.isArray(v)) {
+				newYamlLines.push(`${k}:`);
+				for (const item of v) {
+					newYamlLines.push(`  - ${item}`);
+				}
+			} else {
+				newYamlLines.push(`${k}: ${v}`);
+			}
 		}
 	}
 

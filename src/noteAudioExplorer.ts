@@ -60,13 +60,27 @@ export function parseAudioEmbedsFromMarkdown(markdownBody: string): AudioEmbedIt
 	return items;
 }
 
+export interface EditorLike {
+	focus?: () => void;
+	setCursor?: (pos: { line: number; ch: number }) => void;
+	scrollIntoView?: (range: { from: { line: number; ch: number }; to: { line: number; ch: number } }, center?: boolean) => void;
+}
+
+export interface WorkspaceLike {
+	workspace?: {
+		activeLeaf?: {
+			view?: object | null;
+		} | null;
+	};
+}
+
 /**
  * 활성 에디터에서 특정 라인 번호(Line N)로 커서를 이동하고 스크롤을 맞춥니다 (3-UX-11).
  */
-export function jumpToLineInActiveEditor(app: any, lineNumber: number): boolean {
-	const activeLeaf = app?.workspace?.activeLeaf;
-	const view = activeLeaf?.view;
-	const editor = view?.editor;
+export function jumpToLineInActiveEditor(app: WorkspaceLike, lineNumber: number): boolean {
+	const view = app?.workspace?.activeLeaf?.view;
+	if (!view || !("editor" in view)) return false;
+	const editor = (view as { editor?: EditorLike }).editor;
 	if (!editor) return false;
 
 	const targetLine = Math.max(0, lineNumber - 1);

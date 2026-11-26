@@ -89,7 +89,7 @@ export function postProcessTimestamps(el: HTMLElement): void {
 		TIMESTAMP_REGEX.lastIndex = 0;
 		if (!TIMESTAMP_REGEX.test(text)) continue;
 
-		const fragment = document.createDocumentFragment();
+		const fragment = createFragment();
 		let lastIdx = 0;
 		TIMESTAMP_REGEX.lastIndex = 0;
 		let match: RegExpExecArray | null;
@@ -98,10 +98,11 @@ export function postProcessTimestamps(el: HTMLElement): void {
 			const before = text.slice(lastIdx, match.index);
 			if (before) fragment.appendChild(document.createTextNode(before));
 
-			const timestampSpan = document.createElement("span");
-			timestampSpan.className = "otr-timestamp";
-			timestampSpan.textContent = match[0];
-			timestampSpan.title = `${match[1]} 위치로 오디오 이동 재생`;
+			const timestampSpan = createSpan({
+				cls: "otr-timestamp",
+				text: match[0],
+				title: `${match[1]} 위치로 오디오 이동 재생`,
+			});
 
 			const seconds = parseTimestampToSeconds(match[1]);
 			timestampSpan.addEventListener("click", (evt) => {

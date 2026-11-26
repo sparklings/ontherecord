@@ -1237,3 +1237,23 @@
 	justify-content: flex-end;
 	gap: 8px;
 }
+
+/* --------------------------------------------------------------------------
+   10. Orphan Audio Modal List Styles (Wave 4 Lint Compliance)
+   -------------------------------------------------------------------------- */
+.otr-orphan-list {
+	max-height: 320px;
+	overflow-y: auto;
+	margin-bottom: 1rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 0.5rem;
+}
+
+.otr-orphan-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem 0;
+	border-bottom: 1px solid var(--background-modifier-border-focus);
+}

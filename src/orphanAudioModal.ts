@@ -39,20 +39,9 @@ export class OrphanAudioModal extends Modal {
 		});
 
 		const listContainer = contentEl.createDiv({ cls: "otr-orphan-list" });
-		listContainer.style.maxHeight = "320px";
-		listContainer.style.overflowY = "auto";
-		listContainer.style.marginBottom = "1rem";
-		listContainer.style.border = "1px solid var(--background-modifier-border)";
-		listContainer.style.borderRadius = "4px";
-		listContainer.style.padding = "0.5rem";
 
 		for (const orphan of this.orphans) {
 			const itemDiv = listContainer.createDiv({ cls: "otr-orphan-item" });
-			itemDiv.style.display = "flex";
-			itemDiv.style.justifyContent = "space-between";
-			itemDiv.style.alignItems = "center";
-			itemDiv.style.padding = "0.5rem 0";
-			itemDiv.style.borderBottom = "1px solid var(--background-modifier-border-focus)";
 
 			const infoDiv = itemDiv.createDiv();
 			infoDiv.createEl("strong", { text: orphan.name });
@@ -64,23 +53,25 @@ export class OrphanAudioModal extends Modal {
 			});
 
 			const attachBtn = itemDiv.createEl("button", { text: "활성 노트에 연결" });
-			attachBtn.addEventListener("click", async () => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (!activeFile || activeFile.extension !== "md") {
-					new Notice("오디오를 연결할 마크다운 노트를 먼저 열어주세요.");
-					return;
-				}
-				attachBtn.disabled = true;
-				attachBtn.textContent = "연결 중...";
-				try {
-					await this.onAttach(orphan, activeFile);
-					new Notice(`'${orphan.name}' 파일이 '${activeFile.name}'에 연결되었습니다.`);
-					this.close();
-				} catch (err) {
-					new Notice(`연결 실패: ${err instanceof Error ? err.message : String(err)}`);
-					attachBtn.disabled = false;
-					attachBtn.textContent = "활성 노트에 연결";
-				}
+			attachBtn.addEventListener("click", () => {
+				void (async () => {
+					const activeFile = this.app.workspace.getActiveFile();
+					if (!activeFile || activeFile.extension !== "md") {
+						new Notice("오디오를 연결할 마크다운 노트를 먼저 열어주세요.");
+						return;
+					}
+					attachBtn.disabled = true;
+					attachBtn.textContent = "연결 중...";
+					try {
+						await this.onAttach(orphan, activeFile);
+						new Notice(`'${orphan.name}' 파일이 '${activeFile.name}'에 연결되었습니다.`);
+						this.close();
+					} catch (err) {
+						new Notice(`연결 실패: ${err instanceof Error ? err.message : String(err)}`);
+						attachBtn.disabled = false;
+						attachBtn.textContent = "활성 노트에 연결";
+					}
+				})();
 			});
 		}
 

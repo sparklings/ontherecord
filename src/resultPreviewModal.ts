@@ -160,7 +160,7 @@ export class ResultPreviewModal extends Modal {
 		if (!this.audioFile) return;
 
 		const resourceUrl = this.app.vault.getResourcePath(this.audioFile);
-		const audio = document.createElement("audio");
+		const audio = containerEl.createEl("audio", { cls: "is-hidden" });
 		audio.src = resourceUrl;
 		audio.preload = "metadata";
 		this.audioEl = audio;

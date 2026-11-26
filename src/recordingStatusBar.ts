@@ -41,15 +41,17 @@ export class RecordingStatusBar {
 		);
 		this.tick();
 
-		if (this.timerHandle !== null) {
-			clearInterval(this.timerHandle);
+		if (this.timerHandle !== null && typeof window !== "undefined") {
+			window.clearInterval(this.timerHandle);
 		}
-		this.timerHandle = setInterval(() => this.tick(), 1000) as unknown as number;
+		if (typeof window !== "undefined") {
+			this.timerHandle = window.setInterval(() => this.tick(), 1000);
+		}
 	}
 
 	stop(): void {
-		if (this.timerHandle !== null) {
-			clearInterval(this.timerHandle);
+		if (this.timerHandle !== null && typeof window !== "undefined") {
+			window.clearInterval(this.timerHandle);
 			this.timerHandle = null;
 		}
 		this.currentSession = null;
