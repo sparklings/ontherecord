@@ -81,6 +81,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
+		containerEl.addClass("otr-settings-container");
 
 		// 1. Stitch 스타일 상단 헤더 + 가이드 버튼
 		const heroEl = containerEl.createDiv({ cls: "otr-settings-hero" });

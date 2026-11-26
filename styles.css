@@ -185,128 +185,6 @@
 	text-overflow: ellipsis;
 }
 
-/* Studio Deck Card (Main Recorder Deck) */
-.otr-studio-deck {
-	background-color: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-m, 8px);
-	padding: 10px;
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-}
-
-.otr-deck-status-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.otr-deck-timer {
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--text-normal);
-}
-
-/* Slender Waveform Visualizer */
-.otr-waveform-row {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 3.5px;
-	height: 18px;
-	padding: 0 4px;
-}
-
-.otr-wave-bar {
-	width: 3px;
-	height: 3px;
-	background-color: var(--interactive-accent);
-	border-radius: 1.5px;
-	opacity: 0.25;
-	transition: height 0.2s ease, opacity 0.2s ease;
-}
-
-.otr-waveform-row.is-recording .otr-wave-bar {
-	opacity: 0.9;
-	animation: otr-wave-pulse 1s infinite ease-in-out alternate;
-}
-
-.otr-waveform-row.is-recording .otr-wave-bar:nth-child(1) { animation-delay: 0.05s; height: 6px; }
-.otr-waveform-row.is-recording .otr-wave-bar:nth-child(2) { animation-delay: 0.2s; height: 14px; }
-.otr-waveform-row.is-recording .otr-wave-bar:nth-child(3) { animation-delay: 0.35s; height: 10px; }
-.otr-waveform-row.is-recording .otr-wave-bar:nth-child(4) { animation-delay: 0.15s; height: 16px; }
-.otr-waveform-row.is-recording .otr-wave-bar:nth-child(5) { animation-delay: 0.3s; height: 12px; }
-.otr-waveform-row.is-recording .otr-wave-bar:nth-child(6) { animation-delay: 0.45s; height: 18px; }
-.otr-waveform-row.is-recording .otr-wave-bar:nth-child(7) { animation-delay: 0.25s; height: 11px; }
-.otr-waveform-row.is-recording .otr-wave-bar:nth-child(8) { animation-delay: 0.1s; height: 15px; }
-.otr-waveform-row.is-recording .otr-wave-bar:nth-child(9) { animation-delay: 0.4s; height: 7px; }
-
-@keyframes otr-wave-pulse {
-	0% { height: 3px; opacity: 0.3; }
-	50% { height: 18px; opacity: 1; }
-	100% { height: 6px; opacity: 0.6; }
-}
-
-/* Precision 3-Button Controls (No Overflow) */
-.otr-controls-grid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 5px;
-	padding-top: 4px;
-	border-top: 1px solid var(--background-modifier-border);
-}
-
-.otr-ctrl-btn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 4px;
-	padding: 5px 4px;
-	border-radius: var(--radius-s);
-	background-color: var(--background-secondary);
-	border: 1px solid var(--background-modifier-border);
-	font-size: 11px;
-	font-weight: 500;
-	color: var(--text-normal);
-	cursor: pointer;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-.otr-ctrl-btn:hover:not(:disabled) {
-	background-color: var(--background-modifier-hover);
-	border-color: var(--interactive-accent);
-}
-
-.otr-ctrl-btn:disabled {
-	opacity: 0.4;
-	cursor: not-allowed;
-}
-
-.otr-ctrl-btn svg {
-	width: 12px;
-	height: 12px;
-	flex-shrink: 0;
-}
-
-.otr-ctrl-btn.btn-stop {
-	color: var(--text-error, #f85149);
-}
-
-.otr-ctrl-btn.btn-record-main {
-	background-color: var(--interactive-accent);
-	color: var(--text-on-accent);
-	border-color: transparent;
-	font-weight: 600;
-}
-
-.otr-ctrl-btn.btn-record-main:hover:not(:disabled) {
-	background-color: var(--interactive-accent-hover);
-}
-
 /* Audio Explorer Section */
 .otr-explorer-header {
 	display: flex;
@@ -1381,4 +1259,192 @@
 	font-size: 11px;
 	color: var(--text-muted);
 	margin-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   12. Stitch 1:1 Exact Visual Parity (Settings Cards, Audio Cards, Sync Bar)
+   -------------------------------------------------------------------------- */
+.otr-settings-container .setting-item:not(.setting-item-heading) {
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m, 8px);
+	padding: 12px 14px;
+	margin-bottom: 8px;
+}
+
+.otr-settings-container .setting-item-heading {
+	border-top: none;
+	border-bottom: none;
+	padding: 4px 0;
+	margin-top: 14px;
+	margin-bottom: 6px;
+}
+
+.otr-settings-container .setting-item-control input[type="text"] {
+	min-width: 210px;
+	font-family: var(--font-monospace);
+	font-size: 12px;
+}
+
+/* Stitch-style Stacked Note Audio Card */
+.otr-audio-item-stacked {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 10px 12px;
+	border-radius: var(--radius-m, 8px);
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	transition: border-color 0.15s ease;
+}
+
+.otr-audio-item-stacked:hover {
+	border-color: var(--interactive-accent);
+}
+
+.otr-audio-card-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
+}
+
+.otr-audio-card-left {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	flex: 1;
+}
+
+.otr-audio-card-meta {
+	font-family: var(--font-monospace);
+	font-size: 10px;
+	color: var(--text-muted);
+}
+
+.otr-audio-card-footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 6px;
+}
+
+.otr-card-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 8px;
+	border-radius: var(--radius-s, 4px);
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary);
+	color: var(--text-normal);
+	font-size: 11px;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.otr-card-btn:hover {
+	background-color: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+}
+
+.otr-card-btn svg {
+	width: 11px;
+	height: 11px;
+}
+
+/* Custom Range Seekbar (Review Modal) */
+.otr-sync-seekbar {
+	-webkit-appearance: none;
+	appearance: none;
+	height: 6px;
+	border-radius: 9999px;
+	background: var(--background-modifier-border);
+	outline: none;
+	cursor: pointer;
+}
+
+.otr-sync-seekbar::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+	border: 2px solid var(--background-primary);
+	box-shadow: 0 0 0 1px var(--interactive-accent);
+	cursor: pointer;
+}
+
+.otr-sync-info-col {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.otr-sync-top-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 11px;
+}
+
+.otr-sync-active-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	color: var(--text-muted);
+	font-size: 11px;
+}
+
+.otr-sync-active-badge svg {
+	width: 11px;
+	height: 11px;
+	color: var(--interactive-accent);
+}
+
+/* Segmented Replace / Append Selector inside Review Modal */
+.otr-insert-choice-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 8px 10px;
+	margin-bottom: 12px;
+	border-radius: var(--radius-m, 8px);
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	font-size: 12px;
+}
+
+.otr-insert-choice-label {
+	color: var(--text-muted);
+	font-weight: 500;
+}
+
+.otr-insert-choice-group {
+	display: flex;
+	gap: 4px;
+}
+
+.otr-choice-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 10px;
+	border-radius: var(--radius-s, 6px);
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	color: var(--text-muted);
+	font-size: 11px;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.otr-choice-pill.is-selected {
+	border-color: var(--interactive-accent);
+	background-color: rgba(123, 108, 217, 0.14);
+	color: var(--text-normal);
 }

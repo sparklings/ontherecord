@@ -7,6 +7,7 @@ import { syncAudioPlayback } from "./audioPlaybackSync.ts";
 
 export interface ApprovedResult {
 	markdown: string;
+	choice?: ExistingResultChoice;
 }
 
 export interface AudioEmbedTarget {
@@ -93,6 +94,7 @@ export class ResultPreviewModal extends Modal {
 	private resolve: (value: ApprovedResult | null) => void = () => undefined;
 	private settled = false;
 	private includeTimestamps = true;
+	private existingChoice: ExistingResultChoice = "replace";
 	private editableSegments: Array<{ startSeconds: number; endSeconds: number; text: string }> = [];
 	private audioEl: HTMLAudioElement | null = null;
 	private speedIndex = 0;
@@ -170,9 +172,16 @@ export class ResultPreviewModal extends Modal {
 		const playBtn = bar.createEl("button", { cls: "otr-sync-play-btn", title: "재생 / 일시정지" });
 		setIcon(playBtn, "play");
 
-		const timeEl = bar.createSpan({ cls: "otr-sync-time", text: "00:00 / 00:00" });
+		const infoCol = bar.createDiv({ cls: "otr-sync-info-col" });
+		const topRow = infoCol.createDiv({ cls: "otr-sync-top-row" });
+		const timeEl = topRow.createSpan({ cls: "otr-sync-time", text: "00:00 / 00:00" });
 
-		const seekbar = bar.createEl("input", {
+		const activeBadge = topRow.createSpan({ cls: "otr-sync-active-badge" });
+		const sparkIcon = activeBadge.createSpan({ cls: "otr-inline-icon" });
+		setIcon(sparkIcon, "sparkles");
+		const syncLabelEl = activeBadge.createSpan({ text: "타임스탬프 클릭 시 재생 동기화" });
+
+		const seekbar = infoCol.createEl("input", {
 			cls: "otr-sync-seekbar",
 			type: "range",
 		});
@@ -183,7 +192,7 @@ export class ResultPreviewModal extends Modal {
 
 		const speedBtn = bar.createEl("button", {
 			cls: "otr-sync-speed-btn",
-			text: `${PLAYBACK_SPEEDS[this.speedIndex].toFixed(2).replace(/\.00$/, ".0")}x`,
+			text: `${PLAYBACK_SPEEDS[this.speedIndex].toFixed(1)}x`,
 			title: "재생 속도 전환",
 		});
 
@@ -222,12 +231,15 @@ export class ResultPreviewModal extends Modal {
 			setIcon(playBtn, audio.paused ? "play" : "pause");
 
 			// 현재 재생 시각에 해당하는 세그먼트 행 강조
+			let activeSegmentIndex = -1;
 			this.segmentRows.forEach((row, idx) => {
 				const seg = this.editableSegments[idx];
 				if (!seg) return;
 				const isActive = !audio.paused && current >= seg.startSeconds && current <= Math.max(seg.endSeconds, seg.startSeconds + 0.5);
+				if (isActive) activeSegmentIndex = idx + 1;
 				row.toggleClass("is-active", isActive);
 			});
+			syncLabelEl.setText(activeSegmentIndex > 0 ? `세그먼트 ${activeSegmentIndex} 재생 중` : "타임스탬프 클릭 시 재생 동기화");
 		};
 
 		audio.addEventListener("loadedmetadata", syncUi);
@@ -283,6 +295,30 @@ export class ResultPreviewModal extends Modal {
 		const listContainer = contentEl.createDiv({ cls: "otr-segment-list" });
 		this.renderSegmentsOnly(listContainer);
 
+		// Stitch 시안과 동일한 통합 Replace / Append 선택기
+		const choiceBar = contentEl.createDiv({ cls: "otr-insert-choice-bar" });
+		choiceBar.createSpan({ text: "기존 결과 처리", cls: "otr-insert-choice-label" });
+		const choiceGroup = choiceBar.createDiv({ cls: "otr-insert-choice-group" });
+
+		const replaceBtn = choiceGroup.createEl("button", {
+			text: "기존 블록 교체",
+			cls: `otr-choice-pill ${this.existingChoice === "replace" ? "is-selected" : ""}`,
+		});
+		const appendBtn = choiceGroup.createEl("button", {
+			text: "아래에 추가",
+			cls: `otr-choice-pill ${this.existingChoice === "append" ? "is-selected" : ""}`,
+		});
+		replaceBtn.onclick = () => {
+			this.existingChoice = "replace";
+			replaceBtn.addClass("is-selected");
+			appendBtn.removeClass("is-selected");
+		};
+		appendBtn.onclick = () => {
+			this.existingChoice = "append";
+			appendBtn.addClass("is-selected");
+			replaceBtn.removeClass("is-selected");
+		};
+
 		const footer = contentEl.createDiv({ cls: "otr-review-footer" });
 		const cancelBtn = footer.createEl("button", { text: "취소" });
 		cancelBtn.onclick = () => this.close();
@@ -291,7 +327,7 @@ export class ResultPreviewModal extends Modal {
 		insertBtn.onclick = () => {
 			const finalMarkdown = this.buildCurrentMarkdown();
 			if (finalMarkdown.trim().length === 0) return;
-			this.finish({ markdown: finalMarkdown });
+			this.finish({ markdown: finalMarkdown, choice: this.existingChoice });
 			this.close();
 		};
 	}

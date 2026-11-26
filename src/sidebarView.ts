@@ -336,49 +336,62 @@ export class OnTheRecordSidebarView extends ItemView {
 		}
 
 		for (const item of this.audioItems) {
-			const itemCard = this.audioListContainerEl.createDiv({ cls: "otr-audio-item" });
+			const itemCard = this.audioListContainerEl.createDiv({ cls: "otr-audio-item-stacked" });
 
-			const infoCol = itemCard.createDiv({ cls: "otr-audio-item-info" });
+			// 1. Top Row: Line Tag + Filename + Status Pill
+			const topRow = itemCard.createDiv({ cls: "otr-audio-card-top" });
+			const leftGroup = topRow.createDiv({ cls: "otr-audio-card-left" });
+			leftGroup.createSpan({ cls: "otr-line-tag", text: `Line ${item.lineNumber}` });
+			const titleSpan = leftGroup.createSpan({ cls: "otr-audio-item-title", text: item.filename });
+			titleSpan.title = item.audioPath;
 
-			const metaRow = infoCol.createDiv({ cls: "otr-audio-item-meta" });
-			metaRow.createSpan({ cls: "otr-line-tag", text: `L${item.lineNumber}` });
-
-			const statusSpan = metaRow.createSpan({
+			const statusSpan = topRow.createSpan({
 				cls: `otr-audio-status-pill ${item.transcribed ? "is-done" : "is-pending"}`,
 			});
 			if (item.transcribed) {
 				const checkIcon = statusSpan.createSpan({ cls: "otr-inline-icon" });
 				setIcon(checkIcon, "check");
 			}
-			statusSpan.createSpan({ text: item.transcribed ? "전사됨" : "대기" });
+			statusSpan.createSpan({ text: item.transcribed ? "완료" : "대기" });
 
-			const titleRow = infoCol.createDiv({ cls: "otr-audio-item-title", text: item.filename });
-			titleRow.title = item.audioPath;
+			// 2. Meta Row: 파일 크기 (MB)
+			const linkedFile = this.activeNote
+				? this.app.metadataCache.getFirstLinkpathDest(item.audioPath, this.activeNote.path)
+				: null;
+			if (linkedFile instanceof TFile) {
+				const sizeMb = (linkedFile.stat.size / (1024 * 1024)).toFixed(1);
+				itemCard.createDiv({ text: `${sizeMb} MB`, cls: "otr-audio-card-meta" });
+			}
 
-			const actionCol = itemCard.createDiv({ cls: "otr-audio-item-actions" });
+			// 3. Footer Row: Jump + Transcribe / Re-transcribe
+			const footerRow = itemCard.createDiv({ cls: "otr-audio-card-footer" });
 
-			const jumpBtn = actionCol.createEl("button", {
-				cls: "otr-action-icon-btn",
-				title: `본문 ${item.lineNumber}행 위치로 커서 이동`,
+			const jumpBtn = footerRow.createEl("button", {
+				cls: "otr-card-btn",
+				title: `본문 ${item.lineNumber}행 위치로 이동`,
 			});
-			setIcon(jumpBtn, "arrow-up-right");
+			const jumpIcon = jumpBtn.createSpan({ cls: "otr-inline-icon" });
+			setIcon(jumpIcon, "external-link");
+			jumpBtn.createSpan({ text: "이동" });
 			jumpBtn.onclick = () => {
 				jumpToLineInActiveEditor(this.app, item.lineNumber);
 			};
 
 			if (item.transcribed) {
-				const retranscribeBtn = actionCol.createEl("button", {
-					cls: "otr-action-icon-btn",
+				const retranscribeBtn = footerRow.createEl("button", {
+					cls: "otr-card-btn",
 					title: `'${item.filename}' 재전사 대기열 등록`,
 				});
-				setIcon(retranscribeBtn, "refresh-cw");
+				const reIcon = retranscribeBtn.createSpan({ cls: "otr-inline-icon" });
+				setIcon(reIcon, "refresh-cw");
+				retranscribeBtn.createSpan({ text: "재전사" });
 				retranscribeBtn.onclick = async () => {
 					retranscribeBtn.disabled = true;
 					await this.callbacks.enqueueAudioTranscription(item.audioPath);
 					new Notice(`[${item.filename}] 재전사 대기열에 등록되었습니다.`);
 				};
 			} else {
-				const transcribeBtn = actionCol.createEl("button", {
+				const transcribeBtn = footerRow.createEl("button", {
 					cls: "otr-action-badge-btn",
 					text: "전사",
 					title: `'${item.filename}' 백그라운드 전사 시작`,

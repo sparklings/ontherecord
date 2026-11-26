@@ -1049,13 +1049,15 @@ export default class OnTheRecordPlugin extends Plugin {
 		}
 
 		try {
-			let choice: ExistingResultChoice | null = "append";
-			const current = await this.app.vault.read(target.note);
-			if (hasExistingResult(current, audioPath)) {
-				choice = await new ExistingResultModal(this.app).prompt();
-				if (!choice) {
-					new Notice("취소했습니다. 노트는 수정되지 않았습니다.");
-					return;
+			let choice: ExistingResultChoice | null = approved.choice ?? "append";
+			if (!approved.choice) {
+				const current = await this.app.vault.read(target.note);
+				if (hasExistingResult(current, audioPath)) {
+					choice = await new ExistingResultModal(this.app).prompt();
+					if (!choice) {
+						new Notice("취소했습니다. 노트는 수정되지 않았습니다.");
+						return;
+					}
 				}
 			}
 			const selectedChoice = choice;
