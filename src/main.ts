@@ -1396,6 +1396,7 @@ export default class OnTheRecordPlugin extends Plugin {
 				this.app,
 				report,
 				(pair) => void this.applyDiscoveredCpuSetup(pair),
+				(pairs) => void this.applyDiscoveredCpuSetupMultiple(pairs),
 			).open();
 		} catch (error) {
 			progress.close();
@@ -1412,9 +1413,27 @@ export default class OnTheRecordPlugin extends Plugin {
 				modelPath: pair.modelPath,
 			});
 			if (!saved) return;
+			await this.updateVaultSettings({ defaultModelSize: pair.verification.modelId });
 			new Notice(`검증된 ${pair.verification.modelId} 모델과 런타임 경로를 설정에 적용했습니다.`);
 		} catch (error) {
 			this.reportError("검색한 CPU 도구 경로를 설정에 적용하지 못했습니다.", error);
+		}
+	}
+
+	private async applyDiscoveredCpuSetupMultiple(pairs: readonly VerifiedCpuToolPair[]): Promise<void> {
+		try {
+			if (pairs.length === 0) return;
+			const primaryPair = pairs.find((p) => p.verification.modelId === "medium") ?? pairs[0];
+			const saved = await this.updateLocalSettings({
+				runtimePath: primaryPair.runtimePath,
+				modelPath: primaryPair.modelPath,
+			});
+			if (!saved) return;
+			await this.updateVaultSettings({ defaultModelSize: primaryPair.verification.modelId });
+			const modelNames = pairs.map((p) => p.verification.modelId).join(", ");
+			new Notice(`검증된 도구 조합 ${pairs.length}건(${modelNames})을 확인하여 런타임 및 기본 모델(${primaryPair.verification.modelId})을 설정에 일괄 적용했습니다.`);
+		} catch (error) {
+			this.reportError("선택한 CPU 도구 경로를 설정에 적용하지 못했습니다.", error);
 		}
 	}
 
