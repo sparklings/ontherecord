@@ -99,6 +99,8 @@ export class ResultPreviewModal extends Modal {
 	private audioEl: HTMLAudioElement | null = null;
 	private speedIndex = 0;
 	private segmentRows: HTMLElement[] = [];
+	private activeSegmentIndex = -1;
+	private syncLabelEl: HTMLElement | null = null;
 
 	constructor(
 		app: App,
@@ -123,7 +125,7 @@ export class ResultPreviewModal extends Modal {
 
 	onOpen(): void {
 		this.modalEl.addClass("otr-review-modal");
-		this.setTitle("전사 결과 검토 및 삽입");
+		this.titleEl.addClass("is-hidden");
 		this.render();
 	}
 
@@ -169,9 +171,14 @@ export class ResultPreviewModal extends Modal {
 
 		const bar = containerEl.createDiv({ cls: "otr-audio-sync-bar" });
 
-		const playBtn = bar.createEl("button", { cls: "otr-sync-play-btn", title: "재생 / 일시정지" });
+		// 원형 재생/일시정지 버튼 (36px, bg #7b6cd9)
+		const playBtn = bar.createEl("button", {
+			cls: "otr-sync-play-btn",
+			title: "오디오 재생 / 일시정지",
+		});
 		setIcon(playBtn, "play");
 
+		// 파형 / 스크러버 영역
 		const infoCol = bar.createDiv({ cls: "otr-sync-info-col" });
 		const topRow = infoCol.createDiv({ cls: "otr-sync-top-row" });
 		const timeEl = topRow.createSpan({ cls: "otr-sync-time", text: "00:00 / 00:00" });
@@ -179,7 +186,7 @@ export class ResultPreviewModal extends Modal {
 		const activeBadge = topRow.createSpan({ cls: "otr-sync-active-badge" });
 		const sparkIcon = activeBadge.createSpan({ cls: "otr-inline-icon" });
 		setIcon(sparkIcon, "sparkles");
-		const syncLabelEl = activeBadge.createSpan({ text: "타임스탬프 클릭 시 재생 동기화" });
+		this.syncLabelEl = activeBadge.createSpan({ text: "타임스탬프 클릭 시 싱크 이동" });
 
 		const seekbar = infoCol.createEl("input", {
 			cls: "otr-sync-seekbar",
@@ -190,8 +197,9 @@ export class ResultPreviewModal extends Modal {
 		seekbar.step = "0.1";
 		seekbar.value = "0";
 
+		// 재생 속도 버튼 (1.0x, 1.25x, 1.5x, 2.0x)
 		const speedBtn = bar.createEl("button", {
-			cls: "otr-sync-speed-btn",
+			cls: "otr-sync-speed-btn font-mono-tabular",
 			text: `${PLAYBACK_SPEEDS[this.speedIndex].toFixed(1)}x`,
 			title: "재생 속도 전환",
 		});
@@ -208,7 +216,7 @@ export class ResultPreviewModal extends Modal {
 			this.speedIndex = (this.speedIndex + 1) % PLAYBACK_SPEEDS.length;
 			const nextSpeed = PLAYBACK_SPEEDS[this.speedIndex];
 			audio.playbackRate = nextSpeed;
-			speedBtn.setText(`${nextSpeed}x`);
+			speedBtn.setText(`${nextSpeed.toFixed(1)}x`);
 		};
 
 		seekbar.addEventListener("input", () => {
@@ -235,11 +243,25 @@ export class ResultPreviewModal extends Modal {
 			this.segmentRows.forEach((row, idx) => {
 				const seg = this.editableSegments[idx];
 				if (!seg) return;
-				const isActive = !audio.paused && current >= seg.startSeconds && current <= Math.max(seg.endSeconds, seg.startSeconds + 0.5);
+				const isActive =
+					!audio.paused &&
+					current >= seg.startSeconds &&
+					current <= Math.max(seg.endSeconds, seg.startSeconds + 0.5);
 				if (isActive) activeSegmentIndex = idx + 1;
 				row.toggleClass("is-active", isActive);
+
+				// 활성 행의 타임스탬프 펄스 뱃지 토글
+				const pulseDot = row.querySelector(".otr-pulse-dot");
+				if (pulseDot) {
+					pulseDot.classList.toggle("is-active", isActive);
+				}
 			});
-			syncLabelEl.setText(activeSegmentIndex > 0 ? `세그먼트 ${activeSegmentIndex} 재생 중` : "타임스탬프 클릭 시 재생 동기화");
+			this.activeSegmentIndex = activeSegmentIndex;
+			if (this.syncLabelEl) {
+				this.syncLabelEl.setText(
+					activeSegmentIndex > 0 ? `Synced to segment ${activeSegmentIndex}` : "타임스탬프 클릭 시 싱크 이동",
+				);
+			}
 		};
 
 		audio.addEventListener("loadedmetadata", syncUi);
@@ -254,60 +276,94 @@ export class ResultPreviewModal extends Modal {
 		contentEl.empty();
 		this.segmentRows = [];
 
-		const hero = contentEl.createDiv({ cls: "otr-review-hero" });
-		const heroIcon = hero.createSpan({ cls: "otr-brand-icon-box" });
-		setIcon(heroIcon, "file-audio");
-		const heroText = hero.createDiv();
-		heroText.createDiv({ text: this.audioFile ? this.audioFile.name : "전사 결과 검토", cls: "otr-review-hero-title" });
-		heroText.createDiv({
-			text: `대상: ${this.targetName} · ${this.editableSegments.length}개 세그먼트`,
-			cls: "otr-review-hero-sub",
-		});
+		// Stitch Header (px-6 py-4 bg-[#1a1a1a] border-b)
+		const header = contentEl.createDiv({ cls: "otr-review-header" });
+		const headerLeft = header.createDiv({ cls: "otr-review-header-left" });
+
+		const iconBox = headerLeft.createDiv({ cls: "otr-review-icon-box" });
+		setIcon(iconBox, "file-text");
+
+		const headerMeta = headerLeft.createDiv({ cls: "otr-review-header-meta" });
+		const titleRow = headerMeta.createDiv({ cls: "otr-review-title-row" });
+		titleRow.createEl("h2", { text: "Review transcription result", cls: "otr-review-title" });
+		titleRow.createSpan({ text: "Whisper GGML", cls: "otr-review-tag font-mono-tabular" });
+
+		const subText = this.audioFile
+			? `${this.audioFile.name} • ${this.editableSegments.length} segments`
+			: `Target: ${this.targetName} • ${this.editableSegments.length} segments`;
+		headerMeta.createDiv({ text: subText, cls: "otr-review-sub font-mono-tabular" });
 
 		for (const warning of this.result.warnings) {
 			contentEl.createEl("p", { text: `경고: ${warning}`, cls: "otr-review-warning" });
 		}
 
+		// Audio Sync Control Bar (Stitch lines 51-77)
 		this.renderAudioSyncBar(contentEl);
 
-		const toolbar = contentEl.createDiv({ cls: "otr-review-toolbar" });
-		const hintText = toolbar.createSpan({
-			cls: "otr-review-hint",
-			text: this.audioFile
-				? "타임스탬프를 클릭하면 해당 위치부터 재생됩니다. 문장을 직접 수정할 수 있습니다."
-				: "문장을 직접 수정한 뒤 노트에 삽입할 수 있습니다.",
-		});
-		void hintText;
+		// Segment List Container
+		const listContainer = contentEl.createDiv({ cls: "otr-segment-list-container" });
 
-		const copyRawBtn = toolbar.createEl("button", { cls: "otr-link-btn", text: "원문 복사" });
+		// Segment Header Bar: hint on left, segments count & options on right
+		const headerBar = listContainer.createDiv({ cls: "otr-segment-header-bar" });
+		const hint = headerBar.createSpan({ cls: "otr-segment-hint" });
+		const hintIcon = hint.createSpan({ cls: "otr-inline-icon" });
+		setIcon(hintIcon, "edit-3");
+		hint.createSpan({ text: "Click timestamp to jump audio • Edit inline before saving" });
+
+		const optionsRight = headerBar.createDiv({ cls: "otr-segment-header-right" });
+
+		// 타임스탬프 토글 버튼
+		const tsToggleBtn = optionsRight.createEl("button", {
+			cls: `otr-segment-option-btn ${this.includeTimestamps ? "is-active" : ""}`,
+			text: this.includeTimestamps ? "시간 표시 ON" : "시간 표시 OFF",
+			title: "전사 결과 내 시간 태그 포함 여부",
+		});
+		tsToggleBtn.onclick = () => {
+			this.includeTimestamps = !this.includeTimestamps;
+			tsToggleBtn.setText(this.includeTimestamps ? "시간 표시 ON" : "시간 표시 OFF");
+			tsToggleBtn.toggleClass("is-active", this.includeTimestamps);
+			this.renderSegmentsOnly(segmentsEl);
+		};
+
+		// 원문 복사 버튼
+		const copyRawBtn = optionsRight.createEl("button", {
+			cls: "otr-segment-option-btn",
+			text: "원문 복사",
+			title: "전사 내용 전체를 마크다운으로 클립보드에 복사",
+		});
 		copyRawBtn.onclick = async () => {
 			await navigator.clipboard.writeText(this.buildCurrentMarkdown());
 			new Notice("전사 내용을 클립보드에 복사했습니다.");
 		};
 
-		new Setting(contentEl).setName("시간 표시 포함").addToggle((toggle) =>
-			toggle.setValue(this.includeTimestamps).onChange((value) => {
-				this.includeTimestamps = value;
-				this.renderSegmentsOnly(listContainer);
-			}),
-		);
+		optionsRight.createSpan({
+			text: `${this.editableSegments.length} segments`,
+			cls: "otr-segment-count font-mono-tabular",
+		});
 
-		const listContainer = contentEl.createDiv({ cls: "otr-segment-list" });
-		this.renderSegmentsOnly(listContainer);
+		// Scrollable Segment List (Stitch lines 79-132)
+		const segmentsEl = listContainer.createDiv({ cls: "otr-segment-list" });
+		this.renderSegmentsOnly(segmentsEl);
 
-		// Stitch 시안과 동일한 통합 Replace / Append 선택기
+		// Insertion Mode Selector (Stitch lines 134-147)
 		const choiceBar = contentEl.createDiv({ cls: "otr-insert-choice-bar" });
-		choiceBar.createSpan({ text: "기존 결과 처리", cls: "otr-insert-choice-label" });
+		choiceBar.createSpan({ text: "Insertion mode:", cls: "otr-insert-choice-label" });
 		const choiceGroup = choiceBar.createDiv({ cls: "otr-insert-choice-group" });
 
 		const replaceBtn = choiceGroup.createEl("button", {
-			text: "기존 블록 교체",
 			cls: `otr-choice-pill ${this.existingChoice === "replace" ? "is-selected" : ""}`,
 		});
+		const replaceIcon = replaceBtn.createSpan({ cls: "otr-inline-icon" });
+		setIcon(replaceIcon, "refresh-cw");
+		replaceBtn.createSpan({ text: "Replace existing block" });
+
 		const appendBtn = choiceGroup.createEl("button", {
-			text: "아래에 추가",
 			cls: `otr-choice-pill ${this.existingChoice === "append" ? "is-selected" : ""}`,
 		});
+		const appendIcon = appendBtn.createSpan({ cls: "otr-inline-icon" });
+		setIcon(appendIcon, "arrow-down-to-line");
+		appendBtn.createSpan({ text: "Append below" });
+
 		replaceBtn.onclick = () => {
 			this.existingChoice = "replace";
 			replaceBtn.addClass("is-selected");
@@ -319,11 +375,28 @@ export class ResultPreviewModal extends Modal {
 			replaceBtn.removeClass("is-selected");
 		};
 
+		// Modal Footer Actions (Stitch lines 149-164)
 		const footer = contentEl.createDiv({ cls: "otr-review-footer" });
-		const cancelBtn = footer.createEl("button", { text: "취소" });
+		const targetInfo = footer.createDiv({ cls: "otr-review-target-info font-mono-tabular" });
+		const targetIcon = targetInfo.createSpan({ cls: "otr-inline-icon" });
+		setIcon(targetIcon, "file-text");
+		targetInfo.createSpan({ text: `Target: ${this.targetName}` });
+
+		const footerActions = footer.createDiv({ cls: "otr-review-footer-actions" });
+
+		const cancelBtn = footerActions.createEl("button", {
+			text: "Cancel",
+			cls: "otr-btn-secondary",
+		});
 		cancelBtn.onclick = () => this.close();
 
-		const insertBtn = footer.createEl("button", { text: "노트에 삽입", cls: "mod-cta" });
+		const insertBtn = footerActions.createEl("button", {
+			cls: "otr-btn-primary mod-cta",
+		});
+		const checkIcon = insertBtn.createSpan({ cls: "otr-inline-icon" });
+		setIcon(checkIcon, "check");
+		insertBtn.createSpan({ text: "Insert into note" });
+
 		insertBtn.onclick = () => {
 			const finalMarkdown = this.buildCurrentMarkdown();
 			if (finalMarkdown.trim().length === 0) return;
@@ -339,7 +412,10 @@ export class ResultPreviewModal extends Modal {
 		if (this.editableSegments.length === 0) {
 			const fallbackArea = listContainer.createEl("textarea", { cls: "otr-segment-fallback-area" });
 			fallbackArea.value = this.result.text;
-			fallbackArea.rows = 10;
+			fallbackArea.rows = 8;
+			fallbackArea.addEventListener("input", () => {
+				this.result.text = fallbackArea.value;
+			});
 			return;
 		}
 
@@ -347,22 +423,27 @@ export class ResultPreviewModal extends Modal {
 			const row = listContainer.createDiv({ cls: "otr-segment-row" });
 			this.segmentRows.push(row);
 
-			if (this.includeTimestamps) {
-				const tsBtn = row.createEl("button", {
-					cls: "otr-segment-ts-btn",
-					text: `[${formatTimestamp(seg.startSeconds)}]`,
-					title: this.audioEl ? `${formatTimestamp(seg.startSeconds)} 위치부터 재생` : "타임스탬프",
-				});
-				tsBtn.onclick = () => {
-					if (this.audioEl) {
-						syncAudioPlayback(this.audioEl, seg.startSeconds);
-					}
-				};
-			}
+			// Timestamp Jump Button
+			const tsBtn = row.createEl("button", {
+				cls: "otr-segment-ts-btn font-mono-tabular",
+				title: this.audioEl ? `${formatTimestamp(seg.startSeconds)} 위치부터 오디오 동기화 재생` : "타임스탬프",
+			});
 
+			tsBtn.createSpan({ cls: "otr-pulse-dot" });
+			const playIcon = tsBtn.createSpan({ cls: "otr-inline-icon" });
+			setIcon(playIcon, "play");
+			tsBtn.createSpan({ text: formatTimestamp(seg.startSeconds) });
+
+			tsBtn.onclick = () => {
+				if (this.audioEl) {
+					syncAudioPlayback(this.audioEl, seg.startSeconds);
+				}
+			};
+
+			// Content Editable Textarea (auto-resizing)
 			const input = row.createEl("textarea", { cls: "otr-segment-input" });
 			input.value = seg.text;
-			input.rows = Math.max(1, Math.min(4, Math.ceil(seg.text.length / 55)));
+			input.rows = Math.max(1, Math.min(5, Math.ceil(seg.text.length / 55)));
 			input.addEventListener("input", () => {
 				this.editableSegments[index].text = input.value;
 			});

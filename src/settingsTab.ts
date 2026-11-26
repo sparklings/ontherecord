@@ -1,7 +1,7 @@
 import { Notice, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type { App, Plugin } from "obsidian";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
-import { SUPPORTED_MODELS, getModelMetadata, checkModelFileInstalled, buildModelDownloadCommand } from "./modelCatalog.ts";
+import { SUPPORTED_MODELS, checkModelFileInstalled, buildModelDownloadCommand } from "./modelCatalog.ts";
 import { testLocalLlmConnection } from "./localLlmClient.ts";
 import * as fs from "fs";
 
@@ -16,23 +16,6 @@ function checkPathExists(filePath: string): { exists: boolean; sizeBytes?: numbe
 		// 파일 시스템 오류 또는 권한 문제
 	}
 	return { exists: false };
-}
-
-function renderStatusBadge(container: HTMLElement, status: { exists: boolean; sizeBytes?: number }, label = "정상"): void {
-	const isReady = status.exists;
-	const badge = container.createSpan({ cls: `otr-status-badge ${isReady ? "is-ready" : "is-missing"}` });
-
-	badge.createSpan({ cls: "otr-status-badge-dot" });
-
-	if (isReady) {
-		badge.createSpan({ text: label });
-		if (status.sizeBytes) {
-			const sizeMb = (status.sizeBytes / (1024 * 1024)).toFixed(1);
-			badge.createSpan({ text: `· ${sizeMb} MB`, cls: "otr-status-badge-size" });
-		}
-	} else {
-		badge.createSpan({ text: "파일 없음" });
-	}
 }
 
 function renderScopeHeading(containerEl: HTMLElement, title: string, scope: "vault" | "local"): void {
@@ -157,114 +140,135 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 	}
 
 	/**
-	 * 탭 1: 회의록 및 녹음 워크플로 설정
+	 * 탭 1: 회의록 및 녹음 워크플로 설정 (Stitch stitch-workflow-tab.html 1:1 이식)
 	 */
 	private renderWorkflowTab(containerEl: HTMLElement, vaultSettings: VaultSettings): void {
 		renderScopeHeading(containerEl, "회의록 및 녹음 워크플로", "vault");
 
-		new Setting(containerEl)
-			.setName("회의록 작성 시 녹음 시작 방식")
-			.setDesc("새 회의록 작성 시 자동으로 음성 녹음을 시작할지 선택합니다.")
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("auto", "새 회의록 작성 시 자동 시작 (권장)")
-					.addOption("manual", "단축키 또는 버튼으로 수동 시작")
-					.setValue(vaultSettings.recordStartMode)
-					.onChange((value) => {
-						if (value === "auto" || value === "manual") {
-							void this.updateVaultSettings({ recordStartMode: value });
-						}
-					}),
-			);
+		const stack = containerEl.createDiv({ cls: "otr-settings-card-stack" });
 
-		new Setting(containerEl)
-			.setName("녹음 시작 안내 알림 표시")
-			.setDesc("녹음이 시작될 때 우측 상단에 팝업 알림을 표시합니다.")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(vaultSettings.recordStartNotification)
-					.onChange((value) => {
-						void this.updateVaultSettings({ recordStartNotification: value });
-					}),
-			);
+		// Card 1: 녹음 시작 방식
+		const card1 = stack.createDiv({ cls: "otr-setting-card" });
+		const info1 = card1.createDiv({ cls: "otr-setting-card-info" });
+		info1.createDiv({ text: "회의록 작성 시 녹음 시작 방식", cls: "otr-setting-card-title" });
+		info1.createDiv({ text: "새 회의록 작성 시 자동으로 음성 녹음을 시작할지 선택합니다.", cls: "otr-setting-card-desc" });
+		const select1 = card1.createEl("select", { cls: "otr-setting-select" });
+		const optAuto1 = select1.createEl("option", { text: "새 회의록 작성 시 자동 시작 (권장)", value: "auto" });
+		const optManual1 = select1.createEl("option", { text: "단축키 또는 버튼으로 수동 시작", value: "manual" });
+		if (vaultSettings.recordStartMode === "manual") optManual1.selected = true;
+		else optAuto1.selected = true;
+		select1.onchange = () => {
+			const val = select1.value;
+			if (val === "auto" || val === "manual") {
+				void this.updateVaultSettings({ recordStartMode: val });
+			}
+		};
 
-		new Setting(containerEl)
-			.setName("회의록 마크다운 노트 보관 폴더")
-			.setDesc("이 폴더 하위에 새 마크다운 문서를 생성했을 때만 녹음 시작 규칙을 적용합니다.")
-			.addText((text) =>
-				text
-					.setValue(vaultSettings.autoRecordFolder)
-					.setPlaceholder("예: Meetings 또는 회의록")
-					.onChange((value) => {
-						void this.updateVaultSettings({ autoRecordFolder: value.trim() });
-					}),
-			);
+		// Card 2: 알림 토글
+		const card2 = stack.createDiv({ cls: "otr-setting-card" });
+		const info2 = card2.createDiv({ cls: "otr-setting-card-info" });
+		info2.createDiv({ text: "녹음 시작 안내 알림 표시", cls: "otr-setting-card-title" });
+		info2.createDiv({ text: "녹음이 시작될 때 우측 상단에 팝업 알림을 표시합니다.", cls: "otr-setting-card-desc" });
+		const toggleLabel2 = card2.createEl("label", { cls: "otr-custom-toggle" });
+		const toggleInput2 = toggleLabel2.createEl("input", { type: "checkbox" });
+		toggleInput2.checked = vaultSettings.recordStartNotification;
+		toggleLabel2.createDiv({ cls: "otr-toggle-slider" });
+		toggleInput2.onchange = () => {
+			void this.updateVaultSettings({ recordStartNotification: toggleInput2.checked });
+		};
 
-		new Setting(containerEl)
-			.setName("조건부 자동 시작 템플릿 파일")
-			.setDesc("지정한 템플릿과 일치하는 문서가 생성되었을 때만 녹음이 자동 시작됩니다.")
-			.addText((text) =>
-				text
-					.setValue(vaultSettings.autoRecordTemplatePath)
-					.setPlaceholder("예: Templates/회의록 템플릿.md")
-					.onChange((value) => {
-						void this.updateVaultSettings({ autoRecordTemplatePath: value.trim() });
-					}),
-			);
+		// Card 3: 마크다운 보관 폴더
+		const card3 = stack.createDiv({ cls: "otr-setting-card" });
+		const info3 = card3.createDiv({ cls: "otr-setting-card-info" });
+		info3.createDiv({ text: "회의록 마크다운 노트 보관 폴더", cls: "otr-setting-card-title" });
+		info3.createDiv({ text: "이 폴더 하위에 새 마크다운 문서를 생성했을 때만 녹음 시작 규칙을 적용합니다.", cls: "otr-setting-card-desc" });
+		const input3 = card3.createEl("input", {
+			type: "text",
+			cls: "otr-setting-input font-mono-tabular",
+			value: vaultSettings.autoRecordFolder,
+			placeholder: "예: Meetings 또는 회의록",
+		});
+		input3.onchange = () => {
+			void this.updateVaultSettings({ autoRecordFolder: input3.value.trim() });
+		};
 
-		new Setting(containerEl)
-			.setName("녹음 중 문서 탭 닫힘 시 동작")
-			.setDesc("녹음 중인 탭이 닫혔을 때 녹음 파일 유실을 방지하는 안전 정책입니다.")
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("stop-and-attach", "녹음 안전 중지 후 자동 연결 (권장)")
-					.addOption("ignore", "녹음 계속 진행 (백그라운드)")
-					.setValue(vaultSettings.onTabCloseAction)
-					.onChange((value) => {
-						if (value === "stop-and-attach" || value === "ignore") {
-							void this.updateVaultSettings({ onTabCloseAction: value });
-						}
-					}),
-			);
+		// Card 4: 조건부 템플릿 파일
+		const card4 = stack.createDiv({ cls: "otr-setting-card" });
+		const info4 = card4.createDiv({ cls: "otr-setting-card-info" });
+		info4.createDiv({ text: "조건부 자동 시작 템플릿 파일", cls: "otr-setting-card-title" });
+		info4.createDiv({ text: "지정한 템플릿과 일치하는 문서가 생성되었을 때만 녹음이 자동 시작됩니다.", cls: "otr-setting-card-desc" });
+		const input4 = card4.createEl("input", {
+			type: "text",
+			cls: "otr-setting-input font-mono-tabular",
+			value: vaultSettings.autoRecordTemplatePath,
+			placeholder: "예: Templates/회의록 템플릿.md",
+		});
+		input4.onchange = () => {
+			void this.updateVaultSettings({ autoRecordTemplatePath: input4.value.trim() });
+		};
 
-		new Setting(containerEl)
-			.setName("녹음 종료 후 자동 전사 시작")
-			.setDesc("녹음이 중지되면 백그라운드 큐로 넘겨 자동으로 텍스트 변환을 개시합니다.")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(vaultSettings.autoTranscribe)
-					.onChange((value) => {
-						void this.updateVaultSettings({ autoTranscribe: value });
-					}),
-			);
+		// Card 5: 탭 닫힘 동작
+		const card5 = stack.createDiv({ cls: "otr-setting-card" });
+		const info5 = card5.createDiv({ cls: "otr-setting-card-info" });
+		info5.createDiv({ text: "녹음 중 문서 탭 닫힘 시 동작", cls: "otr-setting-card-title" });
+		info5.createDiv({ text: "녹음 중인 탭이 닫혔을 때 녹음 파일 유실을 방지하는 안전 정책입니다.", cls: "otr-setting-card-desc" });
+		const select5 = card5.createEl("select", { cls: "otr-setting-select" });
+		const optStop5 = select5.createEl("option", { text: "녹음 안전 중지 후 자동 연결 (권장)", value: "stop-and-attach" });
+		const optIgnore5 = select5.createEl("option", { text: "녹음 계속 진행 (백그라운드)", value: "ignore" });
+		if (vaultSettings.onTabCloseAction === "ignore") optIgnore5.selected = true;
+		else optStop5.selected = true;
+		select5.onchange = () => {
+			const val = select5.value;
+			if (val === "stop-and-attach" || val === "ignore") {
+				void this.updateVaultSettings({ onTabCloseAction: val });
+			}
+		};
 
-		new Setting(containerEl)
-			.setName("전사 결과 노트 반영 방식")
-			.setDesc("전사 완료 시 노트 본문에 반영하는 절차를 지정합니다.")
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("auto", "오디오 임베드 아래 자동 삽입 (권장)")
-					.addOption("review", "미리보기 모달로 검토 후 승인 삽입")
-					.setValue(vaultSettings.transcriptionInsertMode)
-					.onChange((value) => {
-						void this.updateVaultSettings({ transcriptionInsertMode: value as "auto" | "review" });
-					}),
-			);
+		// Card 6: 자동 전사 시작
+		const card6 = stack.createDiv({ cls: "otr-setting-card" });
+		const info6 = card6.createDiv({ cls: "otr-setting-card-info" });
+		info6.createDiv({ text: "녹음 종료 후 자동 전사 시작", cls: "otr-setting-card-title" });
+		info6.createDiv({ text: "녹음이 중지되면 백그라운드 큐로 넘겨 자동으로 텍스트 변환을 개시합니다.", cls: "otr-setting-card-desc" });
+		const toggleLabel6 = card6.createEl("label", { cls: "otr-custom-toggle" });
+		const toggleInput6 = toggleLabel6.createEl("input", { type: "checkbox" });
+		toggleInput6.checked = vaultSettings.autoTranscribe;
+		toggleLabel6.createDiv({ cls: "otr-toggle-slider" });
+		toggleInput6.onchange = () => {
+			void this.updateVaultSettings({ autoTranscribe: toggleInput6.checked });
+		};
 
-		new Setting(containerEl)
-			.setName("오디오 저장 완료 대기 시간 (초)")
-			.setDesc("녹음기가 파일 쓰기를 완전히 마칠 때까지 대기하는 시간입니다 (기본값: 5초).")
-			.addText((text) =>
-				text
-					.setValue(String(vaultSettings.stabilizationSeconds))
-					.setPlaceholder("5")
-					.onChange((value) => {
-						const seconds = Number(value);
-						if (Number.isInteger(seconds) && seconds >= 1 && seconds <= 60) {
-							void this.updateVaultSettings({ stabilizationSeconds: seconds });
-						}
-					}),
-			);
+		// Card 7: 전사 결과 노트 반영 방식
+		const card7 = stack.createDiv({ cls: "otr-setting-card" });
+		const info7 = card7.createDiv({ cls: "otr-setting-card-info" });
+		info7.createDiv({ text: "전사 결과 노트 반영 방식", cls: "otr-setting-card-title" });
+		info7.createDiv({ text: "전사 완료 시 노트 본문에 반영하는 절차를 지정합니다.", cls: "otr-setting-card-desc" });
+		const select7 = card7.createEl("select", { cls: "otr-setting-select" });
+		const optAuto7 = select7.createEl("option", { text: "오디오 임베드 아래 자동 삽입 (권장)", value: "auto" });
+		const optReview7 = select7.createEl("option", { text: "미리보기 모달로 검토 후 승인 삽입", value: "review" });
+		if (vaultSettings.transcriptionInsertMode === "review") optReview7.selected = true;
+		else optAuto7.selected = true;
+		select7.onchange = () => {
+			void this.updateVaultSettings({ transcriptionInsertMode: select7.value as "auto" | "review" });
+		};
+
+		// Card 8: 오디오 저장 안정화 대기 시간
+		const card8 = stack.createDiv({ cls: "otr-setting-card" });
+		const info8 = card8.createDiv({ cls: "otr-setting-card-info" });
+		info8.createDiv({ text: "오디오 저장 완료 대기 시간 (초)", cls: "otr-setting-card-title" });
+		info8.createDiv({ text: "녹음기가 파일 쓰기를 완전히 마칠 때까지 대기하는 시간입니다 (기본값: 5초).", cls: "otr-setting-card-desc" });
+		const input8 = card8.createEl("input", {
+			type: "number",
+			cls: "otr-setting-input font-mono-tabular otr-input-narrow",
+			value: String(vaultSettings.stabilizationSeconds),
+		});
+		input8.min = "1";
+		input8.max = "60";
+		input8.onchange = () => {
+			const seconds = Number(input8.value);
+			if (Number.isInteger(seconds) && seconds >= 1 && seconds <= 60) {
+				void this.updateVaultSettings({ stabilizationSeconds: seconds });
+			}
+		};
 	}
 
 	/**
@@ -511,120 +515,157 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 	}
 
 	/**
-	 * 탭 3: 하드웨어 가속 및 로컬 AI 요약 설정
+	 * 탭 3: 하드웨어 가속 및 로컬 AI 요약 설정 (Stitch stitch-acceleration-tab.html 1:1 이식)
 	 */
 	private renderAccelerationTab(containerEl: HTMLElement, vaultSettings: VaultSettings, localSettings: LocalSettings | null): void {
 		renderScopeHeading(containerEl, "하드웨어 가속 (GPU 오프로딩)", "local");
 
+		const gpuStack = containerEl.createDiv({ cls: "otr-settings-card-stack" });
+
 		if (localSettings) {
-			new Setting(containerEl)
-				.setName("하드웨어 가속 백엔드")
-				.setDesc("가속 엔진을 선택합니다. (외장 GPU: CUDA, 인텔 내장: Vulkan 권장)")
-				.addDropdown((dropdown) =>
-					dropdown
-						.addOption("auto", "자동 감지 (권장)")
-						.addOption("cuda", "NVIDIA CUDA (외장)")
-						.addOption("vulkan", "Vulkan (Intel Iris Xe / AMD / NVIDIA)")
-						.addOption("cpu", "CPU 전용")
-						.addOption("openvino", "Intel OpenVINO")
-						.setValue(localSettings.gpuBackend ?? "auto")
-						.onChange((value) => {
-							if (value === "auto" || value === "cpu" || value === "cuda" || value === "vulkan" || value === "openvino") {
-								void this.updateLocalSettings({ gpuBackend: value });
-							}
-						}),
-				);
+			// Card 1: GPU Backend
+			const cardGpu = gpuStack.createDiv({ cls: "otr-setting-card" });
+			const infoGpu = cardGpu.createDiv({ cls: "otr-setting-card-info" });
+			infoGpu.createDiv({ text: "하드웨어 가속 백엔드", cls: "otr-setting-card-title" });
+			infoGpu.createDiv({ text: "가속 엔진을 선택합니다. (외장 GPU: CUDA, 인텔 내장: Vulkan 권장)", cls: "otr-setting-card-desc" });
+			const selectGpu = cardGpu.createEl("select", { cls: "otr-setting-select" });
+			const backends: Array<{ id: string; label: string }> = [
+				{ id: "auto", label: "자동 감지 (권장)" },
+				{ id: "cuda", label: "NVIDIA CUDA (외장)" },
+				{ id: "vulkan", label: "Vulkan (Intel Iris Xe / AMD / NVIDIA)" },
+				{ id: "cpu", label: "CPU 전용" },
+				{ id: "openvino", label: "Intel OpenVINO" },
+			];
+			for (const b of backends) {
+				const opt = selectGpu.createEl("option", { text: b.label, value: b.id });
+				if ((localSettings.gpuBackend ?? "auto") === b.id) opt.selected = true;
+			}
+			selectGpu.onchange = () => {
+				const val = selectGpu.value;
+				if (val === "auto" || val === "cpu" || val === "cuda" || val === "vulkan" || val === "openvino") {
+					void this.updateLocalSettings({ gpuBackend: val });
+				}
+			};
 
-			new Setting(containerEl)
-				.setName("GPU VRAM 레이어 적재 수 (-ngl)")
-				.setDesc("GPU VRAM으로 오프로드할 신경망 레이어 수입니다 (0: CPU, 99: GPU 전체 적재).")
-				.addText((text) =>
-					text
-						.setValue(String(localSettings.gpuLayers ?? 0))
-						.setPlaceholder("0 또는 99")
-						.onChange((value) => {
-							const num = parseInt(value.trim(), 10);
-							if (!isNaN(num) && num >= 0 && num <= 999) {
-								void this.updateLocalSettings({ gpuLayers: num });
-							}
-						}),
-				);
+			// Card 2: 2-Col Grid (GPU Layers + Device ID)
+			const gridGpu = gpuStack.createDiv({ cls: "otr-setting-2col-grid" });
 
-			new Setting(containerEl)
-				.setName("그래픽 카드 번호 (-dev)")
-				.setDesc("연산에 사용할 GPU 장치 번호입니다 (기본값: 0).")
-				.addText((text) =>
-					text
-						.setValue(String(localSettings.gpuDeviceId ?? 0))
-						.setPlaceholder("0")
-						.onChange((value) => {
-							const num = parseInt(value.trim(), 10);
-							if (!isNaN(num) && num >= 0 && num <= 64) {
-								void this.updateLocalSettings({ gpuDeviceId: num });
-							}
-						}),
-				);
+			const colLayers = gridGpu.createDiv({ cls: "otr-setting-col-box" });
+			colLayers.createDiv({ text: "GPU VRAM 레이어 적재 수 (-ngl)", cls: "otr-setting-card-title" });
+			colLayers.createDiv({ text: "0: CPU 전용, 99: GPU VRAM 전체 적재", cls: "otr-setting-card-desc" });
+			const inputLayers = colLayers.createEl("input", {
+				type: "number",
+				cls: "otr-setting-input font-mono-tabular",
+				value: String(localSettings.gpuLayers ?? 0),
+			});
+			inputLayers.min = "0";
+			inputLayers.max = "999";
+			inputLayers.onchange = () => {
+				const num = parseInt(inputLayers.value.trim(), 10);
+				if (!isNaN(num) && num >= 0 && num <= 999) {
+					void this.updateLocalSettings({ gpuLayers: num });
+				}
+			};
+
+			const colDev = gridGpu.createDiv({ cls: "otr-setting-col-box" });
+			colDev.createDiv({ text: "그래픽 카드 번호 (-dev)", cls: "otr-setting-card-title" });
+			colDev.createDiv({ text: "연산에 사용할 GPU 장치 번호 (기본값: 0)", cls: "otr-setting-card-desc" });
+			const inputDev = colDev.createEl("input", {
+				type: "number",
+				cls: "otr-setting-input font-mono-tabular",
+				value: String(localSettings.gpuDeviceId ?? 0),
+			});
+			inputDev.min = "0";
+			inputDev.max = "64";
+			inputDev.onchange = () => {
+				const num = parseInt(inputDev.value.trim(), 10);
+				if (!isNaN(num) && num >= 0 && num <= 64) {
+					void this.updateLocalSettings({ gpuDeviceId: num });
+				}
+			};
 		}
 
 		renderScopeHeading(containerEl, "로컬 AI 회의록 요약", "vault");
 
-		new Setting(containerEl)
-			.setName("로컬 AI 요약 사용")
-			.setDesc("전사 완료 후 또는 버튼 클릭 시 로컬 LLM(Ollama / LM Studio 호환)으로 3단 회의록 요약을 생성합니다.")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(vaultSettings.enableLocalLlm)
-					.onChange((value) => {
-						void this.updateVaultSettings({ enableLocalLlm: value });
-					}),
-			);
+		const aiStack = containerEl.createDiv({ cls: "otr-settings-card-stack" });
 
-		new Setting(containerEl)
-			.setName("로컬 엔드포인트 URL")
-			.setDesc("100% 프라이버시 보호를 위해 오직 localhost 및 127.0.0.1만 허용됩니다 (Ollama/OpenAI 호환 자동 감지).")
-			.addText((text) =>
-				text
-					.setValue(vaultSettings.localLlmEndpoint)
-					.setPlaceholder("http://127.0.0.1:11434")
-					.onChange((value) => {
-						void this.updateVaultSettings({ localLlmEndpoint: value.trim() });
-					}),
-			)
-			.addButton((button) =>
-				button.setButtonText("연결 테스트").onClick(async () => {
-					button.setDisabled(true);
-					new Notice("연결 확인 중...");
-					const res = await testLocalLlmConnection(vaultSettings.localLlmEndpoint);
-					button.setDisabled(false);
-					if (res.ok) {
-						new Notice(`연결 성공 (${res.serverType}, 감지된 모델 ${res.models.length}개)`);
-					} else {
-						new Notice(`연결 실패: ${res.error ?? "알 수 없는 오류"}`, 6000);
-					}
-				}),
-			);
+		// Card 3: 로컬 AI 요약 토글
+		const cardAiToggle = aiStack.createDiv({ cls: "otr-setting-card" });
+		const infoAiToggle = cardAiToggle.createDiv({ cls: "otr-setting-card-info" });
+		infoAiToggle.createDiv({ text: "로컬 AI 요약 사용", cls: "otr-setting-card-title" });
+		infoAiToggle.createDiv({ text: "전사 완료 후 또는 버튼 클릭 시 로컬 LLM으로 3단 회의록 요약을 생성합니다.", cls: "otr-setting-card-desc" });
+		const toggleLabelAi = cardAiToggle.createEl("label", { cls: "otr-custom-toggle" });
+		const toggleInputAi = toggleLabelAi.createEl("input", { type: "checkbox" });
+		toggleInputAi.checked = vaultSettings.enableLocalLlm;
+		toggleLabelAi.createDiv({ cls: "otr-toggle-slider" });
+		toggleInputAi.onchange = () => {
+			void this.updateVaultSettings({ enableLocalLlm: toggleInputAi.checked });
+		};
 
-		new Setting(containerEl)
-			.setName("요약 모델 이름")
-			.setDesc("PC에 설치된 로컬 LLM 모델명을 입력하세요. (예: qwen2.5:7b, llama3.1:8b)")
-			.addText((text) =>
-				text
-					.setValue(vaultSettings.localLlmModel)
-					.setPlaceholder("qwen2.5:7b")
-					.onChange((value) => {
-						void this.updateVaultSettings({ localLlmModel: value.trim() });
-					}),
-			);
+		// Card 4: 로컬 엔드포인트 URL + 100% Private 배지 + 연결 테스트
+		const cardEndpoint = aiStack.createDiv({ cls: "otr-tool-card" });
+		const endTop = cardEndpoint.createDiv({ cls: "otr-tool-card-top" });
+		const endInfo = endTop.createDiv();
+		endInfo.createDiv({ text: "로컬 엔드포인트 URL", cls: "otr-tool-card-title" });
+		endInfo.createDiv({
+			text: "오직 localhost 및 127.0.0.1만 허용됩니다 (Ollama / OpenAI 규격 자동 감지).",
+			cls: "otr-tool-card-hint",
+		});
+		endTop.createSpan({ text: "100% Private", cls: "otr-status-badge is-ready font-mono-tabular" });
 
-		new Setting(containerEl)
-			.setName("전사 완료 시 자동 요약 생성")
-			.setDesc("전사가 완료되어 노트에 삽입된 후 자동으로 요약 블록을 추가합니다.")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(vaultSettings.localLlmAutoSummarize)
-					.onChange((value) => {
-						void this.updateVaultSettings({ localLlmAutoSummarize: value });
-					}),
-			);
+		const endInputRow = cardEndpoint.createDiv({ cls: "otr-tool-card-input-row" });
+		const endInput = endInputRow.createEl("input", {
+			type: "text",
+			cls: "otr-tool-card-input font-mono-tabular",
+			value: vaultSettings.localLlmEndpoint,
+			placeholder: "http://localhost:11434",
+		});
+		endInput.onchange = () => {
+			void this.updateVaultSettings({ localLlmEndpoint: endInput.value.trim() });
+		};
+
+		const testConnBtn = endInputRow.createEl("button", {
+			text: "연결 테스트",
+			cls: "otr-tool-browse-btn",
+		});
+		testConnBtn.onclick = async () => {
+			testConnBtn.disabled = true;
+			new Notice("연결 확인 중...");
+			const res = await testLocalLlmConnection(vaultSettings.localLlmEndpoint);
+			testConnBtn.disabled = false;
+			if (res.ok) {
+				new Notice(`연결 성공 (${res.serverType}, 감지된 모델 ${res.models.length}개)`);
+			} else {
+				new Notice(`연결 실패: ${res.error ?? "알 수 없는 오류"}`, 6000);
+			}
+		};
+
+		// Card 5: 2-Col Grid (모델명 + 자동 요약 토글)
+		const gridAi = aiStack.createDiv({ cls: "otr-setting-2col-grid" });
+
+		const colModel = gridAi.createDiv({ cls: "otr-setting-col-box" });
+		colModel.createDiv({ text: "요약 모델 이름", cls: "otr-setting-card-title" });
+		colModel.createDiv({ text: "PC에 설치된 모델명 (예: qwen2.5:7b, llama3.1:8b)", cls: "otr-setting-card-desc" });
+		const inputModel = colModel.createEl("input", {
+			type: "text",
+			cls: "otr-setting-input font-mono-tabular",
+			value: vaultSettings.localLlmModel,
+			placeholder: "qwen2.5:7b",
+		});
+		inputModel.onchange = () => {
+			void this.updateVaultSettings({ localLlmModel: inputModel.value.trim() });
+		};
+
+		const colAutoAi = gridAi.createDiv({ cls: "otr-setting-card" });
+		const infoAutoAi = colAutoAi.createDiv({ cls: "otr-setting-card-info" });
+		infoAutoAi.createDiv({ text: "전사 완료 시 자동 요약", cls: "otr-setting-card-title" });
+		infoAutoAi.createDiv({ text: "노트 본문 삽입 후 자동 실행", cls: "otr-setting-card-desc" });
+		const toggleLabelAuto = colAutoAi.createEl("label", { cls: "otr-custom-toggle" });
+		const toggleInputAuto = toggleLabelAuto.createEl("input", { type: "checkbox" });
+		toggleInputAuto.checked = vaultSettings.localLlmAutoSummarize;
+		toggleLabelAuto.createDiv({ cls: "otr-toggle-slider" });
+		toggleInputAuto.onchange = () => {
+			void this.updateVaultSettings({ localLlmAutoSummarize: toggleInputAuto.checked });
+		};
 	}
 }

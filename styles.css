@@ -2356,3 +2356,744 @@
 .otr-status-badge-dot.is-warning {
 	background-color: #d17b39;
 }
+
+/* --------------------------------------------------------------------------
+   14. Stitch Workflow, Acceleration & Review Modal Exact Visual Parity
+   -------------------------------------------------------------------------- */
+
+/* Settings Cards Stack */
+.otr-settings-card-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-top: 6px;
+	margin-bottom: 14px;
+}
+
+.otr-setting-card {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 14px;
+	background-color: #252525;
+	border: 1px solid #353535;
+	border-radius: 8px;
+	gap: 12px;
+}
+
+.theme-light .otr-setting-card {
+	background-color: var(--background-secondary);
+	border-color: var(--background-modifier-border);
+}
+
+.otr-setting-card-info {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	flex: 1;
+}
+
+.otr-setting-card-title {
+	font-size: 12px;
+	font-weight: 500;
+	color: #ffffff;
+}
+
+.theme-light .otr-setting-card-title {
+	color: var(--text-normal);
+}
+
+.otr-setting-card-desc {
+	font-size: 11px;
+	color: #8c8c90;
+	line-height: 1.4;
+}
+
+.theme-light .otr-setting-card-desc {
+	color: var(--text-muted);
+}
+
+.otr-setting-select {
+	background-color: #1e1e1e;
+	border: 1px solid #3a3a3a;
+	color: #e1e1e6;
+	font-size: 12px;
+	border-radius: 6px;
+	padding: 6px 12px;
+	cursor: pointer;
+	outline: none;
+	transition: border-color 0.15s ease;
+}
+
+.otr-setting-select:focus {
+	border-color: #7b6cd9;
+}
+
+.theme-light .otr-setting-select {
+	background-color: var(--background-primary);
+	border-color: var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.otr-setting-input {
+	background-color: #1e1e1e;
+	border: 1px solid #3a3a3a;
+	border-radius: 6px;
+	padding: 6px 10px;
+	font-size: 12px;
+	color: #e1e1e6;
+	outline: none;
+	transition: border-color 0.15s ease;
+}
+
+.otr-setting-input:focus {
+	border-color: #7b6cd9;
+}
+
+.theme-light .otr-setting-input {
+	background-color: var(--background-primary);
+	border-color: var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.otr-input-narrow {
+	width: 90px;
+	text-align: right;
+}
+
+.otr-setting-input-wrap {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.otr-setting-input-suffix {
+	font-size: 11px;
+	color: #8c8c90;
+}
+
+/* 2-Column Grid for Settings */
+.otr-setting-2col-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+@media (max-width: 600px) {
+	.otr-setting-2col-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.otr-setting-col-box {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 12px;
+	background-color: #252525;
+	border: 1px solid #353535;
+	border-radius: 8px;
+}
+
+.theme-light .otr-setting-col-box {
+	background-color: var(--background-secondary);
+	border-color: var(--background-modifier-border);
+}
+
+.otr-setting-col-box .otr-setting-input {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+/* Custom Stitch Toggle Switch */
+.otr-custom-toggle {
+	position: relative;
+	display: inline-block;
+	width: 38px;
+	height: 22px;
+	flex-shrink: 0;
+	cursor: pointer;
+}
+
+.otr-custom-toggle input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+	position: absolute;
+}
+
+.otr-toggle-slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #3a3a3a;
+	transition: 0.2s ease;
+	border-radius: 22px;
+}
+
+.theme-light .otr-toggle-slider {
+	background-color: var(--background-modifier-border);
+}
+
+.otr-toggle-slider:before {
+	position: absolute;
+	content: "";
+	height: 16px;
+	width: 16px;
+	left: 3px;
+	bottom: 3px;
+	background-color: #ffffff;
+	transition: 0.2s ease;
+	border-radius: 50%;
+}
+
+.otr-custom-toggle input:checked + .otr-toggle-slider {
+	background-color: #7b6cd9;
+}
+
+.otr-custom-toggle input:checked + .otr-toggle-slider:before {
+	transform: translateX(16px);
+}
+
+/* Stitch Review Modal Parity (stitch-review-modal.html) */
+.otr-review-modal .modal-title {
+	display: none;
+}
+
+.otr-review-modal .modal {
+	width: 760px;
+	max-width: 92vw;
+	max-height: 90vh;
+	padding: 0;
+	overflow: hidden;
+	background-color: #1e1e1e;
+	border: 1px solid #353535;
+	border-radius: 12px;
+	display: flex;
+	flex-direction: column;
+}
+
+.theme-light .otr-review-modal .modal {
+	background-color: var(--background-primary);
+	border-color: var(--background-modifier-border);
+}
+
+.otr-review-modal .modal-content {
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+
+/* Review Header */
+.otr-review-header {
+	padding: 14px 20px;
+	border-bottom: 1px solid #313131;
+	background-color: #1a1a1a;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.theme-light .otr-review-header {
+	background-color: var(--background-secondary-alt);
+	border-bottom-color: var(--background-modifier-border);
+}
+
+.otr-review-header-left {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.otr-review-icon-box {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	background-color: #272535;
+	border: 1px solid #3c365c;
+	color: #7b6cd9;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.otr-review-icon-box svg {
+	width: 16px;
+	height: 16px;
+}
+
+.otr-review-header-meta {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.otr-review-title-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.otr-review-title {
+	font-size: 13px;
+	font-weight: 600;
+	color: #ffffff;
+	margin: 0;
+}
+
+.theme-light .otr-review-title {
+	color: var(--text-normal);
+}
+
+.otr-review-tag {
+	font-size: 10px;
+	color: #c7beff;
+	background-color: #342e54;
+	border: 1px solid #524687;
+	padding: 1px 6px;
+	border-radius: 4px;
+}
+
+.otr-review-sub {
+	font-size: 11px;
+	color: #8c8c90;
+}
+
+/* Review Audio Sync Bar */
+.otr-review-modal .otr-audio-sync-bar {
+	padding: 10px 20px;
+	background-color: #171717;
+	border-bottom: 1px solid #2d2d2d;
+	border-top: none;
+	border-left: none;
+	border-right: none;
+	border-radius: 0;
+	margin-bottom: 0;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.theme-light .otr-review-modal .otr-audio-sync-bar {
+	background-color: var(--background-secondary);
+	border-bottom-color: var(--background-modifier-border);
+}
+
+.otr-review-modal .otr-sync-play-btn {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background-color: #7b6cd9;
+	color: #ffffff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+	cursor: pointer;
+	border: none;
+	transition: background-color 0.15s ease;
+}
+
+.otr-review-modal .otr-sync-play-btn:hover {
+	background-color: #6f5ecf;
+}
+
+.otr-review-modal .otr-sync-play-btn svg {
+	width: 16px;
+	height: 16px;
+	margin-left: 1px;
+}
+
+.otr-review-modal .otr-sync-info-col {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.otr-review-modal .otr-sync-top-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 11px;
+}
+
+.otr-review-modal .otr-sync-time {
+	color: #ffffff;
+	font-size: 11px;
+}
+
+.theme-light .otr-review-modal .otr-sync-time {
+	color: var(--text-normal);
+}
+
+.otr-review-modal .otr-sync-active-badge {
+	color: #7b6cd9;
+	font-size: 11px;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.otr-review-modal .otr-sync-active-badge svg {
+	width: 12px;
+	height: 12px;
+}
+
+.otr-review-modal .otr-sync-seekbar {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	height: 6px;
+	border-radius: 9999px;
+	background: #2c2c2c;
+	outline: none;
+	cursor: pointer;
+}
+
+.otr-review-modal .otr-sync-seekbar::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #7b6cd9;
+	border: 2px solid #171717;
+	cursor: pointer;
+}
+
+.otr-review-modal .otr-sync-speed-btn {
+	padding: 4px 10px;
+	background-color: #252525;
+	border: 1px solid #353535;
+	border-radius: 4px;
+	color: #d0d0d5;
+	font-size: 11px;
+	cursor: pointer;
+	box-shadow: none;
+	transition: background-color 0.15s ease;
+}
+
+.otr-review-modal .otr-sync-speed-btn:hover {
+	background-color: #2e2e2e;
+	color: #ffffff;
+}
+
+/* Segment List Container & Hint Header */
+.otr-segment-list-container {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	padding: 12px 20px;
+	overflow: hidden;
+}
+
+.otr-segment-header-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-bottom: 8px;
+	font-size: 11px;
+	color: #8c8c90;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	margin-bottom: 8px;
+}
+
+.otr-segment-hint {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.otr-segment-hint svg {
+	width: 12px;
+	height: 12px;
+	color: #7b6cd9;
+}
+
+.otr-segment-header-right {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.otr-segment-option-btn {
+	padding: 2px 8px;
+	font-size: 10px;
+	border-radius: 4px;
+	background-color: #252525;
+	border: 1px solid #353535;
+	color: #8c8c90;
+	cursor: pointer;
+	box-shadow: none;
+	transition: all 0.15s ease;
+}
+
+.otr-segment-option-btn:hover,
+.otr-segment-option-btn.is-active {
+	color: #c7beff;
+	border-color: #524687;
+	background-color: #342e54;
+}
+
+.otr-segment-count {
+	font-size: 10px;
+	color: #8c8c90;
+}
+
+.otr-review-modal .otr-segment-list {
+	flex: 1;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding-right: 4px;
+	margin-bottom: 0;
+	border: none;
+	background: transparent;
+	max-height: none;
+}
+
+/* Individual Segment Rows */
+.otr-review-modal .otr-segment-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 10px 12px;
+	background-color: #252525;
+	border: 1px solid #353535;
+	border-radius: 8px;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.theme-light .otr-review-modal .otr-segment-row {
+	background-color: var(--background-secondary);
+	border-color: var(--background-modifier-border);
+}
+
+.otr-review-modal .otr-segment-row:hover {
+	background-color: #282828;
+}
+
+/* Active Segment Highlight */
+.otr-review-modal .otr-segment-row.is-active {
+	background-color: #22212d;
+	border: 2px solid #7b6cd9;
+	box-shadow: 0 2px 10px rgba(123, 108, 217, 0.12);
+}
+
+.otr-review-modal .otr-segment-ts-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 7px;
+	border-radius: 5px;
+	background-color: #1e1e1e;
+	border: 1px solid #333333;
+	color: #7b6cd9;
+	font-size: 11px;
+	cursor: pointer;
+	box-shadow: none;
+	flex-shrink: 0;
+	margin-top: 1px;
+	transition: background-color 0.15s ease;
+}
+
+.otr-review-modal .otr-segment-ts-btn:hover {
+	background-color: #2d2d2d;
+}
+
+.otr-review-modal .otr-segment-row.is-active .otr-segment-ts-btn {
+	background-color: #342e54;
+	border-color: #524687;
+	color: #c7beff;
+	font-weight: 600;
+}
+
+.otr-pulse-dot {
+	display: none;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background-color: #7b6cd9;
+	animation: otr-pulse 1.4s infinite cubic-bezier(0, 0, 0.2, 1);
+}
+
+.otr-pulse-dot.is-active {
+	display: inline-block;
+}
+
+.otr-review-modal .otr-segment-input {
+	flex: 1;
+	background: transparent;
+	border: none;
+	outline: none;
+	color: #e1e1e6;
+	font-size: 12px;
+	line-height: 1.5;
+	resize: vertical;
+	padding: 2px 0;
+}
+
+.theme-light .otr-review-modal .otr-segment-input {
+	color: var(--text-normal);
+}
+
+.otr-review-modal .otr-segment-row.is-active .otr-segment-input {
+	color: #ffffff;
+}
+
+/* Insertion Mode Selector Bar */
+.otr-review-modal .otr-insert-choice-bar {
+	padding: 10px 20px;
+	background-color: #171717;
+	border-top: 1px solid #2d2d2d;
+	border-bottom: none;
+	border-left: none;
+	border-right: none;
+	border-radius: 0;
+	margin-bottom: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.theme-light .otr-review-modal .otr-insert-choice-bar {
+	background-color: var(--background-secondary-alt);
+	border-top-color: var(--background-modifier-border);
+}
+
+.otr-review-modal .otr-insert-choice-label {
+	font-size: 12px;
+	color: #8c8c90;
+}
+
+.otr-review-modal .otr-insert-choice-group {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	background-color: #222222;
+	padding: 3px;
+	border-radius: 6px;
+	border: 1px solid #303030;
+}
+
+.theme-light .otr-review-modal .otr-insert-choice-group {
+	background-color: var(--background-secondary);
+	border-color: var(--background-modifier-border);
+}
+
+.otr-review-modal .otr-choice-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 10px;
+	border-radius: 4px;
+	background-color: transparent;
+	border: 1px solid transparent;
+	color: #9999a0;
+	font-size: 11px;
+	font-weight: 500;
+	cursor: pointer;
+	box-shadow: none;
+	transition: all 0.15s ease;
+}
+
+.otr-review-modal .otr-choice-pill:hover {
+	color: #ffffff;
+}
+
+.otr-review-modal .otr-choice-pill.is-selected {
+	background-color: #2c2b38;
+	border-color: #48426d;
+	color: #c7beff;
+	font-weight: 600;
+}
+
+/* Footer Actions */
+.otr-review-modal .otr-review-footer {
+	padding: 12px 20px;
+	background-color: #1a1a1a;
+	border-top: 1px solid #313131;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.theme-light .otr-review-modal .otr-review-footer {
+	background-color: var(--background-secondary-alt);
+	border-top-color: var(--background-modifier-border);
+}
+
+.otr-review-target-info {
+	font-size: 11px;
+	color: #717178;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.otr-review-target-info svg {
+	width: 14px;
+	height: 14px;
+	color: #888890;
+}
+
+.otr-review-footer-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.otr-review-modal button.otr-btn-secondary {
+	padding: 6px 14px;
+	border-radius: 6px;
+	background-color: #282828;
+	border: 1px solid #3a3a3a;
+	color: #d0d0d5;
+	font-size: 12px;
+	cursor: pointer;
+	box-shadow: none;
+	transition: background-color 0.15s ease;
+}
+
+.otr-review-modal button.otr-btn-secondary:hover {
+	background-color: #323232;
+	color: #ffffff;
+}
+
+.otr-review-modal button.otr-btn-primary {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 16px;
+	border-radius: 6px;
+	background-color: #7b6cd9;
+	border: 1px solid #7b6cd9;
+	color: #ffffff;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+	transition: background-color 0.15s ease;
+}
+
+.otr-review-modal button.otr-btn-primary:hover {
+	background-color: #6f5ecf;
+	border-color: #6f5ecf;
+}
+
+.otr-review-modal button.otr-btn-primary svg {
+	width: 14px;
+	height: 14px;
+}
