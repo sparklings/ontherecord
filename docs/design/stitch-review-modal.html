@@ -1,168 +1,238 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en" class="h-full bg-[#0d0d0d]">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>On the Record - Review Transcription Modal</title>
+  <title>On the Record - Transcript Review & Insertion Modal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #121212; color: #dcddde; }
-    .font-mono { font-family: 'JetBrains Mono', monospace; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #353535; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #4a4a4a; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6 bg-[#0f0f10]">
-  <div class="fixed inset-0 bg-black/70 backdrop-blur-[2px] z-0"></div>
-  
-  <!-- Review Modal Container (760px) -->
-  <div class="relative z-10 w-full max-w-[760px] bg-[#1e1e1e] rounded-xl border border-[#353535] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-    
-    <!-- Header -->
-    <div class="px-6 py-4 border-b border-[#313131] flex items-center justify-between bg-[#1a1a1a] select-none">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-[#272535] border border-[#3c365c] flex items-center justify-center text-[#7b6cd9]">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-            <line x1="10" y1="9" x2="8" y2="9"/>
+<body class="h-full flex items-center justify-center p-6 bg-[#0f0f10] text-[#e0e0e0] select-none antialiased">
+
+  <!-- Background overlay simulating Obsidian workspace context -->
+  <div class="fixed inset-0 bg-black/75 backdrop-blur-sm pointer-events-none"></div>
+
+  <!-- Obsidian Modal Dialog (760px) -->
+  <div class="relative w-full max-w-[760px] bg-[#1e1e1e] border border-[#353535] rounded-xl shadow-2xl overflow-hidden flex flex-col z-10">
+
+    <!-- 1. Modal Header -->
+    <div class="px-6 py-5 border-b border-[#2d2d2d] flex items-center justify-between bg-[#1f1f21]">
+      <div class="flex items-center space-x-3.5">
+        <!-- Icon Container -->
+        <div class="w-10 h-10 rounded-lg bg-[#272535] border border-[#3c365c] flex items-center justify-center text-[#7b6cd9] flex-shrink-0 shadow-inner">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 13.5h6m-6 3h4" />
           </svg>
         </div>
+
         <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-sm font-semibold text-white tracking-wide">Review transcription result</h1>
-            <span class="text-[10px] font-mono text-[#c7beff] bg-[#342e54] border border-[#524687] px-1.5 py-0.5 rounded">Whisper GGML</span>
+          <div class="flex items-center space-x-2.5">
+            <h2 class="text-[17px] font-semibold text-white tracking-tight">Review transcription result</h2>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium font-mono bg-[#342e54] text-[#c7beff] border border-[#524687]">Whisper GGML</span>
           </div>
-          <p class="text-xs text-[#8c8c90] font-mono mt-0.5">Recording 1410.m4a • 04:12 • Medium (q5_0)</p>
+          <p class="text-[12px] font-mono text-[#8c8c90] mt-0.5">Recording 1410.m4a • 04:12 • Medium (q5_0)</p>
         </div>
       </div>
-      <button class="w-7 h-7 rounded-md hover:bg-[#2b2b2b] text-[#999999] hover:text-white flex items-center justify-center transition-colors">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+
+      <!-- Close X Button -->
+      <button class="w-8 h-8 rounded-md flex items-center justify-center text-[#8e8e93] hover:text-white hover:bg-[#2b2b2b] transition-colors" title="Close dialog">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
     </div>
 
-    <!-- Audio Sync Control Bar -->
-    <div class="px-6 py-3 bg-[#171717] border-b border-[#2d2d2d] flex items-center gap-4">
-      <!-- Play/Pause Button -->
-      <button class="w-9 h-9 rounded-full bg-[#7b6cd9] hover:bg-[#6f5ecf] text-white flex items-center justify-center transition-colors shadow-md shrink-0">
-        <svg class="w-4 h-4 fill-current ml-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <!-- 2. Audio Sync Control Bar -->
+    <div class="px-6 py-3.5 bg-[#171717] border-b border-[#2d2d2d] flex items-center space-x-4">
+      <!-- Play/Pause 36px circular button -->
+      <button class="w-9 h-9 rounded-full bg-[#7b6cd9] hover:bg-[#6e5ec9] text-white flex items-center justify-center flex-shrink-0 transition-colors shadow-sm" title="Pause / Play audio">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+        </svg>
       </button>
 
-      <!-- Waveform / Scrubber Area -->
-      <div class="flex-1 space-y-1">
-        <div class="flex items-center justify-between text-xs font-mono">
-          <span class="text-white">01:24 <span class="text-[#717178]">/ 04:12</span></span>
-          <span class="text-[11px] text-[#7b6cd9] flex items-center gap-1">
-            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>
-            Synced to segment 3
-          </span>
+      <!-- Scrubber & Sync area -->
+      <div class="flex-1 flex flex-col justify-center space-y-1.5">
+        <div class="flex items-center justify-between text-[11px] leading-none">
+          <span class="font-mono font-medium text-[#c7beff]">01:24 <span class="text-[#686870] font-normal">/ 04:12</span></span>
+          <div class="flex items-center space-x-1 text-[#7b6cd9] font-medium text-[11px]">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+            </svg>
+            <span>Synced to segment 3</span>
+          </div>
         </div>
-        <!-- Scrubber Track -->
-        <div class="w-full h-1.5 bg-[#2c2c2c] rounded-full overflow-hidden relative cursor-pointer">
-          <div class="h-full bg-[#7b6cd9] rounded-full" style="width: 33%;"></div>
+
+        <!-- Seekbar progress track -->
+        <div class="relative w-full h-[6px] bg-[#2c2c2c] rounded-full overflow-hidden cursor-pointer group">
+          <div class="h-full bg-[#7b6cd9] rounded-full relative" style="width: 33.3%;"></div>
         </div>
       </div>
 
-      <!-- Playback Speed -->
-      <button class="px-2.5 py-1 bg-[#252525] border border-[#353535] rounded text-xs font-mono text-[#d0d0d5] hover:bg-[#2e2e2e] transition-colors">
-        1.0x
+      <!-- Speed button -->
+      <button class="px-2 py-1 rounded bg-[#252525] border border-[#353535] text-[11px] font-mono text-[#d0d0d5] hover:border-[#4d4d4d] transition-colors flex items-center space-x-1" title="Playback speed">
+        <span>1.0x</span>
+        <svg class="w-2.5 h-2.5 text-[#888890]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      <!-- Audio Mute/Volume Icon -->
+      <button class="p-1 text-[#8e8e93] hover:text-[#d0d0d5] transition-colors" title="Volume">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.757 3.63 8.25 4.51 8.25H6.75z" />
+        </svg>
       </button>
     </div>
 
-    <!-- Segment List (Editable) -->
-    <div class="overflow-y-auto px-6 py-4 space-y-2.5 flex-1">
-      <div class="text-[11px] text-[#8c8c90] flex items-center justify-between pb-1">
-        <span class="flex items-center gap-1.5">
-          <svg class="w-3 h-3 text-[#7b6cd9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          Click timestamp to jump audio • Edit inline before saving
-        </span>
-        <span class="font-mono text-[10px]">5 segments</span>
+    <!-- 3. Editable Segment List -->
+    <div class="px-6 py-4 flex-1 overflow-y-auto space-y-3 max-h-[380px]">
+      <!-- Subheader -->
+      <div class="flex items-center justify-between text-[12px] text-[#8c8c90] pb-1">
+        <div class="flex items-center space-x-1.5">
+          <svg class="w-3.5 h-3.5 text-[#7b6cd9]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+          </svg>
+          <span>Click timestamp to jump audio • Edit inline before saving</span>
+        </div>
+        <div class="flex items-center space-x-3">
+          <span class="text-[11px] font-mono text-[#787880]">5 segments</span>
+          <button class="text-[11px] text-[#7b6cd9] hover:underline flex items-center space-x-1 font-medium">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+            </svg>
+            <span>Copy raw text</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Segment Row 1 -->
-      <div class="p-3 bg-[#252525] hover:bg-[#282828] border border-[#353535] rounded-lg transition-all flex items-start gap-3">
-        <button class="px-2 py-0.5 rounded bg-[#1e1e1e] hover:bg-[#2d2d2d] border border-[#333333] text-[11px] font-mono text-[#7b6cd9] flex items-center gap-1 shrink-0 mt-0.5">
-          <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          00:08
+      <!-- Segment 1 -->
+      <div class="flex items-start space-x-3 p-3 bg-[#252525] border border-[#353535] rounded-lg hover:border-[#444] transition-colors group">
+        <button class="flex items-center space-x-1.5 px-2 py-1 rounded bg-[#1e1e1e] border border-[#303030] text-[11px] font-mono text-[#7b6cd9] hover:bg-[#282635] flex-shrink-0 transition-colors" title="Seek to 00:08">
+          <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <span>00:08</span>
         </button>
-        <div class="flex-1 text-xs text-[#e1e1e6] leading-relaxed outline-none" contenteditable="true">
+        <div class="flex-1 text-[13.5px] leading-relaxed text-[#d4d4d8] outline-none hover:text-white transition-colors cursor-text">
           Let us review the sprint deliverables and local whisper benchmarks.
         </div>
       </div>
 
-      <!-- Segment Row 2 -->
-      <div class="p-3 bg-[#252525] hover:bg-[#282828] border border-[#353535] rounded-lg transition-all flex items-start gap-3">
-        <button class="px-2 py-0.5 rounded bg-[#1e1e1e] hover:bg-[#2d2d2d] border border-[#333333] text-[11px] font-mono text-[#7b6cd9] flex items-center gap-1 shrink-0 mt-0.5">
-          <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          00:42
+      <!-- Segment 2 -->
+      <div class="flex items-start space-x-3 p-3 bg-[#252525] border border-[#353535] rounded-lg hover:border-[#444] transition-colors group">
+        <button class="flex items-center space-x-1.5 px-2 py-1 rounded bg-[#1e1e1e] border border-[#303030] text-[11px] font-mono text-[#7b6cd9] hover:bg-[#282635] flex-shrink-0 transition-colors" title="Seek to 00:42">
+          <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <span>00:42</span>
         </button>
-        <div class="flex-1 text-xs text-[#e1e1e6] leading-relaxed outline-none" contenteditable="true">
+        <div class="flex-1 text-[13.5px] leading-relaxed text-[#d4d4d8] outline-none hover:text-white transition-colors cursor-text">
           The core ML acceleration on Apple Silicon brings transcription performance significantly ahead of real-time streaming.
         </div>
       </div>
 
-      <!-- Segment Row 3 (ACTIVE PLAYBACK SEGMENT) -->
-      <div class="p-3 bg-[#22212d] border-2 border-[#7b6cd9] rounded-lg transition-all flex items-start gap-3 shadow-md shadow-[#7b6cd9]/5">
-        <button class="px-2 py-0.5 rounded bg-[#342e54] border border-[#524687] text-[11px] font-mono text-[#c7beff] flex items-center gap-1 shrink-0 mt-0.5 font-semibold">
-          <span class="w-1.5 h-1.5 rounded-full bg-[#7b6cd9] animate-pulse"></span>
-          01:24
-        </button>
-        <div class="flex-1 text-xs text-white leading-relaxed outline-none font-medium" contenteditable="true">
-          We verified latency is down to 420ms with the medium q5_0 model.
+      <!-- Segment 3: ACTIVE PLAYBACK SEGMENT -->
+      <div class="p-3 bg-[#22212d] border-2 border-[#7b6cd9] rounded-lg shadow-sm space-y-2">
+        <div class="flex items-start space-x-3">
+          <button class="flex items-center space-x-1.5 px-2 py-1 rounded bg-[#342e54] border border-[#524687] text-[11px] font-mono font-medium text-[#c7beff] flex-shrink-0 shadow-sm" title="Active playback at 01:24">
+            <span class="w-2 h-2 rounded-full bg-[#7b6cd9] animate-pulse"></span>
+            <span>01:24</span>
+          </button>
+          <div class="flex-1">
+            <div class="p-2 rounded bg-[#1b1a24] border border-[#48426d] text-[13.5px] leading-relaxed text-white font-medium focus:ring-1 focus:ring-[#7b6cd9] outline-none cursor-text">
+              We verified latency is down to 420ms with the medium q5_0 model.
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-[11px] pl-16 pr-1 text-[#a59ed0]">
+          <span class="flex items-center space-x-1">
+            <svg class="w-3 h-3 text-[#7b6cd9]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.757 3.63 8.25 4.51 8.25H6.75z" />
+            </svg>
+            <span>Active playback segment</span>
+          </span>
+          <span class="font-mono text-[#8c86b0]">Confidence: 98.4%</span>
         </div>
       </div>
 
-      <!-- Segment Row 4 -->
-      <div class="p-3 bg-[#252525] hover:bg-[#282828] border border-[#353535] rounded-lg transition-all flex items-start gap-3">
-        <button class="px-2 py-0.5 rounded bg-[#1e1e1e] hover:bg-[#2d2d2d] border border-[#333333] text-[11px] font-mono text-[#7b6cd9] flex items-center gap-1 shrink-0 mt-0.5">
-          <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          02:15
+      <!-- Segment 4 -->
+      <div class="flex items-start space-x-3 p-3 bg-[#252525] border border-[#353535] rounded-lg hover:border-[#444] transition-colors group">
+        <button class="flex items-center space-x-1.5 px-2 py-1 rounded bg-[#1e1e1e] border border-[#303030] text-[11px] font-mono text-[#7b6cd9] hover:bg-[#282635] flex-shrink-0 transition-colors" title="Seek to 02:15">
+          <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <span>02:15</span>
         </button>
-        <div class="flex-1 text-xs text-[#e1e1e6] leading-relaxed outline-none" contenteditable="true">
+        <div class="flex-1 text-[13.5px] leading-relaxed text-[#d4d4d8] outline-none hover:text-white transition-colors cursor-text">
           Next step is testing custom vocabulary tokens so technical terms like Obsidian, FFmpeg, and CoreML stay properly capitalized.
         </div>
       </div>
     </div>
 
-    <!-- Insertion Mode Selector -->
-    <div class="px-6 py-2.5 bg-[#171717] border-t border-[#2d2d2d] flex items-center justify-between text-xs">
-      <span class="text-[#8c8c90]">Insertion mode:</span>
-      <div class="flex items-center gap-1 bg-[#222222] p-1 rounded-md border border-[#303030]">
-        <button class="px-2.5 py-1 rounded bg-[#2c2b38] text-[#c7beff] border border-[#48426d] font-medium flex items-center gap-1.5">
-          <svg class="w-3 h-3 text-[#7b6cd9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
-          Replace existing block
+    <!-- 4. Insertion Mode Selector Bar -->
+    <div class="px-6 py-3 bg-[#171717] border-t border-[#2d2d2d] flex items-center justify-between">
+      <span class="text-[12px] font-medium text-[#8e8e93]">Insertion mode:</span>
+
+      <div class="flex items-center space-x-1 bg-[#121212] p-1 rounded-lg border border-[#2b2b2b]">
+        <!-- Replace Existing Block (Selected) -->
+        <button class="flex items-center space-x-2 px-3 py-1.5 rounded-md bg-[#2c2b38] border border-[#48426d] text-[#c7beff] text-[12px] font-medium transition-all shadow-sm">
+          <span class="w-3.5 h-3.5 rounded-full border-2 border-[#7b6cd9] flex items-center justify-center">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#7b6cd9]"></span>
+          </span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+          <span>Replace existing block</span>
         </button>
-        <button class="px-2.5 py-1 rounded text-[#9999a0] hover:text-white transition-colors flex items-center gap-1.5">
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
-          Append below
+
+        <!-- Append Below (Unselected) -->
+        <button class="flex items-center space-x-2 px-3 py-1.5 rounded-md hover:bg-[#202020] text-[#9999a0] hover:text-[#d0d0d5] text-[12px] font-normal transition-all">
+          <span class="w-3.5 h-3.5 rounded-full border border-[#444] flex items-center justify-center"></span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+          </svg>
+          <span>Append below</span>
         </button>
       </div>
     </div>
 
-    <!-- Modal Footer Actions -->
-    <div class="px-6 py-3.5 bg-[#1a1a1a] border-t border-[#313131] flex items-center justify-between">
-      <div class="text-[11px] font-mono text-[#717178] flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5 text-[#888890]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-        Target: Line 12 in 2026-11-26 1430 Weekly Sync.md
+    <!-- 5. Modal Footer -->
+    <div class="px-6 py-4 bg-[#1b1b1c] border-t border-[#2d2d2d] flex items-center justify-between">
+      <!-- Target note info -->
+      <div class="flex items-center space-x-2 text-[12px] text-[#717178] font-mono truncate max-w-[380px]">
+        <svg class="w-3.5 h-3.5 text-[#7b6cd9] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+        </svg>
+        <span class="truncate">Target: Line <strong class="text-[#9e9ea4] font-medium">12</strong> in <span class="text-[#c7beff] underline decoration-[#48426d] underline-offset-2">2026-11-26 1430 Weekly Sync.md</span></span>
       </div>
-      <div class="flex items-center gap-2.5">
-        <button class="px-3.5 py-1.5 rounded-md bg-[#282828] hover:bg-[#323232] border border-[#3a3a3a] text-xs text-[#d0d0d5] transition-colors">
+
+      <!-- Action buttons -->
+      <div class="flex items-center space-x-2.5">
+        <button class="px-4 py-2 rounded-lg bg-[#282828] border border-[#3a3a3a] text-[13px] text-[#d4d4d8] hover:bg-[#323232] hover:text-white font-medium transition-colors">
           Cancel
         </button>
-        <button class="px-4 py-1.5 rounded-md bg-[#7b6cd9] hover:bg-[#6f5ecf] text-xs font-semibold text-white transition-colors shadow-md flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          Insert into note
+        <button class="px-4 py-2 rounded-lg bg-[#7b6cd9] hover:bg-[#6e5ec9] text-white text-[13px] font-medium flex items-center space-x-2 transition-colors shadow-sm">
+          <svg class="w-3.5 h-3.5 stroke-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+          <span>Insert into note</span>
         </button>
       </div>
     </div>
 
   </div>
+
 </body>
 </html>
