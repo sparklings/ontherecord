@@ -1,7 +1,7 @@
 export type AppLike = {
 	vault: {
 		getAbstractFileByPath: (path: string) => unknown;
-		createFolder: (folder: string) => Promise<void>;
+		createFolder: (folder: string) => Promise<unknown>;
 		create: (path: string, content: string) => Promise<{ path: string }>;
 		read?: (file: any) => Promise<string>;
 	};

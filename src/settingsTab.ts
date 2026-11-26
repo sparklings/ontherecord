@@ -1,7 +1,6 @@
-import { Notice, PluginSettingTab, Setting } from "obsidian";
+import { Notice, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type { App, Plugin } from "obsidian";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
-import { t } from "./i18n.ts";
 import { SUPPORTED_MODELS, getModelMetadata, checkModelFileInstalled, buildModelDownloadCommand } from "./modelCatalog.ts";
 import { testLocalLlmConnection } from "./localLlmClient.ts";
 import * as fs from "fs";
@@ -19,14 +18,12 @@ function checkPathExists(filePath: string): { exists: boolean; sizeBytes?: numbe
 	return { exists: false };
 }
 
-function renderStatusBadge(container: HTMLElement, status: { exists: boolean; sizeBytes?: number }, label = "준비됨"): void {
+function renderStatusBadge(container: HTMLElement, status: { exists: boolean; sizeBytes?: number }, label = "정상"): void {
 	const isReady = status.exists;
 	const badge = container.createSpan({ cls: `otr-status-badge ${isReady ? "is-ready" : "is-missing"}` });
 
-	// 부드러운 상태 표시 도트 (Point Indicator)
 	badge.createSpan({ cls: "otr-status-badge-dot" });
 
-	// 상태 레이블
 	if (isReady) {
 		badge.createSpan({ text: label });
 		if (status.sizeBytes) {
@@ -40,6 +37,8 @@ function renderStatusBadge(container: HTMLElement, status: { exists: boolean; si
 
 /* eslint obsidianmd/settings-tab/prefer-setting-definitions: off -- Retain compatibility with minAppVersion 1.7.2. */
 export class OnTheRecordSettingTab extends PluginSettingTab {
+	private activeTab: "workflow" | "transcription" | "acceleration" = "workflow";
+
 	constructor(
 		app: App,
 		private readonly getVaultSettings: () => VaultSettings,
@@ -58,34 +57,62 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		// 설정 도움말 및 튜토리얼 상단 안내 배너
-		const helpBanner = containerEl.createDiv({ cls: "setting-item-description" });
-		helpBanner.style.padding = "10px 14px";
-		helpBanner.style.marginBottom = "1.2rem";
-		helpBanner.style.borderRadius = "8px";
-		helpBanner.style.backgroundColor = "var(--background-secondary)";
-		helpBanner.style.border = "1px solid var(--background-modifier-border)";
-		helpBanner.style.display = "flex";
-		helpBanner.style.justifyContent = "space-between";
-		helpBanner.style.alignItems = "center";
+		// 1. 설정 도움말 안내 배너
+		const helpBanner = containerEl.createDiv({ cls: "otr-help-banner" });
+		const bannerText = helpBanner.createDiv({ cls: "otr-help-banner-text" });
+		const infoIcon = bannerText.createSpan({ cls: "otr-inline-icon" });
+		setIcon(infoIcon, "help-circle");
+		bannerText.createSpan({ text: "설정 옵션 상세 설명, 모델 권장 사양 및 GPU 튜닝 가이드" });
 
-		const bannerText = helpBanner.createSpan();
-		bannerText.setText("💡 각 설정의 목적, 최적의 권장값 및 GPU 가속 튜닝 효과가 궁금하신가요?");
-
-		const guideBtn = helpBanner.createEl("button", { text: "📖 상세 설정 가이드 보기" });
-		guideBtn.style.cursor = "pointer";
+		const guideBtn = helpBanner.createEl("button", { text: "가이드 보기", cls: "otr-action-badge-btn" });
 		guideBtn.onclick = () => {
 			window.open("https://github.com/sparklings/ontherecord/blob/main/docs/SETTINGS_GUIDE.md", "_blank");
 		};
 
-		new Setting(containerEl).setName("🎙️ 음성 녹음 및 회의록 세션").setHeading();
+		// 2. 상단 탭 세그먼트 네비게이션
+		const tabNav = containerEl.createDiv({ cls: "otr-settings-tab-nav" });
 
+		const tabs: Array<{ id: "workflow" | "transcription" | "acceleration"; label: string; icon: string }> = [
+			{ id: "workflow", label: "워크플로", icon: "file-text" },
+			{ id: "transcription", label: "전사 & 모델", icon: "mic" },
+			{ id: "acceleration", label: "가속 & AI", icon: "zap" },
+		];
+
+		for (const t of tabs) {
+			const btn = tabNav.createEl("button", {
+				cls: `otr-tab-btn ${this.activeTab === t.id ? "is-active" : ""}`,
+			});
+			const iconSpan = btn.createSpan();
+			setIcon(iconSpan, t.icon);
+			btn.createSpan({ text: t.label });
+			btn.onclick = () => {
+				this.activeTab = t.id;
+				this.display();
+			};
+		}
+
+		// 3. 탭별 콘텐츠 렌더링
 		const vaultSettings = this.getVaultSettings();
 		const localSettings = this.getLocalSettings();
 
+		if (this.activeTab === "workflow") {
+			this.renderWorkflowTab(containerEl, vaultSettings);
+		} else if (this.activeTab === "transcription") {
+			this.renderTranscriptionTab(containerEl, vaultSettings, localSettings);
+		} else {
+			this.renderAccelerationTab(containerEl, vaultSettings, localSettings);
+		}
+	}
+
+	/**
+	 * 탭 1: 회의록 및 녹음 워크플로 설정
+	 */
+	private renderWorkflowTab(containerEl: HTMLElement, vaultSettings: VaultSettings): void {
+		new Setting(containerEl).setName("회의록 및 녹음 워크플로").setHeading();
+
 		new Setting(containerEl)
 			.setName("회의록 작성 시 녹음 시작 방식")
-			.setDesc("새 마크다운 회의록을 열었을 때 자동으로 음성 녹음을 시작할지 선택합니다. (노트 속성 recorder가 우선 적용)")
+			.setDesc("새 회의록 작성 시 자동으로 음성 녹음을 시작할지 선택합니다.")
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOption("auto", "새 회의록 작성 시 자동 시작 (권장)")
@@ -100,7 +127,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("녹음 시작 안내 알림 표시")
-			.setDesc("녹음이 시작될 때 우측 상단에 팝업 알림을 표시합니다. 끄면 상태표시줄 타이머만 조용히 켜집니다.")
+			.setDesc("녹음이 시작될 때 우측 상단에 팝업 알림을 표시합니다.")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(vaultSettings.recordStartNotification)
@@ -111,7 +138,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("회의록 마크다운 노트 보관 폴더")
-			.setDesc("이 폴더 하위에 새 마크다운 문서를 생성했을 때만 녹음 시작 규칙을 적용합니다. (비워두면 볼트 내 모든 새 노트에 적용)")
+			.setDesc("이 폴더 하위에 새 마크다운 문서를 생성했을 때만 녹음 시작 규칙을 적용합니다.")
 			.addText((text) =>
 				text
 					.setValue(vaultSettings.autoRecordFolder)
@@ -122,61 +149,46 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("회의록 템플릿 파일 기준 자동 시작")
-			.setDesc("지정한 템플릿(예: Templates/회의록.md)으로 새 문서가 생성되었을 때만 녹음이 시작됩니다. (비워두면 모든 새 노트에 적용)")
+			.setName("조건부 자동 시작 템플릿 파일")
+			.setDesc("지정한 템플릿과 일치하는 문서가 생성되었을 때만 녹음이 자동 시작됩니다.")
 			.addText((text) =>
 				text
 					.setValue(vaultSettings.autoRecordTemplatePath)
-					.setPlaceholder("예: Templates/회의록.md")
+					.setPlaceholder("예: Templates/회의록 템플릿.md")
 					.onChange((value) => {
 						void this.updateVaultSettings({ autoRecordTemplatePath: value.trim() });
 					}),
 			);
 
-		// 음성 녹음 파일 저장 위치 안내 카드
-		const audioStorageNote = containerEl.createDiv({ cls: "setting-item-description" });
-		audioStorageNote.style.padding = "6px 12px";
-		audioStorageNote.style.marginBottom = "1rem";
-		audioStorageNote.style.borderRadius = "6px";
-		audioStorageNote.style.backgroundColor = "var(--background-secondary)";
-		audioStorageNote.style.fontSize = "0.85em";
-		audioStorageNote.setText("💡 실제 녹음된 오디오(.m4a) 파일은 옵시디언의 '설정 > 파일 및 링크 > 새 첨부 파일의 위치'에 지정된 폴더에 안전하게 보관됩니다.");
-
 		new Setting(containerEl)
-			.setName("작성 중인 노트 탭을 닫을 때")
-			.setDesc("회의 중 실수로 탭을 닫아도 녹음 파일이 유실되거나 고아가 되지 않도록 처리하는 방식입니다.")
+			.setName("녹음 중 문서 탭 닫힘 시 동작")
+			.setDesc("녹음 중인 탭이 닫혔을 때 녹음 파일 유실을 방지하는 안전 정책입니다.")
 			.addDropdown((dropdown) =>
 				dropdown
-					.addOption("stop-and-attach", "녹음 안전 중지 및 오디오 자동 연결 (권장)")
-					.addOption("ignore", "녹음 유지 (수동 중지)")
+					.addOption("stop-and-attach", "녹음 안전 중지 후 자동 연결 (권장)")
+					.addOption("ignore", "녹음 계속 진행 (백그라운드)")
 					.setValue(vaultSettings.onTabCloseAction)
 					.onChange((value) => {
-						void this.updateVaultSettings({ onTabCloseAction: value as "stop-and-attach" | "ignore" });
+						if (value === "stop-and-attach" || value === "ignore") {
+							void this.updateVaultSettings({ onTabCloseAction: value });
+						}
 					}),
 			);
 
-		new Setting(containerEl).setName("⚡ 음성 전사 파이프라인").setHeading();
 		new Setting(containerEl)
-			.setName("녹음 종료 즉시 백그라운드 전사 시작")
-			.setDesc("녹음이 중지되면 별도 클릭 없이 로컬 whisper.cpp 엔진이 비동기로 전사를 시작합니다.")
+			.setName("녹음 종료 후 자동 전사 시작")
+			.setDesc("녹음이 중지되면 백그라운드 큐로 넘겨 자동으로 텍스트 변환을 개시합니다.")
 			.addToggle((toggle) =>
-				toggle.setValue(vaultSettings.autoTranscribe).onChange((value) => {
-					void this.updateVaultSettings({ autoTranscribe: value });
-				}),
-			);
-
-		new Setting(containerEl)
-			.setName("외부 음성 파일 자동 감지")
-			.setDesc("스마트폰 녹음기나 외부에서 볼트로 추가된 새 오디오 파일을 감지하여 전사 대기열에 등록합니다.")
-			.addToggle((toggle) =>
-				toggle.setValue(vaultSettings.autoDetectRecording).onChange((value) => {
-					void this.updateVaultSettings({ autoDetectRecording: value });
-				}),
+				toggle
+					.setValue(vaultSettings.autoTranscribe)
+					.onChange((value) => {
+						void this.updateVaultSettings({ autoTranscribe: value });
+					}),
 			);
 
 		new Setting(containerEl)
 			.setName("전사 결과 노트 반영 방식")
-			.setDesc("전사가 완료되었을 때 노트 본문에 반영하는 방식입니다.")
+			.setDesc("전사 완료 시 노트 본문에 반영하는 절차를 지정합니다.")
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOption("auto", "오디오 임베드 아래 자동 삽입 (권장)")
@@ -189,7 +201,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("오디오 저장 완료 대기 시간 (초)")
-			.setDesc("녹음기나 동기화 도구가 오디오 파일 저장을 완전히 끝마칠 때까지 기다리는 시간입니다 (기본값: 5초).")
+			.setDesc("녹음기가 파일 쓰기를 완전히 마칠 때까지 대기하는 시간입니다 (기본값: 5초).")
 			.addText((text) =>
 				text
 					.setValue(String(vaultSettings.stabilizationSeconds))
@@ -201,10 +213,17 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 						}
 					}),
 			);
+	}
+
+	/**
+	 * 탭 2: 음성 전사 모델 및 런타임 설정
+	 */
+	private renderTranscriptionTab(containerEl: HTMLElement, vaultSettings: VaultSettings, localSettings: LocalSettings | null): void {
+		new Setting(containerEl).setName("음성인식 모델 선택").setHeading();
 
 		new Setting(containerEl)
 			.setName("기본 전사 언어")
-			.setDesc("전사에 사용할 언어입니다. 한국어 회의의 경우 '한국어'로 고정하면 잡음 구간에서 외국어로 환각하는 현상을 방지합니다.")
+			.setDesc("한국어 회의의 경우 '한국어'로 고정하면 잡음 구간에서의 외국어 환각을 차단합니다.")
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOption("ko", "한국어 (권장)")
@@ -216,199 +235,80 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		const modelSizeSetting = new Setting(containerEl)
-			.setName("음성인식 모델 크기")
-			.setDesc("전사에 사용할 whisper 모델을 선택합니다. 한국어 비즈니스 회의에는 Medium 모델을 기본 권장합니다.");
+		// 2열 정밀 모델 셀렉터 그리드
+		const modelGrid = containerEl.createDiv({ cls: "otr-model-grid" });
+		const selectedModelId = vaultSettings.defaultModelSize || "medium";
 
-		const modelInfoContainer = containerEl.createDiv({ cls: "otr-model-info-container" });
-		modelInfoContainer.style.marginTop = "-0.5rem";
-		modelInfoContainer.style.marginBottom = "1rem";
+		const detailContainer = containerEl.createDiv({ cls: "otr-model-detail-wrap" });
 
-		const renderModelInfo = (modelId: string) => {
-			modelInfoContainer.empty();
+		const renderDetailBox = (modelId: string) => {
+			detailContainer.empty();
 			const meta = getModelMetadata(modelId);
 			const installStatus = checkModelFileInstalled(modelId, localSettings?.modelPath);
 
-			const card = modelInfoContainer.createDiv({ cls: "setting-item-description" });
-			card.style.padding = "10px 14px";
-			card.style.borderRadius = "8px";
-			card.style.backgroundColor = "var(--background-secondary)";
-			card.style.border = "1px solid var(--background-modifier-border)";
+			const box = detailContainer.createDiv({ cls: "otr-model-detail-box" });
+			const top = box.createDiv({ cls: "otr-model-detail-top" });
+			top.createSpan({ text: `${meta.label} 상세 정보`, cls: "otr-model-detail-title" });
 
-			const topRow = card.createDiv();
-			topRow.style.display = "flex";
-			topRow.style.justifyContent = "space-between";
-			topRow.style.alignItems = "center";
-			topRow.style.marginBottom = "6px";
-
-			const titleSpan = topRow.createSpan({ text: `📦 ${meta.filename} (약 ${meta.sizeMb} MB · ${meta.quantization})` });
-			titleSpan.style.fontWeight = "bold";
-
-			const badgeSpan = topRow.createSpan({
+			const badge = top.createSpan({
 				cls: `otr-status-badge ${installStatus.installed ? "is-ready" : "is-missing"}`,
 			});
-			badgeSpan.createSpan({ cls: "otr-status-badge-dot" });
-			badgeSpan.createSpan({ text: installStatus.installed ? "이 PC에 준비됨" : "미설치" });
+			badge.createSpan({ cls: "otr-status-badge-dot" });
+			badge.createSpan({ text: installStatus.installed ? "설치됨" : "미설치" });
 
-			const descP = card.createEl("p", { text: meta.description });
-			descP.style.margin = "4px 0 8px 0";
-			descP.style.fontSize = "0.9em";
-
-			const bottomRow = card.createDiv();
-			bottomRow.style.display = "flex";
-			bottomRow.style.justifyContent = "space-between";
-			bottomRow.style.alignItems = "center";
-			bottomRow.style.gap = "8px";
-			bottomRow.style.flexWrap = "wrap";
-
-			const linkA = bottomRow.createEl("a", { text: "🔗 Hugging Face 공식 출처 열기", href: meta.huggingFaceUrl });
-			linkA.style.fontSize = "0.85em";
-			linkA.target = "_blank";
+			box.createDiv({ text: meta.description, cls: "otr-model-detail-desc" });
+			box.createDiv({
+				text: `양자화: ${meta.quantization} · 파일 크기: ${meta.sizeMb} MB${meta.recommended ? " · 공식 권장 모델" : ""}`,
+				cls: "otr-model-detail-meta",
+			});
 
 			if (!installStatus.installed) {
-				const downloadBtn = bottomRow.createEl("button", { text: "📥 다운로드 명령어 복사" });
-				downloadBtn.style.cursor = "pointer";
-				downloadBtn.onclick = async () => {
-					const cmd = buildModelDownloadCommand(modelId);
+				const cmd = buildModelDownloadCommand(modelId);
+				const codeRow = box.createDiv({ cls: "otr-code-copy-row" });
+				codeRow.createSpan({ text: cmd, cls: "otr-code-copy-text" });
+				const copyBtn = codeRow.createEl("button", { text: "명령어 복사", cls: "otr-action-badge-btn" });
+				copyBtn.onclick = async () => {
 					await navigator.clipboard.writeText(cmd);
-					new Notice(
-						`[${meta.filename}] 다운로드 명령어가 복사되었습니다.\nPowerShell 터미널을 열고 붙여넣어 실행하세요.`,
-						7000,
-					);
+					new Notice(`[${meta.label}] 다운로드 명령어가 복사되었습니다.\nPowerShell 터미널에 붙여넣어 실행하세요.`);
 				};
 			} else if (localSettings && localSettings.modelPath !== installStatus.resolvedPath) {
-				const applyBtn = bottomRow.createEl("button", { text: "이 모델을 전사 경로로 적용" });
-				applyBtn.style.cursor = "pointer";
+				const applyBtn = box.createEl("button", { text: "현재 전사 모델로 경로 즉시 적용", cls: "mod-cta otr-action-badge-btn" });
 				applyBtn.onclick = async () => {
 					await this.updateLocalSettings({ modelPath: installStatus.resolvedPath });
-					new Notice(`전사 모델 경로가 적용되었습니다: ${installStatus.resolvedPath}`, 4000);
+					new Notice(`[${meta.label}] 모델 경로가 적용되었습니다.`);
 					this.display();
 				};
 			}
 		};
 
-		modelSizeSetting.addDropdown((dropdown) => {
-			for (const m of SUPPORTED_MODELS) {
-				dropdown.addOption(m.id, m.label);
-			}
-			dropdown
-				.setValue(vaultSettings.defaultModelSize)
-				.onChange((value) => {
-					void this.updateVaultSettings({ defaultModelSize: value });
-					renderModelInfo(value);
-				});
-		});
+		for (const m of SUPPORTED_MODELS) {
+			const isSelected = m.id === selectedModelId;
+			const installStatus = checkModelFileInstalled(m.id, localSettings?.modelPath);
 
-		renderModelInfo(vaultSettings.defaultModelSize);
+			const card = modelGrid.createDiv({
+				cls: `otr-model-card ${isSelected ? "is-selected" : ""}`,
+			});
 
-		new Setting(containerEl)
-			.setName("연산 프로세서 선호도")
-			.setDesc("실행 환경에서 선호할 연산 프로세서입니다.")
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("auto", "자동 선택 (권장)")
-					.addOption("accelerator", "GPU 가속기 우선")
-					.addOption("cpu", "CPU 전용")
-					.setValue(vaultSettings.devicePreference)
-					.onChange((value) => {
-						if (value === "auto" || value === "cpu" || value === "accelerator") {
-							void this.updateVaultSettings({ devicePreference: value });
-						}
-					}),
-			);
+			const header = card.createDiv({ cls: "otr-model-card-header" });
+			header.createSpan({ text: m.label, cls: "otr-model-card-title" });
 
-		new Setting(containerEl)
-			.setName("자주 찾는 회의 키워드 (검색 추천어)")
-			.setDesc("전사문 검색 모달에서 한 번의 클릭으로 찾을 키워드(예: 결정 사항, 담당자, 마감일)를 줄바꿈으로 등록하세요.")
-			.addTextArea((text) =>
-				text
-					.setValue(vaultSettings.transcriptSearchTerms.join("\n"))
-					.setPlaceholder("예: 결정 사항\n담당자\nTODO")
-					.onChange((value) => {
-						void this.updateVaultSettings({
-							transcriptSearchTerms: value.split(/\r?\n/).map((term) => term.trim()).filter(Boolean),
-						});
-					}),
-			);
+			const badge = header.createSpan({
+				cls: `otr-status-badge ${installStatus.installed ? "is-ready" : "is-missing"}`,
+			});
+			badge.createSpan({ text: installStatus.installed ? "준비됨" : "미설치" });
 
-		new Setting(containerEl).setName("🤖 로컬 AI 회의록 요약 (Ollama / LM Studio)").setHeading();
-		containerEl.createEl("p", {
-			text: "클라우드 전송 없이 내 PC의 로컬 LLM과 연동하여 회의 전사문의 핵심 요약, 주요 결정 사항, 액션 아이템을 100% 프라이빗하게 자동 추출합니다.",
-			cls: "setting-item-description",
-		});
+			card.createDiv({ text: `${m.sizeMb} MB · ${m.quantization}`, cls: "otr-model-card-meta" });
+			card.createDiv({ text: m.recommended ? "공식 권장 표준 모델" : m.description, cls: "otr-model-card-desc" });
 
-		new Setting(containerEl)
-			.setName("로컬 AI 회의록 요약 활성화")
-			.setDesc("로컬 LLM을 통한 자동 요약 기능 사용 여부를 설정합니다.")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(vaultSettings.enableLocalLlm)
-					.onChange((value) => {
-						void this.updateVaultSettings({ enableLocalLlm: value });
-					}),
-			);
+			card.onclick = () => {
+				void this.updateVaultSettings({ defaultModelSize: m.id });
+				this.display();
+			};
+		}
 
-		const endpointSetting = new Setting(containerEl)
-			.setName("로컬 LLM 엔드포인트 URL")
-			.setDesc("Ollama (기본: http://localhost:11434) 또는 LM Studio (http://localhost:1234) 주소입니다. 보안을 위해 오직 localhost만 허용됩니다.")
-			.addText((text) =>
-				text
-					.setValue(vaultSettings.localLlmEndpoint)
-					.setPlaceholder("http://localhost:11434")
-					.onChange((value) => {
-						void this.updateVaultSettings({ localLlmEndpoint: value.trim() });
-					}),
-			);
+		renderDetailBox(selectedModelId);
 
-		endpointSetting.addButton((button) =>
-			button.setButtonText("연결 확인").onClick(async () => {
-				button.setDisabled(true);
-				button.setButtonText("확인 중...");
-				try {
-					const res = await testLocalLlmConnection(vaultSettings.localLlmEndpoint);
-					if (res.ok) {
-						const modelList = res.models.length > 0 ? ` (감지된 모델: ${res.models.slice(0, 3).join(", ")}${res.models.length > 3 ? " 외" : ""})` : "";
-						new Notice(`✅ 로컬 LLM 서버 연결 성공 [${res.serverType}]${modelList}`, 5000);
-					} else {
-						new Notice(`❌ 연결 실패: ${res.error ?? "서버 응답 없음"}`, 6000);
-					}
-				} catch (err: unknown) {
-					new Notice(`❌ 오류: ${err instanceof Error ? err.message : String(err)}`, 6000);
-				} finally {
-					button.setDisabled(false);
-					button.setButtonText("연결 확인");
-				}
-			}),
-		);
-
-		new Setting(containerEl)
-			.setName("요약 모델 이름")
-			.setDesc("PC에 설치된 로컬 LLM 모델명을 입력하세요. (예: qwen2.5:7b, gemma2:9b, llama3.1:8b)")
-			.addText((text) =>
-				text
-					.setValue(vaultSettings.localLlmModel)
-					.setPlaceholder("qwen2.5:7b")
-					.onChange((value) => {
-						void this.updateVaultSettings({ localLlmModel: value.trim() });
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("전사 완료 시 자동 요약 생성")
-			.setDesc("음성 전사가 완료되어 노트에 삽입된 후 자동으로 로컬 AI 요약 섹션을 노트 하단에 추가합니다.")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(vaultSettings.localLlmAutoSummarize)
-					.onChange((value) => {
-						void this.updateVaultSettings({ localLlmAutoSummarize: value });
-					}),
-			);
-
-		new Setting(containerEl).setName("🛠️ 이 기기의 전사 도구 경로 및 상태").setHeading();
-		containerEl.createEl("p", {
-			text: "이 설정은 다른 기기로 동기화되지 않고 오직 이 PC에만 안전하게 격리 저장됩니다 (%LOCALAPPDATA%\\on-the-record\\local-settings.json).",
-			cls: "setting-item-description",
-		});
+		new Setting(containerEl).setName("기기 전사 도구 경로").setHeading();
 
 		if (!localSettings) {
 			containerEl.createEl("p", {
@@ -421,7 +321,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		const runtimeStatus = checkPathExists(localSettings.runtimePath);
 		const runtimeSetting = new Setting(containerEl)
 			.setName("런타임 실행 파일")
-			.setDesc("사용자가 직접 설치한 whisper-cli 실행 파일의 전체 경로입니다.")
+			.setDesc("whisper-cli.exe 경로입니다.")
 			.addText((text) =>
 				text
 					.setValue(localSettings.runtimePath)
@@ -435,7 +335,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		const modelStatus = checkPathExists(localSettings.modelPath);
 		const modelPathSetting = new Setting(containerEl)
 			.setName("모델 파일")
-			.setDesc("사용자가 직접 설치한 GGML 양자화 모델 파일(.bin)의 전체 경로입니다.")
+			.setDesc("GGML 모델 파일(.bin) 경로입니다.")
 			.addText((text) =>
 				text
 					.setValue(localSettings.modelPath)
@@ -449,7 +349,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		const ffmpegStatus = checkPathExists(localSettings.ffmpegPath);
 		const ffmpegSetting = new Setting(containerEl)
 			.setName("FFmpeg 실행 파일")
-			.setDesc("오디오 16kHz 무손실 정규화에 사용되는 ffmpeg.exe의 전체 경로입니다.")
+			.setDesc("오디오 정규화용 ffmpeg.exe 경로입니다.")
 			.addText((text) =>
 				text
 					.setValue(localSettings.ffmpegPath)
@@ -461,86 +361,142 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		renderStatusBadge(ffmpegSetting.nameEl, ffmpegStatus, "준비됨");
 
 		new Setting(containerEl)
-			.setName("설치된 전사 도구 자동 검색")
-			.setDesc("사용자 폴더의 whisper.cpp, models, programs 등 알려진 위치만 검색해 기준 SHA-256·버전을 검증합니다.")
+			.setName("도구 진단 및 시험")
+			.setDesc("알려진 위치에서 도구를 검색하거나 변환 및 시험 전사를 수행합니다.")
 			.addButton((button) =>
 				button.setButtonText("도구 검색").onClick(() => this.discoverCpuSetup()),
-			);
-
-		new Setting(containerEl)
-			.setName("도구 무결성 검증 및 시험 전사")
-			.setDesc("whisper.cpp 기준선 버전·SHA-256을 확인하고, 오디오를 변환해 시험 전사를 수행합니다.")
+			)
 			.addButton((button) =>
 				button.setButtonText("시험 시작").onClick(() => this.testCpuSetup()),
 			);
 
-		new Setting(containerEl).setName("🚀 하드웨어 및 GPU 가속 설정").setHeading();
-		containerEl.createEl("p", {
-			text: "NVIDIA 외장 그래픽(CUDA) 또는 인텔 내장 그래픽(Vulkan)을 활용하면 CPU 과열과 팬 소음을 완전히 없애고 처리 속도를 최대 3~4배 가속할 수 있습니다.",
-			cls: "setting-item-description",
-		});
-
 		new Setting(containerEl)
-			.setName("하드웨어 가속 백엔드")
-			.setDesc("whisper.cpp 추론 가속 엔진을 선택합니다. (외장 그래픽: CUDA, 인텔 내장: Vulkan 권장)")
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("auto", "자동 감지 (권장)")
-					.addOption("cuda", "NVIDIA CUDA (외장 그래픽)")
-					.addOption("vulkan", "Vulkan (Intel Iris Xe / AMD / NVIDIA)")
-					.addOption("cpu", "CPU 전용")
-					.addOption("openvino", "Intel OpenVINO")
-					.setValue(localSettings.gpuBackend ?? "auto")
-					.onChange((value) => {
-						if (value === "auto" || value === "cpu" || value === "cuda" || value === "vulkan" || value === "openvino") {
-							void this.updateLocalSettings({ gpuBackend: value });
-						}
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("GPU 전용 메모리(VRAM) 레이어 적재 수 (-ngl)")
-			.setDesc("신경망 모델을 GPU VRAM으로 넘겨 처리합니다 (0: CPU 전용, 99: 모델 전체 적재). 외장 GPU 장착 시 99를 권장합니다.")
-			.addText((text) =>
-				text
-					.setValue(String(localSettings.gpuLayers ?? 0))
-					.setPlaceholder("0 (CPU) 또는 99 (GPU 전체 적재)")
-					.onChange((value) => {
-						const num = parseInt(value.trim(), 10);
-						if (!isNaN(num) && num >= 0 && num <= 999) {
-							void this.updateLocalSettings({ gpuLayers: num });
-						}
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("사용할 그래픽 카드 번호 (-dev)")
-			.setDesc("여러 개의 GPU가 장착된 듀얼 GPU 환경에서 연산에 사용할 GPU 번호입니다 (기본값: 0).")
-			.addText((text) =>
-				text
-					.setValue(String(localSettings.gpuDeviceId ?? 0))
-					.setPlaceholder("0")
-					.onChange((value) => {
-						const num = parseInt(value.trim(), 10);
-						if (!isNaN(num) && num >= 0 && num <= 64) {
-							void this.updateLocalSettings({ gpuDeviceId: num });
-						}
-					}),
-			);
-
-		new Setting(containerEl).setName("📦 외부 도구 원클릭 자동 셋업").setHeading();
-		new Setting(containerEl)
-			.setName("자동 셋업 명령어 클립보드 복사")
-			.setDesc("PowerShell 터미널에서 실행하여 whisper.cpp, 기본 모델 및 FFmpeg를 한 번에 자동 설치하고 설정을 연결하는 명령어를 복사합니다.")
+			.setName("1-클릭 통합 자동 셋업")
+			.setDesc("터미널에서 런타임, 기본 모델, FFmpeg를 원클릭 설치하는 명령어를 복사합니다.")
 			.addButton((button) =>
 				button.setButtonText("명령어 복사").onClick(async () => {
 					const cmd = `powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/sparklings/ontherecord/main/scripts/setup-tools.ps1 | iex"`;
 					await navigator.clipboard.writeText(cmd);
-					new Notice(
-						"On the Record 외부 도구 자동 셋업 명령어가 클립보드에 복사되었습니다.\nPowerShell 터미널을 열고 붙여넣어 실행하세요.",
-						7000,
-					);
+					new Notice("통합 자동 셋업 명령어가 클립보드에 복사되었습니다.", 5000);
 				}),
+			);
+	}
+
+	/**
+	 * 탭 3: 하드웨어 가속 및 로컬 AI 요약 설정
+	 */
+	private renderAccelerationTab(containerEl: HTMLElement, vaultSettings: VaultSettings, localSettings: LocalSettings | null): void {
+		new Setting(containerEl).setName("하드웨어 가속 (GPU 오프로딩)").setHeading();
+
+		if (localSettings) {
+			new Setting(containerEl)
+				.setName("하드웨어 가속 백엔드")
+				.setDesc("가속 엔진을 선택합니다. (외장 GPU: CUDA, 인텔 내장: Vulkan 권장)")
+				.addDropdown((dropdown) =>
+					dropdown
+						.addOption("auto", "자동 감지 (권장)")
+						.addOption("cuda", "NVIDIA CUDA (외장)")
+						.addOption("vulkan", "Vulkan (Intel Iris Xe / AMD / NVIDIA)")
+						.addOption("cpu", "CPU 전용")
+						.addOption("openvino", "Intel OpenVINO")
+						.setValue(localSettings.gpuBackend ?? "auto")
+						.onChange((value) => {
+							if (value === "auto" || value === "cpu" || value === "cuda" || value === "vulkan" || value === "openvino") {
+								void this.updateLocalSettings({ gpuBackend: value });
+							}
+						}),
+				);
+
+			new Setting(containerEl)
+				.setName("GPU VRAM 레이어 적재 수 (-ngl)")
+				.setDesc("GPU VRAM으로 오프로드할 신경망 레이어 수입니다 (0: CPU, 99: GPU 전체 적재).")
+				.addText((text) =>
+					text
+						.setValue(String(localSettings.gpuLayers ?? 0))
+						.setPlaceholder("0 또는 99")
+						.onChange((value) => {
+							const num = parseInt(value.trim(), 10);
+							if (!isNaN(num) && num >= 0 && num <= 999) {
+								void this.updateLocalSettings({ gpuLayers: num });
+							}
+						}),
+				);
+
+			new Setting(containerEl)
+				.setName("그래픽 카드 번호 (-dev)")
+				.setDesc("연산에 사용할 GPU 장치 번호입니다 (기본값: 0).")
+				.addText((text) =>
+					text
+						.setValue(String(localSettings.gpuDeviceId ?? 0))
+						.setPlaceholder("0")
+						.onChange((value) => {
+							const num = parseInt(value.trim(), 10);
+							if (!isNaN(num) && num >= 0 && num <= 64) {
+								void this.updateLocalSettings({ gpuDeviceId: num });
+							}
+						}),
+				);
+		}
+
+		new Setting(containerEl).setName("로컬 AI 회의록 요약").setHeading();
+
+		new Setting(containerEl)
+			.setName("로컬 AI 요약 사용")
+			.setDesc("전사 완료 후 또는 버튼 클릭 시 로컬 LLM(Ollama / LM Studio 호환)으로 3단 회의록 요약을 생성합니다.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(vaultSettings.enableLocalLlm)
+					.onChange((value) => {
+						void this.updateVaultSettings({ enableLocalLlm: value });
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("로컬 엔드포인트 URL")
+			.setDesc("100% 프라이버시 보호를 위해 오직 localhost 및 127.0.0.1만 허용됩니다 (Ollama/OpenAI 호환 자동 감지).")
+			.addText((text) =>
+				text
+					.setValue(vaultSettings.localLlmEndpoint)
+					.setPlaceholder("http://127.0.0.1:11434")
+					.onChange((value) => {
+						void this.updateVaultSettings({ localLlmEndpoint: value.trim() });
+					}),
+			)
+			.addButton((button) =>
+				button.setButtonText("연결 테스트").onClick(async () => {
+					button.setDisabled(true);
+					new Notice("연결 확인 중...");
+					const res = await testLocalLlmConnection(vaultSettings.localLlmEndpoint);
+					button.setDisabled(false);
+					if (res.ok) {
+						new Notice(`연결 성공 (${res.serverType}, 감지된 모델 ${res.models.length}개)`);
+					} else {
+						new Notice(`연결 실패: ${res.error ?? "알 수 없는 오류"}`, 6000);
+					}
+				}),
+			);
+
+		new Setting(containerEl)
+			.setName("요약 모델 이름")
+			.setDesc("PC에 설치된 로컬 LLM 모델명을 입력하세요. (예: qwen2.5:7b, llama3.1:8b)")
+			.addText((text) =>
+				text
+					.setValue(vaultSettings.localLlmModel)
+					.setPlaceholder("qwen2.5:7b")
+					.onChange((value) => {
+						void this.updateVaultSettings({ localLlmModel: value.trim() });
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("전사 완료 시 자동 요약 생성")
+			.setDesc("전사가 완료되어 노트에 삽입된 후 자동으로 요약 블록을 추가합니다.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(vaultSettings.localLlmAutoSummarize)
+					.onChange((value) => {
+						void this.updateVaultSettings({ localLlmAutoSummarize: value });
+					}),
 			);
 	}
 }

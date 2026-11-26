@@ -95,7 +95,7 @@ export async function testLocalLlmConnection(endpoint: string, timeoutMs = 3500)
 			const data = (await openaiRes.json()) as { data?: Array<{ id?: string }> };
 			const models = (data.data ?? [])
 				.map((m) => m.id)
-				.filter((id): n is string => typeof id === "string" && id.length > 0);
+				.filter((id): id is string => typeof id === "string" && id.length > 0);
 			return {
 				ok: true,
 				serverType: "openai-compatible",

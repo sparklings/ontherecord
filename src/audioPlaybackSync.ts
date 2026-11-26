@@ -101,9 +101,6 @@ export function postProcessTimestamps(el: HTMLElement): void {
 			const timestampSpan = document.createElement("span");
 			timestampSpan.className = "otr-timestamp";
 			timestampSpan.textContent = match[0];
-			timestampSpan.style.cursor = "pointer";
-			timestampSpan.style.color = "var(--text-accent)";
-			timestampSpan.style.textDecoration = "underline";
 			timestampSpan.title = `${match[1]} 위치로 오디오 이동 재생`;
 
 			const seconds = parseTimestampToSeconds(match[1]);

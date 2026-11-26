@@ -1,73 +1,89 @@
-.modal.otr-cpu-runtime-test {
-	width: 720px;
-	max-width: 90vw;
+/* ==========================================================================
+   On the Record (Obsidian Community Plugin)
+   Production Precision Design System (Raycast / Linear / Superwhisper Standard)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Typography & Global Tokens
+   -------------------------------------------------------------------------- */
+.font-mono-tabular {
+	font-family: var(--font-monospace);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.04em;
 }
 
-.otr-cpu-runtime-report {
-	white-space: pre-wrap;
-	overflow-wrap: anywhere;
-	user-select: text;
-}
-
-.otr-audio-embed-picker-row.is-selected {
-	background-color: var(--background-modifier-hover);
-}
-
-.otr-cpu-discovery-results .setting-item-description {
-	overflow-wrap: anywhere;
-}
-
-/* 세련된 알약(Pill) 형태의 상태 뱃지 (Obsidian 네이티브 디자인 가이드라인 준수) */
+/* --------------------------------------------------------------------------
+   2. Status Badges & Dot Indicators
+   -------------------------------------------------------------------------- */
 .otr-status-badge {
 	display: inline-flex;
 	align-items: center;
-	gap: 5px;
-	margin-left: 0.6rem;
-	padding: 2px 10px;
-	border-radius: 9999px;
-	font-size: 0.75rem;
+	gap: 4px;
+	padding: 1px 7px;
+	border-radius: var(--radius-round, 9999px);
+	font-size: 10px;
 	font-weight: 500;
 	line-height: 1.4;
 	vertical-align: middle;
 	letter-spacing: -0.01em;
-	box-shadow: none;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .otr-status-badge.is-ready {
-	background-color: var(--background-modifier-success, rgba(46, 160, 67, 0.12));
-	color: var(--text-success, #2ea043);
-	border: 1px solid var(--border-success, rgba(46, 160, 67, 0.25));
+	background-color: hsla(var(--color-green-rgb), 0.12);
+	color: var(--color-green);
+	border: 1px solid hsla(var(--color-green-rgb), 0.25);
 }
 
 .otr-status-badge.is-missing {
-	background-color: var(--background-modifier-error, rgba(248, 81, 73, 0.12));
-	color: var(--text-error, #f85149);
-	border: 1px solid var(--border-error, rgba(248, 81, 73, 0.25));
+	background-color: hsla(var(--color-red-rgb), 0.12);
+	color: var(--color-red);
+	border: 1px solid hsla(var(--color-red-rgb), 0.25);
+}
+
+.otr-status-badge.is-warning {
+	background-color: hsla(var(--color-yellow-rgb), 0.12);
+	color: var(--color-yellow);
+	border: 1px solid hsla(var(--color-yellow-rgb), 0.25);
+}
+
+.otr-status-badge.is-idle {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-muted);
+	border: 1px solid var(--background-modifier-border);
 }
 
 .otr-status-badge-dot {
-	width: 6px;
-	height: 6px;
+	width: 5px;
+	height: 5px;
 	border-radius: 50%;
 	background-color: currentColor;
 	flex-shrink: 0;
 }
 
-.otr-status-badge-size {
-	opacity: 0.75;
-	font-weight: 400;
-	font-size: 0.7rem;
-	margin-left: 2px;
+.otr-status-badge-dot.pulse {
+	animation: otr-dot-ping 1.4s infinite cubic-bezier(0, 0, 0.2, 1);
 }
 
-/* 사이드바 전용 모던 플레이어 컨트롤러 및 오디오 탐색기 스타일 (3-UX-12) */
+@keyframes otr-dot-ping {
+	0%, 100% { opacity: 1; transform: scale(1); }
+	50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+/* --------------------------------------------------------------------------
+   3. Sidebar Studio Deck (OnTheRecordSidebarView - 280px Constraint)
+   -------------------------------------------------------------------------- */
 .otr-sidebar-container {
 	padding: 10px 12px;
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 10px;
+	height: 100%;
+	overflow-y: auto;
+	box-sizing: border-box;
 }
 
+/* Header Row */
 .otr-sidebar-header {
 	display: flex;
 	justify-content: space-between;
@@ -76,117 +92,92 @@
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.otr-sidebar-card {
-	background-color: var(--background-secondary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
-	padding: 10px 12px;
+.otr-sidebar-title-group {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: 600;
+	font-size: 12px;
+	letter-spacing: -0.01em;
+	color: var(--text-normal);
 }
 
-.otr-card-label {
-	font-size: 0.8rem;
-	font-weight: 600;
+.otr-sidebar-title-group svg {
+	width: 14px;
+	height: 14px;
+	color: var(--interactive-accent);
+}
+
+.otr-icon-btn {
+	background: transparent;
+	border: none;
 	color: var(--text-muted);
-	margin-bottom: 6px;
-}
-
-.otr-note-title {
-	font-size: 0.95rem;
-	font-weight: 600;
-	color: var(--text-normal);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.otr-timer-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 10px;
-}
-
-.otr-timer-display {
-	font-size: 1.8rem;
-	font-family: var(--font-monospace);
-	font-weight: 700;
-	letter-spacing: 0.05em;
-	color: var(--text-normal);
-}
-
-.otr-pulse {
-	animation: otr-pulse-anim 1.5s infinite ease-in-out;
-}
-
-@keyframes otr-pulse-anim {
-	0%, 100% { opacity: 1; }
-	50% { opacity: 0.45; }
-}
-
-.otr-controls-bar {
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: 6px;
-}
-
-.otr-controls-bar button {
-	padding: 8px 4px;
-	font-size: 0.8rem;
-	font-weight: 600;
-	border-radius: 6px;
 	cursor: pointer;
-	display: flex;
+	padding: 3px;
+	border-radius: var(--radius-s);
+	display: inline-flex;
+	align-items: center;
 	justify-content: center;
-	align-items: center;
+	transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.otr-btn-record {
-	background-color: var(--interactive-accent);
-	color: var(--text-on-accent);
+.otr-icon-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
 }
 
-.otr-audio-list-container {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	max-height: 280px;
-	overflow-y: auto;
+.otr-icon-btn svg {
+	width: 13px;
+	height: 13px;
 }
 
-.otr-audio-item-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 6px 8px;
+/* Active Note Context Card */
+.otr-context-card {
 	background-color: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	gap: 8px;
-}
-
-.otr-audio-info-col {
-	flex: 1;
-	min-width: 0;
-}
-
-.otr-audio-top-meta {
+	border-radius: var(--radius-m, 8px);
+	padding: 8px 10px;
 	display: flex;
-	align-items: center;
-	gap: 6px;
-	margin-bottom: 2px;
+	flex-direction: column;
+	gap: 4px;
 }
 
-.otr-line-badge {
-	font-size: 0.72rem;
-	font-weight: 600;
-	padding: 1px 6px;
-	background-color: var(--background-secondary-alt);
-	border-radius: 4px;
+.otr-context-header-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 11px;
 	color: var(--text-muted);
 }
 
-.otr-audio-filename {
-	font-size: 0.85rem;
+.otr-context-label {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.otr-context-label svg {
+	width: 12px;
+	height: 12px;
+	color: var(--text-faint);
+}
+
+.otr-link-btn {
+	background: none;
+	border: none;
+	padding: 0;
+	font-size: 10px;
+	font-weight: 500;
+	color: var(--interactive-accent);
+	cursor: pointer;
+}
+
+.otr-link-btn:hover {
+	text-decoration: underline;
+}
+
+.otr-context-filename {
+	font-size: 12px;
 	font-weight: 500;
 	color: var(--text-normal);
 	white-space: nowrap;
@@ -194,20 +185,528 @@
 	text-overflow: ellipsis;
 }
 
-.otr-audio-action-col {
+/* Studio Deck Card (Main Recorder Deck) */
+.otr-studio-deck {
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m, 8px);
+	padding: 10px;
 	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.otr-deck-status-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.otr-deck-timer {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+/* Slender Waveform Visualizer */
+.otr-waveform-row {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 3.5px;
+	height: 18px;
+	padding: 0 4px;
+}
+
+.otr-wave-bar {
+	width: 3px;
+	height: 3px;
+	background-color: var(--interactive-accent);
+	border-radius: 1.5px;
+	opacity: 0.25;
+	transition: height 0.2s ease, opacity 0.2s ease;
+}
+
+.otr-waveform-row.is-recording .otr-wave-bar {
+	opacity: 0.9;
+	animation: otr-wave-pulse 1s infinite ease-in-out alternate;
+}
+
+.otr-waveform-row.is-recording .otr-wave-bar:nth-child(1) { animation-delay: 0.05s; height: 6px; }
+.otr-waveform-row.is-recording .otr-wave-bar:nth-child(2) { animation-delay: 0.2s; height: 14px; }
+.otr-waveform-row.is-recording .otr-wave-bar:nth-child(3) { animation-delay: 0.35s; height: 10px; }
+.otr-waveform-row.is-recording .otr-wave-bar:nth-child(4) { animation-delay: 0.15s; height: 16px; }
+.otr-waveform-row.is-recording .otr-wave-bar:nth-child(5) { animation-delay: 0.3s; height: 12px; }
+.otr-waveform-row.is-recording .otr-wave-bar:nth-child(6) { animation-delay: 0.45s; height: 18px; }
+.otr-waveform-row.is-recording .otr-wave-bar:nth-child(7) { animation-delay: 0.25s; height: 11px; }
+.otr-waveform-row.is-recording .otr-wave-bar:nth-child(8) { animation-delay: 0.1s; height: 15px; }
+.otr-waveform-row.is-recording .otr-wave-bar:nth-child(9) { animation-delay: 0.4s; height: 7px; }
+
+@keyframes otr-wave-pulse {
+	0% { height: 3px; opacity: 0.3; }
+	50% { height: 18px; opacity: 1; }
+	100% { height: 6px; opacity: 0.6; }
+}
+
+/* Precision 3-Button Controls (No Overflow) */
+.otr-controls-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 5px;
+	padding-top: 4px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.otr-ctrl-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	padding: 5px 4px;
+	border-radius: var(--radius-s);
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--text-normal);
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.otr-ctrl-btn:hover:not(:disabled) {
+	background-color: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+}
+
+.otr-ctrl-btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.otr-ctrl-btn svg {
+	width: 12px;
+	height: 12px;
+	flex-shrink: 0;
+}
+
+.otr-ctrl-btn.btn-stop {
+	color: var(--text-error, #f85149);
+}
+
+.otr-ctrl-btn.btn-record-main {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: transparent;
+	font-weight: 600;
+}
+
+.otr-ctrl-btn.btn-record-main:hover:not(:disabled) {
+	background-color: var(--interactive-accent-hover);
+}
+
+/* Audio Explorer Section */
+.otr-explorer-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 11px;
+	color: var(--text-muted);
+	padding: 0 2px;
+}
+
+.otr-explorer-title {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-weight: 500;
+}
+
+.otr-explorer-title svg {
+	width: 12px;
+	height: 12px;
+	color: var(--text-faint);
+}
+
+.otr-pill-count {
+	font-size: 9px;
+	font-family: var(--font-monospace);
+	padding: 1px 5px;
+	border-radius: var(--radius-round);
+	background-color: var(--background-modifier-hover);
+	color: var(--text-muted);
+}
+
+.otr-audio-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	max-height: 240px;
+	overflow-y: auto;
+}
+
+.otr-audio-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 6px 8px;
+	border-radius: var(--radius-s);
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	gap: 6px;
+	transition: border-color 0.15s ease;
+}
+
+.otr-audio-item:hover {
+	border-color: var(--interactive-accent);
+}
+
+.otr-audio-item-info {
+	min-width: 0;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.otr-audio-item-meta {
+	display: flex;
+	align-items: center;
 	gap: 4px;
 }
 
-.otr-audio-action-col button {
-	padding: 3px 8px;
-	font-size: 0.75rem;
+.otr-line-tag {
+	font-size: 9px;
+	font-family: var(--font-monospace);
+	padding: 0 4px;
+	border-radius: 3px;
+	background-color: var(--background-secondary-alt);
+	color: var(--text-muted);
+}
+
+.otr-audio-item-title {
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.otr-audio-item-actions {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	flex-shrink: 0;
+}
+
+.otr-action-icon-btn {
+	padding: 3px;
+	border-radius: var(--radius-s);
+	background: transparent;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.otr-action-icon-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.otr-action-icon-btn svg {
+	width: 12px;
+	height: 12px;
+}
+
+.otr-action-badge-btn {
+	padding: 2px 6px;
+	font-size: 10px;
+	font-weight: 500;
+	border-radius: var(--radius-s);
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
 	cursor: pointer;
 }
 
-.otr-quick-btn {
-	width: 100%;
-	margin-top: 4px;
-	font-size: 0.85rem;
+.otr-action-badge-btn:hover {
+	background-color: var(--interactive-accent-hover);
+}
+
+/* Quick Tools Footer Strip */
+.otr-quick-tools-strip {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+	padding-top: 6px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.otr-tool-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	padding: 6px 8px;
+	border-radius: var(--radius-s);
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--text-muted);
 	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.otr-tool-btn:hover {
+	background-color: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+	color: var(--text-normal);
+}
+
+.otr-tool-btn svg {
+	width: 12px;
+	height: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   4. Settings Tab Precision Interface (Raycast / Linear Style)
+   -------------------------------------------------------------------------- */
+.otr-settings-tab-nav {
+	display: flex;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m, 8px);
+	padding: 2px;
+	gap: 2px;
+	margin-bottom: 1.2rem;
+}
+
+.otr-tab-btn {
+	flex: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	padding: 6px 10px;
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-s, 6px);
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-muted);
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.otr-tab-btn:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+}
+
+.otr-tab-btn.is-active {
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-weight: 600;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.otr-tab-btn svg {
+	width: 13px;
+	height: 13px;
+}
+
+/* Model Selection 2-Column Precision Cards */
+.otr-model-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+	margin-top: 6px;
+	margin-bottom: 14px;
+}
+
+.otr-model-card {
+	padding: 10px;
+	border-radius: var(--radius-m, 8px);
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	cursor: pointer;
+	transition: all 0.15s ease;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.otr-model-card:hover {
+	border-color: var(--interactive-accent);
+}
+
+.otr-model-card.is-selected {
+	border-color: var(--interactive-accent);
+	background-color: hsla(var(--interactive-accent-rgb), 0.08);
+}
+
+.otr-model-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.otr-model-card-title {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.otr-model-card-meta {
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.otr-model-card-desc {
+	font-size: 10px;
+	color: var(--text-faint);
+	margin-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   5. Pure CSS Utility Replacements & Status Modifiers (Obsidian Native)
+   -------------------------------------------------------------------------- */
+.otr-timestamp {
+	cursor: pointer;
+	color: var(--text-accent);
+	text-decoration: underline;
+}
+
+.otr-deck-status-group {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.otr-explorer-section {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.otr-status-badge-dot.is-recording {
+	background-color: var(--text-error, #e05252);
+}
+
+.otr-status-badge-dot.is-paused {
+	background-color: var(--text-warning, #d17b39);
+}
+
+.otr-status-badge-dot.is-idle {
+	background-color: var(--text-muted);
+}
+
+.otr-status-label {
+	font-size: 11px;
+	font-weight: 500;
+}
+
+.otr-status-label.is-recording {
+	color: var(--text-error, #e05252);
+}
+
+.otr-status-label.is-paused {
+	color: var(--text-warning, #d17b39);
+}
+
+.otr-status-label.is-idle {
+	color: var(--text-muted);
+}
+
+.otr-status-badge-size {
+	font-size: 10px;
+	opacity: 0.75;
+	font-family: var(--font-monospace);
+	margin-left: 2px;
+}
+
+.otr-help-banner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px;
+	margin-bottom: 12px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m, 6px);
+	font-size: 12px;
+}
+
+.otr-help-banner-text {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--text-muted);
+}
+
+.otr-inline-icon {
+	display: inline-flex;
+	align-items: center;
+}
+
+.otr-model-detail-wrap {
+	margin-bottom: 12px;
+}
+
+.otr-model-detail-box {
+	padding: 10px;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m, 6px);
+	font-size: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.otr-model-detail-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.otr-model-detail-title {
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.otr-model-detail-desc {
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.otr-model-detail-meta {
+	font-size: 10px;
+	color: var(--text-faint);
+	font-family: var(--font-monospace);
+}
+
+.otr-code-copy-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 6px;
+	background-color: var(--background-secondary-alt);
+	border-radius: var(--radius-s, 4px);
+	font-size: 10px;
+	font-family: var(--font-monospace);
+}
+
+.otr-code-copy-text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	margin-right: 8px;
 }

@@ -1,5 +1,5 @@
-import type { App, TFile } from "obsidian";
-import type { ActiveRecordingSessionStore } from "./recordingSession.ts";
+import type { App } from "obsidian";
+import type { ActiveRecordingSession } from "./recordingSession.ts";
 
 export const SUPPORTED_AUDIO_EXTENSIONS = new Set(["m4a", "mp3", "wav", "ogg", "flac", "aac"]);
 
@@ -56,7 +56,7 @@ export function collectAllLinkedAudioPaths(app: App): Set<string> {
  */
 export async function checkUnfinishedSessionOnStartup(
 	app: App,
-	sessionStore: ActiveRecordingSessionStore,
+	sessionStore: { get: () => Promise<ActiveRecordingSession | null> },
 	onDetected?: (message: string) => void,
 ): Promise<string | null> {
 	try {

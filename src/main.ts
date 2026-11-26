@@ -1,5 +1,8 @@
-import { FileSystemAdapter, getLinkpath, MarkdownView, Modal, Notice, Plugin, TFile, WorkspaceLeaf } from "obsidian";
+import { addIcon, FileSystemAdapter, getLinkpath, MarkdownView, Modal, Notice, Plugin, TFile, WorkspaceLeaf } from "obsidian";
 import type { EmbedCache } from "obsidian";
+
+export const OTR_DECK_ICON_ID = "otr-record-deck";
+const OTR_DECK_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15v-2"/><path d="M12 17v-6"/><path d="M15 15v-2"/></svg>`;
 import { DEFAULT_VAULT_SETTINGS, normalizeVaultSettings } from "./settings.ts";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
 import { LocalSettingsStore } from "./localSettingsStore.ts";
@@ -60,6 +63,7 @@ import { generateMeetingSummary } from "./localLlmClient.ts";
 import { extractTranscriptFromMarkdown, formatMeetingSummaryBlock } from "./summaryPrompt.ts";
 import { OnTheRecordSidebarView, OTR_SIDEBAR_VIEW_TYPE } from "./sidebarView.ts";
 import { createMeetingNote, isContentMatchingTemplate } from "./meetingNoteCreator.ts";
+import { parseAudioEmbedsFromMarkdown } from "./noteAudioExplorer.ts";
 
 interface ObsidianAudioRecorderPlugin {
 	instance?: {
@@ -279,16 +283,26 @@ export default class OnTheRecordPlugin extends Plugin {
 						await this.stopCurrentRecording();
 					},
 					createNewMeetingNote: async () => {
-						const file = await createMeetingNote(this.app, {
+						const created = await createMeetingNote(this.app, {
 							folder: this.vaultSettings.autoRecordFolder,
 							templatePath: this.vaultSettings.autoRecordTemplatePath,
 						});
+						const targetFile = this.app.vault.getAbstractFileByPath(created.path);
+						if (!(targetFile instanceof TFile)) return null;
 						const leaf = this.app.workspace.getLeaf(false);
-						await leaf.openFile(file);
-						return file;
+						await leaf.openFile(targetFile);
+						return targetFile;
 					},
 					enqueueAudioTranscription: async (audioPath: string) => {
-						this.recordingQueue.enqueue(audioPath);
+						const activeFile = this.app.workspace.getActiveFile();
+						const audioFile = this.app.vault.getAbstractFileByPath(audioPath);
+						this.recordingQueue.enqueue({
+							filePath: audioPath,
+							notePaths: activeFile ? [activeFile.path] : [],
+							size: audioFile instanceof TFile ? audioFile.stat.size : 0,
+							queuedAt: Date.now(),
+							status: "queued",
+						});
 						void this.queueWorker.trigger();
 					},
 					openAudioPicker: () => {
@@ -304,14 +318,16 @@ export default class OnTheRecordPlugin extends Plugin {
 			id: "create-meeting-note-and-record",
 			name: "새 회의록 작성 및 음성 녹음 시작",
 			callback: async () => {
-				const file = await createMeetingNote(this.app, {
+				const created = await createMeetingNote(this.app, {
 					folder: this.vaultSettings.autoRecordFolder,
 					templatePath: this.vaultSettings.autoRecordTemplatePath,
 				});
+				const targetFile = this.app.vault.getAbstractFileByPath(created.path);
+				if (!(targetFile instanceof TFile)) return;
 				const leaf = this.app.workspace.getLeaf(false);
-				await leaf.openFile(file);
+				await leaf.openFile(targetFile);
 				const session = await this.sessionManager.startManualSession({
-					notePath: file.path,
+					notePath: targetFile.path,
 					seq: 1,
 					onNotice: (msg) => new Notice(msg, 4000),
 				});
@@ -419,10 +435,10 @@ export default class OnTheRecordPlugin extends Plugin {
 				return false;
 			},
 		});
-		this.addRibbonIcon("microphone", "On the Record 회의록 제어 패널 열기", () => {
+		addIcon(OTR_DECK_ICON_ID, OTR_DECK_ICON_SVG);
+		this.addRibbonIcon(OTR_DECK_ICON_ID, "On the Record 회의록 제어 패널 열기", () => {
 			void this.activateSidebarView();
 		});
-		this.addRibbonIcon("search", "전사할 오디오 파일 선택", () => this.openAudioFilePicker());
 
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", () => {
@@ -501,7 +517,9 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		this.app.workspace.onLayoutReady(() => {
 			this.queueWorker.start();
-			void checkUnfinishedSessionOnStartup(this.app, this.sessionStore);
+			void checkUnfinishedSessionOnStartup(this.app, {
+				get: () => this.sessionManager.restore(),
+			});
 			this.registerEvent(
 				this.app.vault.on("create", (file) => {
 					if (file instanceof TFile && file.extension.toLowerCase() === "md") {
@@ -618,9 +636,36 @@ export default class OnTheRecordPlugin extends Plugin {
 	}
 
 	private setupQueueWorker(): void {
+		const runtime = new WhisperCppCpuRuntime();
 		this.queueWorker = new TranscriptionQueueWorker({
 			queue: this.recordingQueue,
-			engine: new WhisperCppCpuRuntime(),
+			engine: {
+				transcribe: async (runtimePath, modelPath, ffmpegPath, audioFullPath, language, onProgress, _signal, gpuOptions) => {
+					const result = await runtime.transcribe(
+						runtimePath,
+						modelPath,
+						ffmpegPath,
+						audioFullPath,
+						language,
+						onProgress,
+						gpuOptions as import("./whisperCppCpu.ts").WhisperGpuExecutionOptions | undefined,
+					);
+					return {
+						...result,
+						engine: {
+							providerId: "whisper-cpp",
+							providerVersion: "1.9.5",
+							modelId: modelPath,
+							device:
+								gpuOptions?.gpuBackend === "cuda" ||
+								gpuOptions?.gpuBackend === "vulkan" ||
+								gpuOptions?.gpuBackend === "openvino"
+									? gpuOptions.gpuBackend
+									: "cpu",
+						},
+					};
+				},
+			},
 			settingsProvider: {
 				getLocalSettings: () => this.localSettings,
 				getVaultSettings: () => ({ language: this.vaultSettings.language }),
@@ -766,10 +811,10 @@ export default class OnTheRecordPlugin extends Plugin {
 		if (this.vaultSettings.autoRecordTemplatePath && this.vaultSettings.autoRecordTemplatePath.trim().length > 0) {
 			const templatePath = this.vaultSettings.autoRecordTemplatePath.trim();
 			const templateFile = this.app.vault.getAbstractFileByPath(templatePath);
-			if (templateFile && "read" in templateFile && typeof (templateFile as TFile).read === "function") {
+			if (templateFile instanceof TFile) {
 				try {
 					const [templateContent, noteContent] = await Promise.all([
-						this.app.vault.read(templateFile as TFile),
+						this.app.vault.read(templateFile),
 						this.app.vault.read(file),
 					]);
 					if (!isContentMatchingTemplate(noteContent, templateContent)) {
@@ -882,6 +927,7 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		if (signal.aborted) return;
 
+		const resolvedNotePaths: string[] = result.status === "linked" ? [...result.notePaths] : [];
 		const recentSession = this.sessionManager.getActiveSession() ?? this.tabCloseHandler.getRecentlyStoppedSession();
 		if (recentSession) {
 			await this.tabCloseHandler.attachAudioToNote(recentSession.notePath, file.path, {
@@ -890,19 +936,19 @@ export default class OnTheRecordPlugin extends Plugin {
 				endedAt: Date.now(),
 				sizeBytes: size ?? file.stat.size,
 			});
-			if (!result.notePaths.includes(recentSession.notePath)) {
-				result.notePaths.push(recentSession.notePath);
+			if (!resolvedNotePaths.includes(recentSession.notePath)) {
+				resolvedNotePaths.push(recentSession.notePath);
 			}
 		} else if (result.status === "timeout") {
 			new Notice("녹음 노트의 오디오 링크를 확인하지 못했습니다. 파일 찾기 기능을 사용하세요.");
 			return;
 		}
 
-		if (result.status !== "linked" && result.notePaths.length === 0) return;
+		if (result.status !== "linked" && resolvedNotePaths.length === 0) return;
 
 		const added = this.recordingQueue.enqueue({
 			filePath: file.path,
-			notePaths: result.notePaths,
+			notePaths: resolvedNotePaths,
 			size: size ?? file.stat.size,
 			queuedAt: Date.now(),
 			status: "queued",
@@ -1400,12 +1446,13 @@ export default class OnTheRecordPlugin extends Plugin {
 				return res.updatedMarkdown;
 			});
 
-			if (resultSummary) {
-				if (resultSummary.count > 0) {
-					const min = Math.floor(resultSummary.totalSeconds / 60);
-					const sec = resultSummary.totalSeconds % 60;
+			const summary = resultSummary as { count: number; totalSeconds: number; totalSizeMb: number } | null;
+			if (summary) {
+				if (summary.count > 0) {
+					const min = Math.floor(summary.totalSeconds / 60);
+					const sec = summary.totalSeconds % 60;
 					new Notice(
-						`[On the Record] 녹음 정보 재계산 완료\n총 ${resultSummary.count}개 녹음 (소요: ${min}분 ${sec}초 · ${resultSummary.totalSizeMb} MB)`,
+						`[On the Record] 녹음 정보 재계산 완료\n총 ${summary.count}개 녹음 (소요: ${min}분 ${sec}초 · ${summary.totalSizeMb} MB)`,
 						5000,
 					);
 				} else {
@@ -1437,7 +1484,8 @@ export default class OnTheRecordPlugin extends Plugin {
 
 			const modal = new OrphanAudioModal(this.app, orphans, async (orphan, targetNote) => {
 				await this.app.vault.process(targetNote, (data) => {
-					const nextSeq = calculateNextRecordingSeq(data);
+					const existingCount = parseAudioEmbedsFromMarkdown(data).length;
+					const nextSeq = calculateNextRecordingSeq(existingCount);
 					return applyRecordingSessionToMarkdown(data, {
 						audioPath: orphan.path,
 						seq: nextSeq,
