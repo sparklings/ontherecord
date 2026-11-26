@@ -71,182 +71,485 @@
 }
 
 /* --------------------------------------------------------------------------
-   3. Sidebar Studio Deck (OnTheRecordSidebarView - 280px Constraint)
+   3. Sidebar Studio Deck (OnTheRecordSidebarView - Stitch 1:1 Parity)
    -------------------------------------------------------------------------- */
 .otr-sidebar-container {
-	padding: 10px 12px;
+	padding: 12px;
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
+	gap: 12px;
 	height: 100%;
 	overflow-y: auto;
 	box-sizing: border-box;
+	background-color: var(--background-primary);
 }
 
-/* Header Row */
+.theme-dark .otr-sidebar-container {
+	background-color: #1e1e1e;
+	color: #dcddde;
+}
+
+/* Header Row (Stitch lines 219-256) */
 .otr-sidebar-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding-bottom: 6px;
-	border-bottom: 1px solid var(--background-modifier-border);
+	padding-bottom: 8px;
+	border-bottom: 1px solid #353535;
+	flex-shrink: 0;
 }
 
 .otr-sidebar-title-group {
 	display: flex;
 	align-items: center;
-	gap: 6px;
-	font-weight: 600;
+	gap: 10px;
+}
+
+.otr-brand-icon-box {
+	width: 28px;
+	height: 28px;
+	border-radius: 6px;
+	background-color: rgba(123, 108, 217, 0.15);
+	border: 1px solid rgba(123, 108, 217, 0.3);
+	color: #7b6cd9;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.otr-brand-icon-box svg {
+	width: 15px;
+	height: 15px;
+}
+
+.otr-sidebar-title-stack {
+	display: flex;
+	flex-direction: column;
+}
+
+.otr-sidebar-title-stack span:first-child {
 	font-size: 12px;
+	font-weight: 600;
+	color: #f2f2f3;
 	letter-spacing: -0.01em;
-	color: var(--text-normal);
 }
 
-.otr-sidebar-title-group svg {
-	width: 14px;
-	height: 14px;
-	color: var(--interactive-accent);
+.otr-sidebar-subtitle {
+	font-size: 10px;
+	color: #8e8e93;
+	margin-top: -2px;
 }
 
-.otr-icon-btn {
+.otr-sidebar-header-actions {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.otr-sidebar-container button.otr-icon-btn {
 	background: transparent;
 	border: none;
-	color: var(--text-muted);
+	box-shadow: none;
+	color: #8e8e93;
 	cursor: pointer;
-	padding: 3px;
-	border-radius: var(--radius-s);
+	padding: 4px;
+	border-radius: 4px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.otr-icon-btn:hover {
-	background-color: var(--background-modifier-hover);
-	color: var(--text-normal);
+.otr-sidebar-container button.otr-icon-btn:hover {
+	background-color: #2d2d2d;
+	color: #f2f2f3;
 }
 
-.otr-icon-btn svg {
-	width: 13px;
-	height: 13px;
+.otr-sidebar-container button.otr-icon-btn svg {
+	width: 14px;
+	height: 14px;
 }
 
-/* Active Note Context Card */
+/* Active Note Target Card (Stitch lines 259-281) */
 .otr-context-card {
-	background-color: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-m, 8px);
-	padding: 8px 10px;
+	background-color: #252525;
+	border: 1px solid #353535;
+	border-radius: 8px;
+	padding: 8px;
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 8px;
 }
 
 .otr-context-header-row {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	font-size: 11px;
-	color: var(--text-muted);
 }
 
 .otr-context-label {
-	display: flex;
-	align-items: center;
-	gap: 4px;
+	font-size: 10px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #8e8e93;
 }
 
-.otr-context-label svg {
-	width: 12px;
-	height: 12px;
-	color: var(--text-faint);
-}
-
-.otr-link-btn {
+.otr-sidebar-container button.otr-link-btn {
 	background: none;
 	border: none;
+	box-shadow: none;
 	padding: 0;
 	font-size: 10px;
 	font-weight: 500;
-	color: var(--interactive-accent);
+	color: #7b6cd9;
 	cursor: pointer;
+	transition: color 0.15s ease;
 }
 
-.otr-link-btn:hover {
+.otr-sidebar-container button.otr-link-btn:hover {
+	color: #8e80e3;
 	text-decoration: underline;
 }
 
+.otr-compact-note-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
+}
+
+.otr-context-filebox {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	background-color: rgba(30, 30, 30, 0.9);
+	border: 1px solid #2c2c2c;
+	flex: 1;
+	min-width: 0;
+}
+
+.otr-context-filebox svg {
+	width: 12px;
+	height: 12px;
+	color: #7b6cd9;
+	flex-shrink: 0;
+}
+
 .otr-context-filename {
-	font-size: 12px;
-	font-weight: 500;
-	color: var(--text-normal);
+	font-family: var(--font-monospace);
+	font-size: 11px;
+	color: #e5e5ea;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
-/* Audio Explorer Section */
+.otr-context-filename.is-empty {
+	color: #8e8e93;
+	font-style: italic;
+}
+
+.otr-compact-record-actions {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+.otr-sidebar-container button.otr-compact-rec-btn {
+	height: 24px;
+	padding: 0 8px;
+	border-radius: 9999px;
+	background-color: rgba(234, 57, 67, 0.15);
+	border: 1px solid rgba(234, 57, 67, 0.3);
+	color: #ea3943;
+	font-size: 10px;
+	font-weight: 500;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	cursor: pointer;
+	box-shadow: none;
+	transition: background-color 0.15s ease;
+}
+
+.otr-sidebar-container button.otr-compact-rec-btn:hover:not(:disabled) {
+	background-color: rgba(234, 57, 67, 0.25);
+}
+
+.otr-sidebar-container button.otr-compact-rec-btn.is-disabled {
+	background-color: rgba(255, 255, 255, 0.05);
+	border-color: #353535;
+	color: #636366;
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.otr-compact-rec-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background-color: #ea3943;
+	flex-shrink: 0;
+}
+
+.otr-compact-rec-btn.is-disabled .otr-compact-rec-dot {
+	background-color: #636366;
+}
+
+/* Audio Explorer Section (Stitch lines 304-382) */
+.otr-explorer-section {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding-top: 4px;
+}
+
 .otr-explorer-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	font-size: 11px;
-	color: var(--text-muted);
 	padding: 0 2px;
 }
 
 .otr-explorer-title {
 	display: flex;
 	align-items: center;
-	gap: 4px;
-	font-weight: 500;
-}
-
-.otr-explorer-title svg {
-	width: 12px;
-	height: 12px;
-	color: var(--text-faint);
+	gap: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #ffffff;
+	letter-spacing: -0.01em;
 }
 
 .otr-pill-count {
-	font-size: 9px;
+	font-size: 10px;
 	font-family: var(--font-monospace);
-	padding: 1px 5px;
-	border-radius: var(--radius-round);
-	background-color: var(--background-modifier-hover);
-	color: var(--text-muted);
+	padding: 1px 6px;
+	border-radius: 9999px;
+	background-color: #252525;
+	border: 1px solid #353535;
+	color: #8e8e93;
+}
+
+.otr-explorer-subtext {
+	font-size: 10px;
+	color: #636366;
 }
 
 .otr-audio-list {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	max-height: 240px;
-	overflow-y: auto;
-}
-
-.otr-audio-item {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 6px 8px;
-	border-radius: var(--radius-s);
-	background-color: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
-	gap: 6px;
-	transition: border-color 0.15s ease;
-}
-
-.otr-audio-item:hover {
-	border-color: var(--interactive-accent);
-}
-
-.otr-audio-item-info {
-	min-width: 0;
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: 8px;
+	overflow-y: auto;
+}
+
+/* Stacked Audio Card (Stitch lines 314-381) */
+.otr-audio-item-stacked {
+	background-color: #252525;
+	border: 1px solid #353535;
+	border-radius: 8px;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	transition: border-color 0.15s ease;
+}
+
+.otr-audio-item-stacked:hover {
+	border-color: #444444;
+}
+
+.otr-audio-card-top {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 6px;
+}
+
+.otr-audio-card-left {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	flex: 1;
+}
+
+.otr-line-tag {
+	font-family: var(--font-monospace);
+	font-size: 10px;
+	font-weight: 500;
+	padding: 2px 5px;
+	border-radius: 3px;
+	background-color: #1e1e1e;
+	border: 1px solid #2c2c2c;
+	color: #8e8e93;
+	align-self: flex-start;
+}
+
+.otr-audio-item-title {
+	font-family: var(--font-monospace);
+	font-size: 11px;
+	color: #ececf1;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.otr-audio-status-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-size: 10px;
+	font-weight: 500;
+	flex-shrink: 0;
+}
+
+.otr-audio-status-pill.is-done {
+	background-color: rgba(69, 178, 107, 0.15);
+	border: 1px solid rgba(69, 178, 107, 0.2);
+	color: #45b26b;
+}
+
+.otr-audio-status-pill.is-pending {
+	background-color: #353535;
+	border: 1px solid #353535;
+	color: #8e8e93;
+}
+
+.otr-audio-status-pill.is-pending .otr-status-badge-dot {
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background-color: #8e8e93;
+}
+
+.otr-audio-card-meta {
+	font-size: 10px;
+	color: #8e8e93;
+	padding-left: 2px;
+}
+
+.otr-audio-card-footer {
+	display: flex;
+	align-items: center;
+	border-top: 1px solid #2c2c2c;
+	padding-top: 8px;
+}
+
+.otr-audio-card-footer.is-done-footer {
+	justify-content: flex-end;
+	gap: 6px;
+}
+
+.otr-audio-card-footer.is-pending-footer {
+	justify-content: space-between;
+}
+
+.otr-sidebar-container button.otr-card-btn {
+	padding: 3px 8px;
+	border-radius: 4px;
+	background-color: #1e1e1e;
+	border: 1px solid #2c2c2c;
+	color: #8e8e93;
+	font-size: 11px;
+	font-weight: 500;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	cursor: pointer;
+	box-shadow: none;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.otr-sidebar-container button.otr-card-btn:hover {
+	background-color: #2d2d2d;
+	color: #ffffff;
+}
+
+.otr-sidebar-container button.otr-card-btn svg {
+	width: 12px;
+	height: 12px;
+	color: #8e8e93;
+}
+
+.otr-sidebar-container button.otr-action-badge-btn {
+	padding: 3px 10px;
+	border-radius: 4px;
+	background-color: #7b6cd9;
+	border: none;
+	color: #ffffff;
+	font-size: 11px;
+	font-weight: 500;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	cursor: pointer;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	transition: background-color 0.15s ease;
+}
+
+.otr-sidebar-container button.otr-action-badge-btn:hover {
+	background-color: #8e80e3;
+}
+
+.otr-sidebar-container button.otr-action-badge-btn svg {
+	width: 12px;
+	height: 12px;
+}
+
+/* Quick Tools Footer Strip (Stitch lines 384-401) */
+.otr-quick-tools-strip {
+	margin-top: auto;
+	padding: 10px 0 0;
+	border-top: 1px solid #353535;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+	flex-shrink: 0;
+}
+
+.otr-sidebar-container button.otr-tool-btn {
+	height: 32px;
+	border-radius: 6px;
+	background-color: #252525;
+	border: 1px solid #353535;
+	color: #dcddde;
+	font-size: 12px;
+	font-weight: 500;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	cursor: pointer;
+	box-shadow: none;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.otr-sidebar-container button.otr-tool-btn:hover {
+	background-color: #2d2d2d;
+	color: #ffffff;
+}
+
+.otr-sidebar-container button.otr-tool-btn svg {
+	width: 14px;
+	height: 14px;
+}
+
+.otr-sidebar-container button.otr-tool-btn:first-child svg {
+	color: #8e8e93;
+}
+
+.otr-sidebar-container button.otr-tool-btn:last-child svg {
+	color: #7b6cd9;
 }
 
 .otr-audio-item-meta {
@@ -1450,21 +1753,8 @@
 }
 
 /* --------------------------------------------------------------------------
-   13. Stitch Exact Visual Parity Overrides & Recording Deck
+   13. Stitch Settings & Modal Visual Parity Overrides
    -------------------------------------------------------------------------- */
-
-/* Dark theme surface hierarchy matching Stitch deep-slate palette */
-.theme-dark .otr-sidebar-container {
-	background-color: #131318;
-}
-
-.theme-dark .otr-sidebar-container .otr-context-card,
-.theme-dark .otr-sidebar-container .otr-rec-deck-card,
-.theme-dark .otr-sidebar-container .otr-queue-widget,
-.theme-dark .otr-sidebar-container .otr-audio-item-stacked {
-	background-color: #1b1b22;
-	border-color: rgba(255, 255, 255, 0.08);
-}
 
 .theme-dark .otr-settings-container .otr-model-card,
 .theme-dark .otr-settings-container .otr-readiness-banner,
