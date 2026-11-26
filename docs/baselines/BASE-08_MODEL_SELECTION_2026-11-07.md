@@ -26,11 +26,11 @@
 ### 2.1 대상 모델 (Hugging Face `ggerganov/whisper.cpp` 커밋 `5359861`)
 | 모델명 | 양자화 | 파일 크기 | 디스크 위치 |
 |---|---|---:|---|
-| **base** | `q5_1` | 57 MB | `%LOCALAPPDATA%\on-the-record-dev\models\ggml-base-q5_1.bin` |
-| **small** | `q5_1` | 166 MB | `%LOCALAPPDATA%\on-the-record-dev\models\ggml-small-q5_1.bin` |
-| **medium** | `q5_0` | 514 MB | `%LOCALAPPDATA%\on-the-record-dev\models\ggml-medium-q5_0.bin` |
-| **large-v3-turbo** | `q5_0` | 547 MB | `%LOCALAPPDATA%\on-the-record-dev\models\ggml-large-v3-turbo-q5_0.bin` |
-| **large-v3** | `q5_0` | 1,031 MB | `%LOCALAPPDATA%\on-the-record-dev\models\ggml-large-v3-q5_0.bin` |
+| **base** | `q5_1` | 57 MB | `%LOCALAPPDATA%\on-the-record\models\ggml-base-q5_1.bin` |
+| **small** | `q5_1` | 166 MB | `%LOCALAPPDATA%\on-the-record\models\ggml-small-q5_1.bin` |
+| **medium** | `q5_0` | 514 MB | `%LOCALAPPDATA%\on-the-record\models\ggml-medium-q5_0.bin` |
+| **large-v3-turbo** | `q5_0` | 547 MB | `%LOCALAPPDATA%\on-the-record\models\ggml-large-v3-turbo-q5_0.bin` |
+| **large-v3** | `q5_0` | 1,031 MB | `%LOCALAPPDATA%\on-the-record\models\ggml-large-v3-q5_0.bin` |
 
 ### 2.2 테스트 표본 데이터셋
 - **`real-sample-01`** (2.2분, 130.6초): IT 기획 및 비즈니스 용어가 혼용된 2인 대화 (단기 처리율 및 전문용어 복원 검증)

@@ -33,16 +33,16 @@
 - Lenovo의 base 짧은 샘플은 첫 실행 67.9초, 두 번째 37.8초로 편차가 컸다. 원인은 측정하지 않았으므로 해석하지 않는다. 다른 Lenovo 케이스는 반복 결과가 비교적 가까웠다.
 - Lenovo에서는 small의 긴 샘플 처리율이 base보다 낮았지만, 모델 간 차이는 샘플 길이에 따라 달랐다.
 - 세그먼트 수는 모델마다 다르며(02: 323 vs 414), 이 값 자체로 품질을 판단할 수 없다.
-- **전사 품질은 평가하지 않았다.** 실제 회의 내용이라 전사문을 열람·기록하지 않았고 기준 전사본(CER)도 없다. Samsung 측정 당시 전사문은 `samples\transcripts\`에 저장했으나, 2026-11-03에 동기화 폴더 밖 `%LOCALAPPDATA%\on-the-record-dev\transcripts\legacy-samsung-960xfg-2026-11-02\`로 옮겼다(해당 기록의 `transcriptFile` 경로는 이동 전 값 그대로). 이후 측정 결과는 `%LOCALAPPDATA%\on-the-record-dev\transcripts\`에 저장한다.
+- **전사 품질은 평가하지 않았다.** 실제 회의 내용이라 전사문을 열람·기록하지 않았고 기준 전사본(CER)도 없다. Samsung 측정 당시 전사문은 `samples\transcripts\`에 저장했으나, 2026-11-03에 동기화 폴더 밖 `%LOCALAPPDATA%\on-the-record\transcripts\legacy-samsung-960xfg-2026-11-02\`로 옮겼다(해당 기록의 `transcriptFile` 경로는 이동 전 값 그대로). 이후 측정 결과는 `%LOCALAPPDATA%\on-the-record\transcripts\`에 저장한다.
 - 측정 기록의 `quality`는 `null`이다.
 
 ## 4. Lenovo에서 측정을 다시 실행하는 방법
 
 1. `benchmarks\hardware\lenovo-ideapad-gaming3-15imh05.json` 확인. 샘플과 런타임·모델은 이 PC와 같은 해시로 준비한다(`samples\real-audio\`는 OneDrive로 동기화되므로 SHA-256만 대조).
-2. 런타임을 `%LOCALAPPDATA%\on-the-record-dev\runtimes\whisper.cpp-b5454-x64-cpu\Release\`에, 모델 두 개를 `...\models\`에 놓는다(해시는 BASE-03).
+2. 런타임을 `%LOCALAPPDATA%\on-the-record\runtimes\whisper.cpp-b5454-x64-cpu\Release\`에, 모델 두 개를 `...\models\`에 놓는다(해시는 BASE-03).
 3. 매트릭스 실행(현재 프로필은 i7-10750H 12논리 프로세서이며, 기준선에서는 8스레드를 사용):
    `powershell -File scripts\measure-whisper.ps1 -DeviceId lenovo-ideapad-gaming3-15imh05 -ModelId base -Quantization q5_1 -SampleId real-sample-01 -Threads 8 -Repeat 2` (모델·샘플별 반복)
-4. 스크립트는 `ffprobe`(FFmpeg)가 PATH에 있어야 한다. 실제 회의 전사문은 OneDrive 동기화 폴더 밖의 `%LOCALAPPDATA%\on-the-record-dev\transcripts\`에 저장한다.
+4. 스크립트는 `ffprobe`(FFmpeg)가 PATH에 있어야 한다. 실제 회의 전사문은 OneDrive 동기화 폴더 밖의 `%LOCALAPPDATA%\on-the-record\transcripts\`에 저장한다.
 
 ## 5. 남은 사항
 

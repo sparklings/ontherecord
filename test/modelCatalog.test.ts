@@ -47,6 +47,8 @@ test("buildModelDownloadCommand: PowerShell 다운로드 원클릭 명령어 생
 
 test("checkModelFileInstalled: 모델 설치 여부 감지", () => {
 	const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "otr-model-test-"));
+	const origLocalAppData = process.env.LOCALAPPDATA;
+	process.env.LOCALAPPDATA = tmpDir;
 	try {
 		const dummyModelPath = path.join(tmpDir, "ggml-medium-q5_0.bin");
 		fs.writeFileSync(dummyModelPath, "dummy content");
@@ -61,6 +63,7 @@ test("checkModelFileInstalled: 모델 설치 여부 감지", () => {
 		const res2 = checkModelFileInstalled("large-v3", "C:\\non-existent\\ggml-large-v3.bin");
 		assert.equal(res2.installed, false);
 	} finally {
+		process.env.LOCALAPPDATA = origLocalAppData;
 		fs.rmSync(tmpDir, { recursive: true, force: true });
 	}
 });

@@ -2,7 +2,7 @@
 .SYNOPSIS
   Measures whisper.cpp CPU transcription runs and writes JSON records to benchmarks\records\.
   Device ID prefixes transcript filenames for hardware-profile traceability.
-  Format: docs\design\HARDWARE_PROFILE.md. Transcripts stay under %LOCALAPPDATA%\on-the-record-dev\transcripts\; content is never printed.
+  Format: docs\design\HARDWARE_PROFILE.md. Transcripts stay under %LOCALAPPDATA%\on-the-record\transcripts\; content is never printed.
 
 .EXAMPLE
   powershell -File scripts\measure-whisper.ps1 -DeviceId samsung-960xfg -ModelId base -Quantization q5_1 -SampleId real-sample-01 -Threads 8 -Repeat 3
@@ -20,7 +20,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
-$dataRoot = Join-Path $env:LOCALAPPDATA 'on-the-record-dev'
+$dataRoot = Join-Path $env:LOCALAPPDATA 'on-the-record'
 $runtimeTag = 'b5454'
 $runtimeDir = Join-Path $dataRoot "runtimes\whisper.cpp-$runtimeTag-x64-cpu\Release"
 $cli = Join-Path $runtimeDir 'whisper-cli.exe'
@@ -126,7 +126,7 @@ for ($i = 1; $i -le $Repeat; $i++) {
             segmentCount         = $segments
             uniqueSegmentCount   = $uniqueSegments
             maxRepeatedSegmentCount = $maxRepeat
-            transcriptFile       = "%LOCALAPPDATA%\on-the-record-dev\transcripts\$([IO.Path]::GetFileName($txt))"
+            transcriptFile       = "%LOCALAPPDATA%\on-the-record\transcripts\$([IO.Path]::GetFileName($txt))"
         }
         environment      = $environment
         quality          = $null

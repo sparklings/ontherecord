@@ -46,7 +46,7 @@
                    "segmentCount":  368,
                    "uniqueSegmentCount":  341,
                    "maxRepeatedSegmentCount":  12,
-                   "transcriptFile":  "%LOCALAPPDATA%\\on-the-record-dev\\transcripts\\samsung-960xfg-real-sample-03-medium-q5_0-t8-run1.txt"
+                   "transcriptFile":  "%LOCALAPPDATA%\\on-the-record\\transcripts\\samsung-960xfg-real-sample-03-medium-q5_0-t8-run1.txt"
                },
     "environment":  {
                         "powerSource":  "ac",

@@ -12,7 +12,7 @@
 | zip SHA-256 | `6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816ccb` |
 | `whisper-cli.exe` SHA-256 | `331dba46d6427105d2b802cdbc7eae916ea1c5abf9b0d3b5cfe460d8db8e4366` |
 | upstream 코드 라이선스 | MIT (`ggml`도 MIT); 배포 zip의 포함 구성요소·고지는 별도 확인 필요 |
-| 설치 위치(저장소 밖) | `%LOCALAPPDATA%\on-the-record-dev\runtimes\whisper.cpp-b5454-x64-cpu\Release\` |
+| 설치 위치(저장소 밖) | `%LOCALAPPDATA%\on-the-record\runtimes\whisper.cpp-b5454-x64-cpu\Release\` |
 
 - v1.9.x 정식 태그에는 바이너리가 없고, `b5454` 태그가 같은 커밋이면서 바이너리를 제공한다.
 - zip에는 CPU 변형 `ggml-cpu-*.dll`이 여러 개 들어 있어 실행 시 CPU에 맞는 것이 선택된다.

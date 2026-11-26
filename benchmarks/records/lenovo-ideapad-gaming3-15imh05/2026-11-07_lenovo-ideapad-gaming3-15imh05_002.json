@@ -46,7 +46,7 @@
                    "segmentCount":  24,
                    "uniqueSegmentCount":  24,
                    "maxRepeatedSegmentCount":  1,
-                   "transcriptFile":  "%LOCALAPPDATA%\\on-the-record-dev\\transcripts\\lenovo-ideapad-gaming3-15imh05-real-sample-01-small-q5_1-t8-run1.txt"
+                   "transcriptFile":  "%LOCALAPPDATA%\\on-the-record\\transcripts\\lenovo-ideapad-gaming3-15imh05-real-sample-01-small-q5_1-t8-run1.txt"
                },
     "environment":  {
                         "powerSource":  "ac",

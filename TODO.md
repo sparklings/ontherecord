@@ -28,6 +28,12 @@
 
 ## 2026-11-27
 
+### 식별자 `-dev` 전면 제거 및 로컬 스토리지/패키지 클린 표준화 (2026-11-27 완료)
+- [x] `DEV-PURGE-01` 로컬 AppData의 `on-the-record-dev` 폴더 내 모델(`ggml-base-q5_1.bin` 등) 및 런타임을 `on-the-record` 정식 표준 경로로 완전 마이그레이션 후 dev 폴더 영구 삭제
+- [x] `DEV-PURGE-02` `local-settings.json` 내 저장된 경로에서 `on-the-record-dev` 문자열을 `on-the-record`로 갱신
+- [x] `DEV-PURGE-03` 스크립트(`scripts/measure-whisper.ps1`), 벤치마크, 문서 전역의 `on-the-record-dev` 참조 전수 정규화
+- [x] `DEV-PURGE-04` 기존 설치된 외부 패키지(`node_modules`) 전면 삭제 및 `npm install` 클린 재설치
+
 ### 기본 기능 극대화 및 UI 초간소화 전면 개편 (2026-11-27 완료)
 - [x] `SIMPLIFY-01` 불필요한 AI 요약 기능 전면 보류 및 UI 제거 (`AI summary` 버튼, Ollama 설정 등 제거)
 - [x] `SIMPLIFY-02` 환경설정 2-Tab 미니멀화 (`가속 & AI` 탭 제거, `전사 & 도구 설정` + `녹음 & 워크플로` 2개로 직관화)
@@ -91,7 +97,7 @@
   - `small-q5_1`: 소요 55.5초(25.5초/오디오분, 2.35× 실시간), 최대 RAM 625 MB, 세그먼트 24개(반복 1회로 환각 루프 없음).
   - `scripts/summarize-records.ps1` 재집계 완료(`benchmarks/summary/summary.md`에 반영).
 - [x] Node.js 호환성 조치: 레노버 Node.js v22.16.0 환경에서 `npm test` 실행 시 `.ts` 확장자 인식 실패(`ERR_UNKNOWN_FILE_EXTENSION`) 문제 해결 → `package.json`의 `test` 스크립트에 `--experimental-strip-types` 플래그 추가. 단위 테스트 45개 전건 통과 확인.
-- [x] `2-CPU-06` 도구 자동 검색 경로 보강: 기존 검색 루트에 개발용 경로가 누락되어 레노버 환경에서 런타임/모델이 0건 검색되던 현상 수정 → `src/cpuRuntimeDiscovery.ts`의 `getCpuToolSearchRoots`에 `%LOCALAPPDATA%\on-the-record-dev` 및 `%LOCALAPPDATA%\on-the-record` 추가. 레노버 환경에서 런타임 2종(`whisper-cli.exe`, `main.exe`) 및 모델 2종(`base`, `small`) 원클릭 검색 확인 완료 (경고 0건). 관련 단위 테스트 보강 통과.
+- [x] `2-CPU-06` 도구 자동 검색 경로 보강: 기존 검색 루트에 개발용 경로가 누락되어 레노버 환경에서 런타임/모델이 0건 검색되던 현상 수정 → `src/cpuRuntimeDiscovery.ts`의 `getCpuToolSearchRoots`에 `%LOCALAPPDATA%\on-the-record` 및 `%LOCALAPPDATA%\on-the-record` 추가. 레노버 환경에서 런타임 2종(`whisper-cli.exe`, `main.exe`) 및 모델 2종(`base`, `small`) 원클릭 검색 확인 완료 (경고 0건). 관련 단위 테스트 보강 통과.
 - [x] 레노버 PC별 로컬 설정(`local-settings.json`) 초기화: `%LOCALAPPDATA%\on-the-record\local-settings.json`에 레노버 전용 경로(whisper-cli b5454, base-q5_1 모델, Chocolatey FFmpeg `C:\ProgramData\chocolatey\bin\ffmpeg.exe`)를 저장·검증 완료.
 - [x] `2-CPU-01`~`2-CPU-03` 레노버 실기 검증: whisper-cli b5454 SHA-256·버전 검증, Chocolatey FFmpeg 9.0.1 기반 M4A 오디오 16 kHz 모노 PCM WAV 정규화, 시험 추론 및 JSON segment 초 단위 timestamp 파싱 전 과정 실기 검증 통과.
 - [x] PlugVaults 최신 빌드 배포: production 빌드 생성 및 `%USERPROFILE%\OneDrive\PlugVaults\.obsidian\plugins\on-the-record\` 배포 완료(해시 일치 확인).
@@ -105,7 +111,7 @@
   - NVIDIA GeForce GTX 1650 Ti (4GB VRAM), 드라이버 580.88, CUDA 13.0 구동 정상 확인(`nvidia-smi`).
   - VRAM 메모리 용량(4GB) 분석: base(~500MB), small(~1GB), medium(~2GB) 모델의 완전 적재가 가능함을 확인.
 - [x] `0-BASE-06` (후속 ②) 레노버 상위 모델 및 기준선 측정 완료:
-  - 선행 조건 완료: `%LOCALAPPDATA%\on-the-record-dev\models\`에 `medium-q5_0`, `large-v3-turbo-q5_0`, `large-v3-q5_0` 모델 파일 3종 다운로드 및 SHA-256 해시 검증 완료. 5대 기준 모델 전체 구비 완료.
+  - 선행 조건 완료: `%LOCALAPPDATA%\on-the-record\models\`에 `medium-q5_0`, `large-v3-turbo-q5_0`, `large-v3-q5_0` 모델 파일 3종 다운로드 및 SHA-256 해시 검증 완료. 5대 기준 모델 전체 구비 완료.
   - 표본 `real-sample-01`(130.6초) 5대 모델 전수 측정 완료(스레드 8):
     - `base-q5_1`: 15.0초/오디오분, RAM 356 MB, 세그먼트 29 (Samsung과 세그먼트 일치)
     - `small-q5_1`: 25.5초/오디오분, RAM 625 MB, 세그먼트 24 (Samsung과 세그먼트 일치)
@@ -181,7 +187,7 @@
 - [x] `0-BASE-05` 오디오 변환기(decoder) 후보 선정 및 라이선스 확인 → 완료(2026-11-02): FFmpeg 9.0.1 공식 소스의 LGPL 기본 빌드를 제품 후보로 선정하고, 합성 표본 5종 및 실제 Opus/M4A 3종의 Lenovo 디코딩 확인. 현재 PC의 GPLv3 빌드는 시험 전용이며 제품용 실행 파일·배포 고지·Obsidian 설치 정책 검토는 제품화 단계에서 별도 확인. [검토 기록](./docs/baselines/BASE-05_AUDIO_DECODER_2026-11-02.md)
 
 - [x] `0-BASE-06` 상위 모델(`medium`, `large-v3-turbo`, `large-v3`) 입력 전사 기준선 확대 측정 → Samsung 완료(2026-11-03) 및 Lenovo 측정 완료(2026-11-07): 두 PC 모두 5대 모델 구비 및 실측 완료. `real-sample-01`(2.2분, 2회) 5개 전 모델 및 `real-sample-02`(21.5분, 1회) medium 측정 완료. 세그먼트 수가 두 PC에서 100% 일치(base 29, small 24, medium 15/171, turbo 25, large-v3 40)함을 확인. Lenovo 1시간 환산: base 14.6분, small 26.0분, medium 68.2분, turbo 82.5분, large-v3 171.3분. 모델 최종 선정은 `0-BASE-08` 육안 검증 후 결정. [결과](./docs/baselines/BASE-06_LARGER_MODELS_2026-11-03.md).
-  - 모델: 각 `q5_0`, Hugging Face `ggerganov/whisper.cpp` 커밋 `5359861`로 고정, SHA-256 검증 완료(`medium` 514MB, `large-v3-turbo` 547MB, `large-v3` 1,031MB). `*.en`, `large-v1/v2`, `tiny`는 제외(영어 전용·구버전·한국어 품질 부족). 파일은 저장소 밖 `%LOCALAPPDATA%\on-the-record-dev\models\`
+  - 모델: 각 `q5_0`, Hugging Face `ggerganov/whisper.cpp` 커밋 `5359861`로 고정, SHA-256 검증 완료(`medium` 514MB, `large-v3-turbo` 547MB, `large-v3` 1,031MB). `*.en`, `large-v1/v2`, `tiny`는 제외(영어 전용·구버전·한국어 품질 부족). 파일은 저장소 밖 `%LOCALAPPDATA%\on-the-record\models\`
   - 조건: whisper.cpp b5454 CPU 전용, `-l ko -t 8`, `scripts\measure-whisper.ps1`. 샘플 `real-sample-01`은 2회, `real-sample-02`는 1회(소요 시간 때문). 비교 기준은 `0-BASE-04`의 `base`/`small`
   - 장치: Samsung 960XFG 먼저(완료), 이후 Lenovo에서 같은 모델·해시·스레드로 반복
   - 기록: `benchmarks\records\<deviceId>\` JSON(장치별 하위 폴더, 2026-11-03 정리), 결과 요약은 `docs\baselines\BASE-06_...md`에 추가. 지표는 처리 시간/오디오 1분, 최대 RAM, 세그먼트 수, 반복 세그먼트 수. 요약표는 `scripts\summarize-records.ps1`로 생성
@@ -298,7 +304,7 @@
 #### 7. 프로젝트 구조 정규화 및 플러그인 ID 유지 확정 (ENV & REPO)
 > 개발 단계에서 생성된 임시 폴더명(`-dev`)을 정규화하고, 사용자 요청에 따른 `obsidian-ontherecord` 플러그인 ID 변경 타당성 및 커뮤니티 배포 정책 부합 여부를 검토하여 결론을 반영한다.
 
-- [x] `3-ENV-17` 프로젝트 구조 및 로컬 저장소 폴더명 `-dev` 접미사 제거 정규화 → 완료(2026-11-20): 개발 단계의 임시 경로인 `%LOCALAPPDATA%\on-the-record-dev`를 완전히 배제하고, 공식 릴리즈 표준 폴더인 `%LOCALAPPDATA%\on-the-record\models` 및 `tools`로 단일화([src/modelCatalog.ts](./src/modelCatalog.ts), [scripts/setup-tools.ps1](./scripts/setup-tools.ps1), [src/cpuRuntimeDiscovery.ts](./src/cpuRuntimeDiscovery.ts)). 사용자 결정에 따라 `-dev` 폴더에 대한 별도 레거시 fallback은 일절 지원하지 않고 깔끔하게 단일 표준 경로만 적용.
+- [x] `3-ENV-17` 프로젝트 구조 및 로컬 저장소 폴더명 `-dev` 접미사 제거 정규화 → 완료(2026-11-20): 개발 단계의 임시 경로인 `%LOCALAPPDATA%\on-the-record`를 완전히 배제하고, 공식 릴리즈 표준 폴더인 `%LOCALAPPDATA%\on-the-record\models` 및 `tools`로 단일화([src/modelCatalog.ts](./src/modelCatalog.ts), [scripts/setup-tools.ps1](./scripts/setup-tools.ps1), [src/cpuRuntimeDiscovery.ts](./src/cpuRuntimeDiscovery.ts)). 사용자 결정에 따라 `-dev` 폴더에 대한 별도 레거시 fallback은 일절 지원하지 않고 깔끔하게 단일 표준 경로만 적용.
 - [x] `3-PROD-02` 플러그인 ID `obsidian-ontherecord` 변경 검토 및 `on-the-record` 유지 확정 → 완료(2026-11-20):
   - **검토 결과 및 사용자 결정**: 플러그인 ID는 **`on-the-record`로 변경 없이 유지 확정**.
   - **결정 근거**:

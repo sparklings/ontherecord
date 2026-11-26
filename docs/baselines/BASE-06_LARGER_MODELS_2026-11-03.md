@@ -6,7 +6,7 @@
 
 - 장치 `samsung-960xfg`, whisper.cpp b5454 CPU 전용, `-l ko -t 8 -otxt` ([측정 스크립트](../../scripts/measure-whisper.ps1)).
 - 모델(`q5_0`, HF 커밋 `5359861`, SHA-256 검증 완료): `medium` 539,212,467 B, `large-v3-turbo` 574,041,195 B, `large-v3` 1,081,140,203 B. 전체 해시는 각 기록 JSON.
-- 샘플 `real-sample-01`(130.6 s) 2회, `real-sample-02`(1292 s) 1회. 기록 `benchmarks\records\samsung-960xfg\2026-11-03_samsung-960xfg_001`~`009`. 전사문은 `%LOCALAPPDATA%\on-the-record-dev\transcripts\`(동기화 밖).
+- 샘플 `real-sample-01`(130.6 s) 2회, `real-sample-02`(1292 s) 1회. 기록 `benchmarks\records\samsung-960xfg\2026-11-03_samsung-960xfg_001`~`009`. 전사문은 `%LOCALAPPDATA%\on-the-record\transcripts\`(동기화 밖).
 - `elapsedSeconds`는 모델 로딩 제외, 최대 RAM은 `PeakWorkingSet64`.
 
 ## 2. 결과

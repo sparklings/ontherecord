@@ -6,6 +6,14 @@
 
 ## 2026-11-27
 
+### 결정 및 표준화
+- **식별자 및 로컬 경로 `-dev` 접미사 전면 배제 및 외부 패키지 클린 재설치**:
+  - 사용자 결정에 따라 `on-the-record-dev`와 같은 개발용 접미사 폴더명/식별자/프로젝트 ID를 일체 사용하지 않도록 결정.
+  - `%LOCALAPPDATA%\on-the-record-dev` 디렉터리 내 모델(`ggml-base-q5_1.bin` 등), 런타임, 전사문을 정식 표준 경로인 `%LOCALAPPDATA%\on-the-record`로 완전 마이그레이션하고 레거시 dev 디렉터리 영구 삭제.
+  - `local-settings.json` 내 저장된 도구/모델 경로를 `on-the-record` 표준 경로로 자동 갱신.
+  - 코드베이스 전체(`scripts/measure-whisper.ps1`, `benchmarks/`, `docs/`)에서 `on-the-record-dev` 잔재 전수 제거.
+  - `node_modules` 전체 삭제 후 `npm install` 클린 재설치 수행.
+
 ### 변경 및 간소화
 - **기본 핵심 기능 극대화 및 UI 초간소화 개편 (`SIMPLIFY-01`~`SIMPLIFY-05`)**:
   - `src/floatingIndicator.ts`: 플로팅 인디케이터에 `transcribing` 및 `completed` 상태 추가. 녹음 종료 즉시 플로팅 알약이 `전사 중 %` 진행 상태로 부드럽게 전환되고, 완료 시 `✓ 전사 완료!` 표시 후 2초 뒤 자동 페이드아웃.
@@ -200,8 +208,8 @@
 - 전체 80개 단위 테스트 통과 및 production build(`main.js`, 155KB) 성공 검증
 - **새 노트북 환경(Samsung 930XDB) 개발환경 구축 및 외부 참조 모듈 설치**:
   - `winget`을 통해 FFmpeg 9.0.2 설치 완료 (`%LOCALAPPDATA%\Microsoft\WinGet\Packages\...`)
-  - `whisper.cpp` v1.9.5(b5454) x64 CPU 공식 빌드 다운로드 및 SHA-256 검증 완료 (`%LOCALAPPDATA%\on-the-record-dev\runtimes\...`)
-  - `base-q5_1` 및 `small-q5_1` 모델 다운로드 및 SHA-256 무결성 검증 완료 (`%LOCALAPPDATA%\on-the-record-dev\models\...`)
+  - `whisper.cpp` v1.9.5(b5454) x64 CPU 공식 빌드 다운로드 및 SHA-256 검증 완료 (`%LOCALAPPDATA%\on-the-record\runtimes\...`)
+  - `base-q5_1` 및 `small-q5_1` 모델 다운로드 및 SHA-256 무결성 검증 완료 (`%LOCALAPPDATA%\on-the-record\models\...`)
   - `%LOCALAPPDATA%\on-the-record\local-settings.json` 초기화 및 실제 오디오(`format-fixture.wav`) 추론 실기 검증 완료
 - **`3-REC-02` 탭 닫힘 감지 및 녹음 자동 안전 중지·연결 (`F-04`, `F-05`, `C-02`)**:
   - `WorkspaceLeaf.prototype.detach` 가로채기를 통해 녹음 중인 노트 탭 닫힘 감지 및 자동 안전 중지 구현
@@ -263,7 +271,7 @@
 
 ### 변경
 - `package.json`의 `test` 스크립트에 `--experimental-strip-types` 플래그를 추가해 Node.js v22.16.0 환경에서 `.ts` 단위 테스트 실행 호환성 확보. 45개 단위 테스트 전건 통과
-- `src/cpuRuntimeDiscovery.ts`의 `getCpuToolSearchRoots`에 `%LOCALAPPDATA%\on-the-record-dev` 및 `%LOCALAPPDATA%\on-the-record`를 추가해 로컬 앱데이터/개발 폴더 내 whisper.cpp 런타임 및 모델 자동 검색을 지원. 레노버 환경에서 런타임 2종·모델 2종 정상 검색 확인 및 단위 테스트 갱신
+- `src/cpuRuntimeDiscovery.ts`의 `getCpuToolSearchRoots`에 `%LOCALAPPDATA%\on-the-record` 및 `%LOCALAPPDATA%\on-the-record`를 추가해 로컬 앱데이터/개발 폴더 내 whisper.cpp 런타임 및 모델 자동 검색을 지원. 레노버 환경에서 런타임 2종·모델 2종 정상 검색 확인 및 단위 테스트 갱신
 - 레노버 노트북 환경에서 whisper.cpp b5454 SHA-256·버전 검증, Chocolatey FFmpeg 9.0.1 기반 M4A 오디오 정규화, 시험 추론 및 JSON segment 초 단위 timestamp 파싱 실기 검증 완료
 - `PlugVaults`의 실제 오디오(`Recording 20261103130854.m4a`) 및 테스트 노트(`On the Record Test Case 1.md`)를 대상으로 실제 whisper.cpp 전사, embed 바로 아래 교체/추가 삽입 로직 및 전사문 검색어 매칭 실기 검증 완료
 - NVIDIA GeForce GTX 1650 Ti (4GB VRAM, 드라이버 580.88, CUDA 13.0) GPU 구동 상태 및 VRAM 적재 용량 분석 완료
@@ -325,7 +333,7 @@
 ### 변경
 - `0-BASE-04` Lenovo 기준선 반영: 긴 샘플 기준 `base` 14.543~14.735초/오디오 1분, `small` 25.508~26.415초/오디오 1분. TODO 항목을 완료로 변경. 전사 품질(CER)은 미평가
 - `.gitignore`에서 `samples\` 전체를 제외해 오디오뿐 아니라 전사문·라벨·메타데이터도 Git 추적 대상에서 제외
-- 측정 스크립트의 전사문 저장 위치를 동기화 폴더 밖 `%LOCALAPPDATA%\on-the-record-dev\transcripts\`로 변경하고, 측정 기록에는 사용자 경로 대신 환경 변수 토큰을 기록
+- 측정 스크립트의 전사문 저장 위치를 동기화 폴더 밖 `%LOCALAPPDATA%\on-the-record\transcripts\`로 변경하고, 측정 기록에는 사용자 경로 대신 환경 변수 토큰을 기록
 - `docs\design\HARDWARE_PROFILE.md`의 전사문 경로 규칙 및 Lenovo 프로필 예시를 실제 확인값에 맞게 갱신. Lenovo 시스템 정보 문서에 OS 빌드·GPU 메모리·드라이버·저장 공간 재확인 결과 반영
 - 문서 폴더를 `docs\design\`(설계), `docs\baselines\`(시험·기준선), `docs\research\`(정책·조사)로 분류하고 [문서 안내](./docs/README.md)에 목록화. 내부 링크도 새 위치로 갱신
 - 루트 README에 저장소 디렉터리 용도를 명시하고, 새 문서는 문서 안내와 CHANGELOG에 등록하도록 규칙 추가
