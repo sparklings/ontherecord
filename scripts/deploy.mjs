@@ -10,10 +10,14 @@ const OPTIONAL = new Set(["styles.css"]);
 // 업무용 vault로 복사되는 것을 막는다.
 const FORBIDDEN = /ObsidianVaults/i;
 
-const vault = path.resolve(
-	process.env.OTR_TEST_VAULT ||
-		path.join(process.env.USERPROFILE || "", "OneDrive", "PlugVaults"),
-);
+const defaultVaults = [
+	process.env.OTR_TEST_VAULT,
+	path.join(process.env.USERPROFILE || "", "OneDrive", "PlugVaults"),
+	"C:\\Cloud Files\\OneDrive\\PlugVaults",
+].filter(Boolean);
+
+let vault = defaultVaults.find((p) => fs.existsSync(path.join(p, ".obsidian"))) || defaultVaults[0];
+
 
 function fail(message) {
 	console.error(`[deploy] ${message}`);
