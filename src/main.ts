@@ -510,9 +510,13 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		this.app.workspace.onLayoutReady(() => {
 			this.queueWorker.start();
-			void checkUnfinishedSessionOnStartup(this.app, {
-				get: () => this.sessionManager.restore(),
-			});
+			void checkUnfinishedSessionOnStartup(
+				this.app,
+				{
+					get: () => this.sessionManager.restore(),
+				},
+				(msg) => new Notice(msg, 8000),
+			);
 			this.registerEvent(
 				this.app.vault.on("create", (file) => {
 					if (file instanceof TFile && file.extension.toLowerCase() === "md") {
@@ -634,7 +638,7 @@ export default class OnTheRecordPlugin extends Plugin {
 		this.queueWorker = new TranscriptionQueueWorker({
 			queue: this.recordingQueue,
 			engine: {
-				transcribe: async (runtimePath, modelPath, ffmpegPath, audioFullPath, language, onProgress, _signal, gpuOptions) => {
+				transcribe: async (runtimePath, modelPath, ffmpegPath, audioFullPath, language, onProgress, signal, gpuOptions) => {
 					const result = await runtime.transcribe(
 						runtimePath,
 						modelPath,
@@ -642,7 +646,10 @@ export default class OnTheRecordPlugin extends Plugin {
 						audioFullPath,
 						language,
 						onProgress,
-						gpuOptions as import("./whisperCppCpu.ts").WhisperGpuExecutionOptions | undefined,
+						{
+							...gpuOptions,
+							signal,
+						} as import("./whisperCppCpu.ts").WhisperGpuExecutionOptions | undefined,
 					);
 					return {
 						...result,

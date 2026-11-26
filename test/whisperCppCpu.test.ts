@@ -278,3 +278,60 @@ test("buildWhisperInferenceArgs: vocabularyPrompt가 설정된 경우 --prompt �
 	});
 	assert.equal(argsWithoutPrompt.includes("--prompt"), false);
 });
+
+test("런타임 및 모델 검증 캐시: 동일 파일에 대해 반복 해싱 없이 캐시된 식별 정보를 반환한다", async () => {
+	const fixture = await createFixture();
+	let hashCount = 0;
+	try {
+		const runtime = new WhisperCppCpuRuntime({
+			hashFile: async (filePath) => {
+				hashCount += 1;
+				return filePath === fixture.runtimePath ? runtimeHash : baseModelHash;
+			},
+			runCommand: async () => ({ stdout: runtimeVersion, stderr: "" }),
+		});
+
+		// 1차 검증: 파일 해싱 실행
+		const first = await runtime.verify(fixture.runtimePath, fixture.modelPath);
+		assert.equal(first.runtimeSha256, runtimeHash);
+		assert.equal(first.modelId, "base");
+		const initialHashCount = hashCount;
+		assert.ok(initialHashCount >= 2);
+
+		// 2차 검증: 파일이 수정되지 않았으므로 캐시 반환 (추가 해싱 0회)
+		const second = await runtime.verify(fixture.runtimePath, fixture.modelPath);
+		assert.equal(second.runtimeSha256, runtimeHash);
+		assert.equal(second.modelId, "base");
+		assert.equal(hashCount, initialHashCount, "캐시 적중 시 hashFile이 추가 호출되지 않아야 함");
+	} finally {
+		await fs.rm(fixture.directory, { recursive: true, force: true });
+	}
+});
+
+test("transcribe: AbortSignal 취소 시 즉시 취소 예외를 발생시킨다", async () => {
+	const fixture = await createFixture();
+	try {
+		const controller = new AbortController();
+		controller.abort();
+
+		const runtime = new WhisperCppCpuRuntime({
+			hashFile: async (filePath) => filePath === fixture.runtimePath ? runtimeHash : baseModelHash,
+			runCommand: async () => ({ stdout: runtimeVersion, stderr: "" }),
+		});
+
+		await assert.rejects(
+			runtime.transcribe(
+				fixture.runtimePath,
+				fixture.modelPath,
+				fixture.ffmpegPath,
+				fixture.audioPath,
+				"ko",
+				undefined,
+				{ signal: controller.signal },
+			),
+			(error: unknown) => error instanceof Error && error.message.includes("취소"),
+		);
+	} finally {
+		await fs.rm(fixture.directory, { recursive: true, force: true });
+	}
+});

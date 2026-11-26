@@ -6,6 +6,22 @@
 
 ## 2026-11-27
 
+### 수정 및 최적화
+- **핵심 음성 전사 파이프라인 및 노트 연동 견고성 강화 (`CORE-01`~`CORE-07`)**:
+  - `src/whisperCppCpu.ts`:
+    - **타임아웃 분리**: 스모크 테스트용 타임아웃(5분)과 실제 전사용 타임아웃(2시간)을 분리하여 장시간 녹음 파일 전사 시 타임아웃으로 크래시되던 문제 해결
+    - **CPU 스레드 최적화**: 하드코딩된 4스레드 대신 `os.cpus()` 논리 코어 수의 75%를 자동 감지·할당하는 `getDefaultCpuThreads()` 적용
+    - **모델/런타임 검증 캐싱**: 파일 수정시각 및 크기가 동일할 경우 메모리 캐시를 반환하여 1.5GB~3.1GB 모델 파일의 매 전사 시 불필요한 전체 재해싱 I/O 병목 완전 제거
+    - **작업 취소 연동**: `AbortSignal`을 FFmpeg 및 whisper.cpp 자식 프로세스 실행 시 전달하여 작업 취소 시 즉각 안전 종료
+    - **임시 폴더 삭제 방어**: 임시 디렉터리 정리 실패가 본래의 전사 오류를 은폐하지 않도록 예외 처리 격리
+  - `src/resultPreview.ts`:
+    - **동적 오디오 임베드 재탐색**: 백그라운드 전사가 진행되는 동안 사용자가 노트 상단에 텍스트를 입력하여 라인이 밀려도, 오디오 링크를 기준으로 본문 내 embed를 동적으로 재탐색하여 안전하게 결과 삽입
+  - `src/main.ts`:
+    - `checkUnfinishedSessionOnStartup`: 비정상 종료된 녹음 세션 감지 시 사용자 Notice 알림 콜백 연결
+    - `setupQueueWorker`: `signal`을 `runtime.transcribe()`에 연결하여 백그라운드 작업 취소 응답성 극대화
+  - `test/whisperCppCpu.test.ts`, `test/resultPreview.test.ts`:
+    - 검증 캐시 적중, 전사 취소, 라인 밀림 동적 재탐색에 대한 단위 테스트 3건 신규 추가 (전체 117건 통과)
+
 ### 추가
 - **Stitch MCP 공식 연동 누락 시안 3종 정식 생성 및 에셋 추출 (`DESIGN-01`, Issue #15)**:
   - Google Stitch MCP (`projects/15695117177036898361`, 디자인 시스템 `assets/17724542724472707759`)에 3개 화면(`Workflow Tab`, `Acceleration & AI Tab`, `Review Modal`)을 생성 등록

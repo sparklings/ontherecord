@@ -94,25 +94,49 @@ export function applyAudioEmbedInsertion(
 	for (let index = 0; index < content.length; index += 1) {
 		if (content[index] === "\n") lineStarts.push(index + 1);
 	}
-	const startLine = lineStarts[options.embed.start.line];
-	const endLine = lineStarts[options.embed.end.line];
-	if (startLine === undefined || endLine === undefined) {
-		throw new Error("오디오 embed 위치가 현재 노트 범위를 벗어났습니다. 다시 시도하세요.");
-	}
-	const embedStart = startLine + options.embed.start.ch;
-	const embedEnd = endLine + options.embed.end.ch;
-	if (embedStart < 0 || embedEnd < embedStart || embedEnd > content.length) {
-		throw new Error("오디오 embed 위치가 올바르지 않습니다. 다시 시도하세요.");
-	}
-	const embedText = content.slice(embedStart, embedEnd);
-	const hasEmbedPrefix = embedText.startsWith("!") || (embedStart > 0 && content[embedStart - 1] === "!");
-	if (!hasEmbedPrefix || !embedText.includes(options.embed.link)) {
-		throw new Error("노트의 오디오 embed가 변경되었습니다. 검색 후 다시 시도하세요.");
-	}
-
-	const embedLine = options.embed.end.ch === 0 && options.embed.end.line > options.embed.start.line
+	let embedLine = options.embed.end.ch === 0 && options.embed.end.line > options.embed.start.line
 		? options.embed.end.line - 1
 		: options.embed.end.line;
+
+	let positionValid = false;
+	const startLine = lineStarts[options.embed.start.line];
+	const endLine = lineStarts[options.embed.end.line];
+	if (startLine !== undefined && endLine !== undefined) {
+		const embedStart = startLine + options.embed.start.ch;
+		const embedEnd = endLine + options.embed.end.ch;
+		if (embedStart >= 0 && embedEnd >= embedStart && embedEnd <= content.length) {
+			const embedText = content.slice(embedStart, embedEnd);
+			const hasEmbedPrefix = embedText.startsWith("!") || (embedStart > 0 && content[embedStart - 1] === "!");
+			if (hasEmbedPrefix && embedText.includes(options.embed.link)) {
+				positionValid = true;
+			}
+		}
+	}
+
+	// 사용자가 전사 도중 상단에 텍스트를 추가/삭제하여 라인 번호가 어긋난 경우,
+	// 본문 전체에서 해당 오디오 링크가 포함된 embed를 동적으로 재탐색
+	if (!positionValid) {
+		const escapedLink = escapeRegExp(options.embed.link);
+		const regex = new RegExp(`!\\[\\[[^\\]]*${escapedLink}[^\\]]*\\]\\]`, "i");
+		const match = regex.exec(content);
+		if (match) {
+			const matchPos = match.index;
+			let foundLine = 0;
+			for (let i = 0; i < lineStarts.length; i += 1) {
+				if (lineStarts[i] <= matchPos) {
+					foundLine = i;
+				} else {
+					break;
+				}
+			}
+			embedLine = foundLine;
+			positionValid = true;
+		}
+	}
+
+	if (!positionValid) {
+		throw new Error("노트의 오디오 embed가 변경되었습니다. 검색 후 다시 시도하세요.");
+	}
 	const lineStart = lineStarts[embedLine];
 	if (lineStart === undefined) throw new Error("오디오 embed 행을 찾을 수 없습니다.");
 	const nextNewline = content.indexOf("\n", lineStart);

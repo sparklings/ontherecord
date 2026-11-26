@@ -136,3 +136,22 @@ test("결과 블록은 공백이 있는 오디오 경로와 함께 추적된다"
 	const first = wrapResultBlock("a b.m4a", "- old");
 	assert.ok(findResultBlock(first, "a b.m4a"));
 });
+
+test("전사 대기 중 상단 편집으로 라인이 밀려도 오디오 embed를 동적으로 재탐색하여 결과를 삽입한다", () => {
+	// 원본 위치는 0행이었으나, 상단에 여러 줄이 추가되어 5행으로 밀린 상황
+	const prepended = "# 새로 작성된 회의 개요\n\n- 참석자: 김팀장, 이선임\n- 일시: 2026-11-27\n\n";
+	const contentWithPrepend = `${prepended}${embedText}\n`;
+
+	// 기존 embed 위치 정보는 여전히 0행을 가리키고 있음
+	const shifted = applyAudioEmbedInsertion(contentWithPrepend, {
+		audioPath: "a.m4a",
+		markdown: "- dynamic fallback result",
+		embed: { ...embed, start: { line: 0, ch: 0 }, end: { line: 0, ch: embedText.length } },
+	});
+
+	// 상단 내용이 보존되고, 재배치된 embed 바로 뒤에 결과 블록이 올바르게 삽입되어야 함
+	assert.ok(shifted.startsWith(prepended));
+	assert.ok(shifted.includes(embedText));
+	assert.ok(shifted.includes("- dynamic fallback result"));
+	assert.ok(shifted.indexOf(embedText) < shifted.indexOf("- dynamic fallback result"));
+});

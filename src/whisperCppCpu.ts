@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { execFile as execFileCallback } from "child_process";
 import { createReadStream } from "fs";
 import { promises as fs } from "fs";
-import { tmpdir } from "os";
+import { cpus, tmpdir } from "os";
 import * as path from "path";
 import { promisify } from "util";
 import { ProviderError } from "./provider.ts";
@@ -16,8 +16,9 @@ const CPU_AUDIO_EXTENSION_SET = new Set<string>(WHISPER_CPP_CPU_AUDIO_EXTENSIONS
 
 const EXPECTED_RUNTIME_VERSION = "whisper.cpp version: 1.9.5";
 const EXPECTED_RUNTIME_SHA256 = "331dba46d6427105d2b802cdbc7eae916ea1c5abf9b0d3b5cfe460d8db8e4366";
-const SMOKE_TEST_TIMEOUT_MS = 5 * 60 * 1000;
-const NORMALIZATION_TIMEOUT_MS = 5 * 60 * 1000;
+export const SMOKE_TEST_TIMEOUT_MS = 5 * 60 * 1000;
+export const TRANSCRIPTION_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+export const NORMALIZATION_TIMEOUT_MS = 15 * 60 * 1000;
 
 const VERIFIED_MODELS = [
 	{
@@ -53,7 +54,7 @@ interface CommandResult {
 }
 
 interface CommandRunner {
-	(filePath: string, args: readonly string[], timeoutMs: number): Promise<CommandResult>;
+	(filePath: string, args: readonly string[], timeoutMs: number, signal?: AbortSignal): Promise<CommandResult>;
 }
 
 interface CpuRuntimeDependencies {
@@ -153,15 +154,36 @@ const defaultDependencies: CpuRuntimeDependencies = {
 			stream.on("end", () => resolve(hash.digest("hex")));
 		});
 	},
-	async runCommand(filePath, args, timeoutMs) {
+	async runCommand(filePath, args, timeoutMs, signal) {
 		const result = await execFile(filePath, [...args], {
 			timeout: timeoutMs,
-			maxBuffer: 1024 * 1024,
+			maxBuffer: 10 * 1024 * 1024,
 			windowsHide: true,
+			signal,
 		});
 		return { stdout: result.stdout, stderr: result.stderr };
 	},
 };
+
+export function getDefaultCpuThreads(): number {
+	const cpuList = cpus();
+	const count = Array.isArray(cpuList) && cpuList.length > 0 ? cpuList.length : 4;
+	return Math.max(1, Math.min(8, Math.floor(count * 0.75)));
+}
+
+interface IdentityCacheEntry<T> {
+	mtimeMs: number;
+	size: number;
+	identity: T;
+}
+
+const runtimeIdentityCache = new Map<string, IdentityCacheEntry<WhisperCppRuntimeIdentity>>();
+const modelIdentityCache = new Map<string, IdentityCacheEntry<WhisperCppModelIdentity>>();
+
+export function clearWhisperVerificationCache(): void {
+	runtimeIdentityCache.clear();
+	modelIdentityCache.clear();
+}
 
 export interface WhisperInferenceOptions {
 	modelPath: string;
@@ -177,11 +199,12 @@ export interface WhisperInferenceOptions {
 }
 
 export function buildWhisperInferenceArgs(options: WhisperInferenceOptions): string[] {
+	const threads = options.threads ?? getDefaultCpuThreads();
 	const args = [
 		"-m", options.modelPath,
 		"-f", options.audioPath,
 		"-l", options.language,
-		"-t", String(options.threads ?? 4),
+		"-t", String(threads),
 		"-np",
 		"-oj",
 		"-of", options.outputBase,
@@ -217,6 +240,9 @@ export interface WhisperGpuExecutionOptions {
 	gpuLayers?: number;
 	gpuDeviceId?: number;
 	vocabularyPrompt?: string;
+	threads?: number;
+	timeoutMs?: number;
+	signal?: AbortSignal;
 }
 
 export class WhisperCppCpuRuntime {
@@ -252,7 +278,12 @@ export class WhisperCppCpuRuntime {
 		if (!runtimePath.trim()) {
 			throw new ProviderError("런타임 실행 파일 경로를 지정하세요.", "runtime-unavailable", "whisper-cpp-cpu");
 		}
-		await assertRegularFile(runtimePath, "런타임 실행 파일");
+		const stat = await assertRegularFile(runtimePath, "런타임 실행 파일");
+		const cached = runtimeIdentityCache.get(runtimePath);
+		if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) {
+			return cached.identity;
+		}
+
 		onProgress("hashing-runtime", 0);
 		const runtimeSha256 = await this.dependencies.hashFile(runtimePath, (percent) => onProgress("hashing-runtime", percent));
 		if (runtimeSha256 !== EXPECTED_RUNTIME_SHA256) {
@@ -282,7 +313,9 @@ export class WhisperCppCpuRuntime {
 			);
 		}
 
-		return { runtimeVersion, runtimeSha256 };
+		const identity: WhisperCppRuntimeIdentity = { runtimeVersion, runtimeSha256 };
+		runtimeIdentityCache.set(runtimePath, { mtimeMs: stat.mtimeMs, size: stat.size, identity });
+		return identity;
 	}
 
 	async identifyModel(
@@ -293,7 +326,12 @@ export class WhisperCppCpuRuntime {
 		if (!modelPath.trim()) {
 			throw new ProviderError("모델 파일 경로를 지정하세요.", "invalid-model", "whisper-cpp-cpu");
 		}
-		await assertRegularFile(modelPath, "모델 파일");
+		const stat = await assertRegularFile(modelPath, "모델 파일");
+		const cached = modelIdentityCache.get(modelPath);
+		if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) {
+			return cached.identity;
+		}
+
 		onProgress("hashing-model", 0);
 		const modelSha256 = await this.dependencies.hashFile(modelPath, (percent) => onProgress("hashing-model", percent));
 		const model = VERIFIED_MODELS.find((candidate) => candidate.sha256 === modelSha256);
@@ -304,11 +342,13 @@ export class WhisperCppCpuRuntime {
 				"whisper-cpp-cpu",
 			);
 		}
-		return {
+		const identity: WhisperCppModelIdentity = {
 			modelId: model.id,
 			modelQuantization: model.quantization,
 			modelSha256,
 		};
+		modelIdentityCache.set(modelPath, { mtimeMs: stat.mtimeMs, size: stat.size, identity });
+		return identity;
 	}
 
 	async smokeTest(
@@ -321,7 +361,10 @@ export class WhisperCppCpuRuntime {
 		gpuOptions?: WhisperGpuExecutionOptions,
 	): Promise<WhisperCppCpuVerification> {
 		const verification = await this.verify(runtimePath, modelPath, onProgress);
-		await this.runInference(runtimePath, modelPath, ffmpegPath, audioPath, language, onProgress, gpuOptions);
+		await this.runInference(runtimePath, modelPath, ffmpegPath, audioPath, language, onProgress, {
+			...gpuOptions,
+			timeoutMs: gpuOptions?.timeoutMs ?? SMOKE_TEST_TIMEOUT_MS,
+		});
 		return verification;
 	}
 
@@ -335,7 +378,10 @@ export class WhisperCppCpuRuntime {
 		gpuOptions?: WhisperGpuExecutionOptions,
 	): Promise<TranscriptionResult> {
 		const verification = await this.verify(runtimePath, modelPath, onProgress);
-		const transcription = await this.runInference(runtimePath, modelPath, ffmpegPath, audioPath, language, onProgress, gpuOptions);
+		const transcription = await this.runInference(runtimePath, modelPath, ffmpegPath, audioPath, language, onProgress, {
+			...gpuOptions,
+			timeoutMs: gpuOptions?.timeoutMs ?? TRANSCRIPTION_TIMEOUT_MS,
+		});
 		const device: ProviderDevice =
 			gpuOptions?.gpuBackend === "cuda" || gpuOptions?.gpuBackend === "vulkan" || gpuOptions?.gpuBackend === "openvino"
 				? gpuOptions.gpuBackend
@@ -374,6 +420,9 @@ export class WhisperCppCpuRuntime {
 		if (language !== "auto" && language !== "ko" && language !== "en") {
 			throw new ProviderError("시험 언어 설정이 올바르지 않습니다.", "execution-failed", "whisper-cpp-cpu");
 		}
+		if (gpuOptions?.signal?.aborted) {
+			throw new ProviderError("전사 작업이 취소되었습니다.", "cancelled", "whisper-cpp-cpu");
+		}
 
 		const temporaryDirectory = await fs.mkdtemp(path.join(tmpdir(), "on-the-record-cpu-test-"));
 		const normalizedAudioPath = path.join(temporaryDirectory, "normalized.wav");
@@ -401,29 +450,40 @@ export class WhisperCppCpuRuntime {
 						normalizedAudioPath,
 					],
 					NORMALIZATION_TIMEOUT_MS,
+					gpuOptions?.signal,
 				);
 			} catch (error) {
+				if (gpuOptions?.signal?.aborted) {
+					throw new ProviderError("전사 작업이 취소되었습니다.", "cancelled", "whisper-cpp-cpu");
+				}
 				throw new ProviderError("FFmpeg 오디오 정규화에 실패했습니다. 입력 파일과 디코더를 확인하세요.", "unsupported-audio", "whisper-cpp-cpu", asError(error));
 			}
 			await assertRegularFile(normalizedAudioPath, "정규화된 오디오 파일");
 
+			if (gpuOptions?.signal?.aborted) {
+				throw new ProviderError("전사 작업이 취소되었습니다.", "cancelled", "whisper-cpp-cpu");
+			}
+
 			onProgress("transcribing");
+			const threads = gpuOptions?.threads ?? getDefaultCpuThreads();
 			const whisperArgs = buildWhisperInferenceArgs({
 				modelPath,
 				audioPath: normalizedAudioPath,
 				language,
 				outputBase,
-				threads: 4,
+				threads,
 				suppressHallucinations: true,
 				device: gpuOptions?.gpuBackend,
 				gpuLayers: gpuOptions?.gpuLayers,
 				gpuDeviceId: gpuOptions?.gpuDeviceId,
 				vocabularyPrompt: gpuOptions?.vocabularyPrompt,
 			});
+			const inferenceTimeoutMs = gpuOptions?.timeoutMs ?? TRANSCRIPTION_TIMEOUT_MS;
 			await this.dependencies.runCommand(
 				runtimePath,
 				whisperArgs,
-				SMOKE_TEST_TIMEOUT_MS,
+				inferenceTimeoutMs,
+				gpuOptions?.signal,
 			);
 			const transcriptPath = `${outputBase}.json`;
 			await assertRegularFile(transcriptPath, "whisper.cpp JSON 결과 파일");
@@ -439,13 +499,15 @@ export class WhisperCppCpuRuntime {
 
 		try {
 			await fs.rm(temporaryDirectory, { recursive: true, force: true });
-		} catch (error) {
-			throw new ProviderError(
-				"시험용 임시 파일을 삭제하지 못했습니다. 임시 폴더를 직접 확인하세요.",
-				"execution-failed",
-				"whisper-cpp-cpu",
-				asError(error),
-			);
+		} catch (cleanupError) {
+			if (!runError) {
+				throw new ProviderError(
+					"시험용 임시 파일을 삭제하지 못했습니다. 임시 폴더를 직접 확인하세요.",
+					"execution-failed",
+					"whisper-cpp-cpu",
+					asError(cleanupError),
+				);
+			}
 		}
 		if (runError) {
 			if (runError instanceof ProviderError) throw runError;
@@ -462,7 +524,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-async function assertRegularFile(filePath: string, label: string): Promise<void> {
+async function assertRegularFile(filePath: string, label: string): Promise<import("fs").Stats> {
 	let stat;
 	try {
 		stat = await fs.stat(filePath);
@@ -472,6 +534,7 @@ async function assertRegularFile(filePath: string, label: string): Promise<void>
 	if (!stat.isFile() || stat.size <= 0) {
 		throw new ProviderError(`${label}이(가) 비어 있거나 일반 파일이 아닙니다.`, "runtime-unavailable", "whisper-cpp-cpu");
 	}
+	return stat;
 }
 
 function asError(error: unknown): Error {
