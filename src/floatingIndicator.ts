@@ -10,6 +10,7 @@ export interface FloatingIndicatorCallbacks {
 
 export interface FloatingIndicatorOptions {
 	hostEl?: HTMLElement;
+	getHostEl?: () => HTMLElement | null;
 	getNow?: () => number;
 	setIcon?: (el: HTMLElement, iconId: string) => void;
 }
@@ -21,6 +22,7 @@ export interface FloatingIndicatorOptions {
 export class FloatingRecordingIndicator {
 	private readonly callbacks: FloatingIndicatorCallbacks;
 	private readonly hostEl?: HTMLElement;
+	private readonly getHostEl?: () => HTMLElement | null;
 	private readonly getNow: () => number;
 	private readonly setIconFn?: (el: HTMLElement, iconId: string) => void;
 
@@ -40,6 +42,7 @@ export class FloatingRecordingIndicator {
 	constructor(callbacks: FloatingIndicatorCallbacks, options: FloatingIndicatorOptions = {}) {
 		this.callbacks = callbacks;
 		this.hostEl = options.hostEl;
+		this.getHostEl = options.getHostEl;
 		this.getNow = options.getNow ?? (() => Date.now());
 		this.setIconFn = options.setIcon;
 	}
@@ -173,9 +176,15 @@ export class FloatingRecordingIndicator {
 	}
 
 	private ensureMounted(): void {
-		if (this.rootEl) return;
-		const parent = this.hostEl ?? (typeof document !== "undefined" ? document.body : null);
+		const parent = this.getHostEl?.() ?? this.hostEl ?? (typeof document !== "undefined" ? document.body : null);
 		if (!parent) return;
+
+		if (this.rootEl) {
+			if (this.rootEl.parentElement && this.rootEl.parentElement !== parent) {
+				parent.appendChild(this.rootEl);
+			}
+			return;
+		}
 
 		const root = parent.createDiv({ cls: "otr-float-indicator is-hidden" });
 		root.setAttribute("role", "status");

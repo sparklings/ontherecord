@@ -750,7 +750,14 @@ export default class OnTheRecordPlugin extends Plugin {
 					await this.stopCurrentRecording();
 				},
 			},
-			{ setIcon },
+			{
+				getHostEl: () => {
+					// 본문 노트 작업 공간(rootSplit)의 우측 하단에 배치하여 사이드바 버튼과 겹침 방지
+					const rootContainer = (this.app.workspace.rootSplit as { containerEl?: HTMLElement } | undefined)?.containerEl;
+					return rootContainer ?? (typeof document !== "undefined" ? document.body : null);
+				},
+				setIcon,
+			},
 		);
 
 		// 코어 Audio recorder 직접 시작/중지 시에도 플로팅 표시기와 사이드바 상태를 자동 동기화

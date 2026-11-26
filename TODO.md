@@ -28,6 +28,10 @@
 
 ## 2026-11-27
 
+### 플로팅 인디케이터 본문 영역 배치 및 UI 시인성 강화 (2026-11-27 완료)
+- [x] `FLOAT-UI-01` 플로팅 캡슐 마운트 위치를 `workspace.rootSplit`으로 변경하여 사이드바 하단 버튼(`새 회의록 작성`)과의 겹침 완벽 차단
+- [x] `FLOAT-UI-02` 호버 시 노출되는 일시정지/중지 컨트롤에 명확한 버튼 테두리(`border: 1px solid`) 및 배경/호버 스타일 적용
+
 ### 식별자 `-dev` 전면 제거 및 로컬 스토리지/패키지 클린 표준화 (2026-11-27 완료)
 - [x] `DEV-PURGE-01` 로컬 AppData의 `on-the-record-dev` 폴더 내 모델(`ggml-base-q5_1.bin` 등) 및 런타임을 `on-the-record` 정식 표준 경로로 완전 마이그레이션 후 dev 폴더 영구 삭제
 - [x] `DEV-PURGE-02` `local-settings.json` 내 저장된 경로에서 `on-the-record-dev` 문자열을 `on-the-record`로 갱신
