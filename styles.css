@@ -710,3 +710,281 @@
 	white-space: nowrap;
 	margin-right: 8px;
 }
+
+/* --------------------------------------------------------------------------
+   6. Ambient Floating Recording Indicator (FEAT-02, UI-02)
+   -------------------------------------------------------------------------- */
+.is-hidden {
+	display: none !important;
+}
+
+.otr-float-indicator {
+	position: fixed;
+	right: 24px;
+	bottom: 36px;
+	z-index: 100;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 12px;
+	border-radius: 9999px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+	backdrop-filter: blur(8px);
+	color: var(--text-normal);
+	font-size: 12px;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.otr-float-indicator.is-starting {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px hsla(var(--interactive-accent-rgb), 0.22);
+}
+
+.otr-float-indicator.is-recording {
+	border-color: rgba(224, 82, 82, 0.45);
+}
+
+.otr-float-indicator.is-paused {
+	border-color: rgba(209, 123, 57, 0.45);
+}
+
+.otr-float-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.otr-float-indicator.is-starting .otr-float-dot {
+	background-color: var(--interactive-accent);
+	animation: otr-pulse 1s infinite ease-in-out;
+}
+
+.otr-float-indicator.is-recording .otr-float-dot {
+	background-color: var(--text-error, #e05252);
+	animation: otr-pulse 1.5s infinite ease-in-out;
+}
+
+.otr-float-indicator.is-paused .otr-float-dot {
+	background-color: var(--text-warning, #d17b39);
+}
+
+.otr-float-text {
+	font-family: var(--font-monospace);
+	font-variant-numeric: tabular-nums;
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.otr-float-actions {
+	display: none;
+	align-items: center;
+	gap: 4px;
+	margin-left: 4px;
+	padding-left: 6px;
+	border-left: 1px solid var(--background-modifier-border);
+}
+
+.otr-float-indicator:hover .otr-float-actions {
+	display: inline-flex;
+}
+
+.otr-float-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3px;
+	border: none;
+	border-radius: var(--radius-s, 4px);
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+}
+
+.otr-float-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.otr-float-btn.is-stop:hover {
+	color: var(--text-error, #e05252);
+}
+
+.otr-float-btn svg {
+	width: 12px;
+	height: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   7. Unobtrusive Sidebar Refinements (UI-03)
+   -------------------------------------------------------------------------- */
+.otr-sidebar-header-actions {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.otr-setup-alert {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 8px 10px;
+	border-radius: var(--radius-m, 6px);
+	background-color: rgba(209, 123, 57, 0.12);
+	border: 1px solid rgba(209, 123, 57, 0.35);
+	font-size: 11px;
+}
+
+.otr-setup-alert-msg {
+	color: var(--text-normal);
+}
+
+.otr-compact-note-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.otr-context-filename.is-empty {
+	color: var(--text-muted);
+	font-weight: 400;
+}
+
+.otr-compact-rec-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 10px;
+	border-radius: var(--radius-s, 4px);
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 11px;
+	font-weight: 500;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.otr-compact-rec-btn:hover:not(:disabled) {
+	border-color: var(--interactive-accent);
+}
+
+.otr-compact-rec-btn.is-disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.otr-compact-rec-btn.is-active {
+	border-color: rgba(224, 82, 82, 0.5);
+	color: var(--text-error, #e05252);
+}
+
+.otr-compact-rec-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background-color: var(--text-error, #e05252);
+}
+
+.otr-queue-widget {
+	padding: 10px;
+	border-radius: var(--radius-m, 6px);
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.otr-queue-top-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.otr-queue-label-group {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.otr-queue-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background-color: var(--interactive-accent);
+	animation: otr-pulse 1.4s infinite ease-in-out;
+}
+
+.otr-queue-status-text {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.otr-queue-file-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	font-size: 11px;
+}
+
+.otr-queue-filename {
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.otr-queue-percent {
+	font-family: var(--font-monospace);
+	color: var(--interactive-accent);
+	font-weight: 600;
+}
+
+.otr-queue-progress-track {
+	width: 100%;
+	height: 4px;
+	border-radius: 9999px;
+	background-color: var(--background-modifier-border);
+	overflow: hidden;
+}
+
+.otr-queue-progress-fill {
+	height: 100%;
+	background-color: var(--interactive-accent);
+	transition: width 0.2s ease;
+}
+
+.otr-audio-empty {
+	font-size: 11px;
+	color: var(--text-muted);
+	padding: 12px 4px;
+	text-align: center;
+}
+
+.otr-audio-status-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	font-size: 10px;
+	font-weight: 500;
+}
+
+.otr-audio-status-pill.is-done {
+	color: var(--text-success, #48a56a);
+}
+
+.otr-audio-status-pill.is-pending {
+	color: var(--text-muted);
+}
+
+.otr-audio-status-pill svg {
+	width: 10px;
+	height: 10px;
+}
