@@ -931,6 +931,16 @@
 	border-color: rgba(209, 123, 57, 0.45);
 }
 
+.otr-float-indicator.is-transcribing {
+	border-color: rgba(123, 108, 217, 0.6);
+	box-shadow: 0 0 0 2px rgba(123, 108, 217, 0.25);
+}
+
+.otr-float-indicator.is-completed {
+	border-color: rgba(52, 199, 89, 0.6);
+	color: #34c759;
+}
+
 .otr-float-dot {
 	width: 8px;
 	height: 8px;
@@ -950,6 +960,15 @@
 
 .otr-float-indicator.is-paused .otr-float-dot {
 	background-color: var(--text-warning, #d17b39);
+}
+
+.otr-float-indicator.is-transcribing .otr-float-dot {
+	background-color: #7b6cd9;
+	animation: otr-pulse 0.9s infinite ease-in-out;
+}
+
+.otr-float-indicator.is-completed .otr-float-dot {
+	background-color: #34c759;
 }
 
 .otr-float-text {

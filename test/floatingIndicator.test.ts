@@ -124,13 +124,27 @@ test("FloatingRecordingIndicator: idle 및 destroy 시 비노출, starting/recor
 	assert.equal(root.hasClass("is-paused"), true);
 	assert.equal(root.children[1].text, "01:05");
 
-	// 4. idle 복귀 시 숨김 처리
+	// 4. transcribing 상태: 전사 진행률 텍스트 노출
+	indicator.setTranscribing(45);
+	assert.equal(indicator.getState(), "transcribing");
+	assert.equal(indicator.isVisible(), true);
+	assert.equal(root.hasClass("is-transcribing"), true);
+	assert.equal(root.children[1].text, "전사 중 45%");
+
+	// 5. completed 상태: 완료 메시지 노출
+	indicator.setCompleted("전사 완료!");
+	assert.equal(indicator.getState(), "completed");
+	assert.equal(indicator.isVisible(), true);
+	assert.equal(root.hasClass("is-completed"), true);
+	assert.equal(root.children[1].text, "✓ 전사 완료!");
+
+	// 6. idle 복귀 시 숨김 처리
 	indicator.setState("idle");
 	assert.equal(indicator.getState(), "idle");
 	assert.equal(indicator.isVisible(), false);
 	assert.equal(root.hasClass("is-hidden"), true);
 
-	// 5. destroy() (Obsidian 종료 시): DOM 요소 완전 제거
+	// 7. destroy() (Obsidian 종료 시): DOM 요소 완전 제거
 	indicator.setState("recording", now);
 	assert.equal(indicator.isVisible(), true);
 	indicator.destroy();

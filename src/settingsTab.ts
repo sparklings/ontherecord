@@ -2,7 +2,6 @@ import { Notice, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type { App, Plugin } from "obsidian";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
 import { SUPPORTED_MODELS, checkModelFileInstalled, buildModelDownloadCommand } from "./modelCatalog.ts";
-import { testLocalLlmConnection } from "./localLlmClient.ts";
 import * as fs from "fs";
 
 function checkPathExists(filePath: string): { exists: boolean; sizeBytes?: number } {
@@ -45,7 +44,7 @@ function openLocalFilePicker(accept: string, onSelected: (filePath: string) => v
 
 /* eslint obsidianmd/settings-tab/prefer-setting-definitions: off -- Retain compatibility with minAppVersion 1.7.2. */
 export class OnTheRecordSettingTab extends PluginSettingTab {
-	private activeTab: "workflow" | "transcription" | "acceleration" = "transcription";
+	private activeTab: "transcription" | "workflow" = "transcription";
 
 	constructor(
 		app: App,
@@ -88,10 +87,9 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		// 2. 상단 탭 세그먼트 네비게이션
 		const tabNav = containerEl.createDiv({ cls: "otr-settings-tab-nav" });
 
-		const tabs: Array<{ id: "workflow" | "transcription" | "acceleration"; label: string; icon: string }> = [
-			{ id: "workflow", label: "워크플로", icon: "file-text" },
-			{ id: "transcription", label: "전사 & 모델", icon: "mic" },
-			{ id: "acceleration", label: "가속 & AI", icon: "zap" },
+		const tabs: Array<{ id: "transcription" | "workflow"; label: string; icon: string }> = [
+			{ id: "transcription", label: "전사 & 도구 설정", icon: "mic" },
+			{ id: "workflow", label: "녹음 & 워크플로", icon: "file-text" },
 		];
 
 		for (const t of tabs) {
@@ -113,10 +111,8 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 
 		if (this.activeTab === "workflow") {
 			this.renderWorkflowTab(containerEl, vaultSettings);
-		} else if (this.activeTab === "transcription") {
-			this.renderTranscriptionTab(containerEl, vaultSettings, localSettings);
 		} else {
-			this.renderAccelerationTab(containerEl, vaultSettings, localSettings);
+			this.renderTranscriptionTab(containerEl, vaultSettings, localSettings);
 		}
 
 		// 4. Stitch 스타일 하단 상태 푸터 바
@@ -500,161 +496,6 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		vocabInput.placeholder = "API, Obsidian, Whisper, Docker, TypeScript, Markdown";
 		vocabInput.oninput = () => {
 			void this.updateVaultSettings({ vocabularyPrompt: vocabInput.value.trim() });
-		};
-	}
-
-	/**
-	 * 탭 3: 하드웨어 가속 및 로컬 AI 요약 설정 (Stitch stitch-acceleration-tab.html 1:1 이식)
-	 */
-	private renderAccelerationTab(containerEl: HTMLElement, vaultSettings: VaultSettings, localSettings: LocalSettings | null): void {
-		renderScopeHeading(containerEl, "하드웨어 가속 (GPU 오프로딩)", "local");
-
-		const gpuStack = containerEl.createDiv({ cls: "otr-settings-card-stack" });
-
-		if (localSettings) {
-			// Card 1: GPU Backend
-			const cardGpu = gpuStack.createDiv({ cls: "otr-setting-card" });
-			const infoGpu = cardGpu.createDiv({ cls: "otr-setting-card-info" });
-			infoGpu.createDiv({ text: "하드웨어 가속 백엔드", cls: "otr-setting-card-title" });
-			infoGpu.createDiv({ text: "가속 엔진을 선택합니다. (외장 GPU: CUDA, 인텔 내장: Vulkan 권장)", cls: "otr-setting-card-desc" });
-			const selectGpu = cardGpu.createEl("select", { cls: "otr-setting-select" });
-			const backends: Array<{ id: string; label: string }> = [
-				{ id: "auto", label: "자동 감지 (권장)" },
-				{ id: "cuda", label: "NVIDIA CUDA (외장)" },
-				{ id: "vulkan", label: "Vulkan (Intel Iris Xe / AMD / NVIDIA)" },
-				{ id: "cpu", label: "CPU 전용" },
-				{ id: "openvino", label: "Intel OpenVINO" },
-			];
-			for (const b of backends) {
-				const opt = selectGpu.createEl("option", { text: b.label, value: b.id });
-				if ((localSettings.gpuBackend ?? "auto") === b.id) opt.selected = true;
-			}
-			selectGpu.onchange = () => {
-				const val = selectGpu.value;
-				if (val === "auto" || val === "cpu" || val === "cuda" || val === "vulkan" || val === "openvino") {
-					void this.updateLocalSettings({ gpuBackend: val });
-				}
-			};
-
-			// Card 2: 2-Col Grid (GPU Layers + Device ID)
-			const gridGpu = gpuStack.createDiv({ cls: "otr-setting-2col-grid" });
-
-			const colLayers = gridGpu.createDiv({ cls: "otr-setting-col-box" });
-			colLayers.createDiv({ text: "GPU VRAM 레이어 적재 수 (-ngl)", cls: "otr-setting-card-title" });
-			colLayers.createDiv({ text: "0: CPU 전용, 99: GPU VRAM 전체 적재", cls: "otr-setting-card-desc" });
-			const inputLayers = colLayers.createEl("input", {
-				type: "number",
-				cls: "otr-setting-input font-mono-tabular",
-				value: String(localSettings.gpuLayers ?? 0),
-			});
-			inputLayers.min = "0";
-			inputLayers.max = "999";
-			inputLayers.onchange = () => {
-				const num = parseInt(inputLayers.value.trim(), 10);
-				if (!isNaN(num) && num >= 0 && num <= 999) {
-					void this.updateLocalSettings({ gpuLayers: num });
-				}
-			};
-
-			const colDev = gridGpu.createDiv({ cls: "otr-setting-col-box" });
-			colDev.createDiv({ text: "그래픽 카드 번호 (-dev)", cls: "otr-setting-card-title" });
-			colDev.createDiv({ text: "연산에 사용할 GPU 장치 번호 (기본값: 0)", cls: "otr-setting-card-desc" });
-			const inputDev = colDev.createEl("input", {
-				type: "number",
-				cls: "otr-setting-input font-mono-tabular",
-				value: String(localSettings.gpuDeviceId ?? 0),
-			});
-			inputDev.min = "0";
-			inputDev.max = "64";
-			inputDev.onchange = () => {
-				const num = parseInt(inputDev.value.trim(), 10);
-				if (!isNaN(num) && num >= 0 && num <= 64) {
-					void this.updateLocalSettings({ gpuDeviceId: num });
-				}
-			};
-		}
-
-		renderScopeHeading(containerEl, "로컬 AI 회의록 요약", "vault");
-
-		const aiStack = containerEl.createDiv({ cls: "otr-settings-card-stack" });
-
-		// Card 3: 로컬 AI 요약 토글
-		const cardAiToggle = aiStack.createDiv({ cls: "otr-setting-card" });
-		const infoAiToggle = cardAiToggle.createDiv({ cls: "otr-setting-card-info" });
-		infoAiToggle.createDiv({ text: "로컬 AI 요약 사용", cls: "otr-setting-card-title" });
-		infoAiToggle.createDiv({ text: "전사 완료 후 또는 버튼 클릭 시 로컬 LLM으로 3단 회의록 요약을 생성합니다.", cls: "otr-setting-card-desc" });
-		const toggleLabelAi = cardAiToggle.createEl("label", { cls: "otr-custom-toggle" });
-		const toggleInputAi = toggleLabelAi.createEl("input", { type: "checkbox" });
-		toggleInputAi.checked = vaultSettings.enableLocalLlm;
-		toggleLabelAi.createDiv({ cls: "otr-toggle-slider" });
-		toggleInputAi.onchange = () => {
-			void this.updateVaultSettings({ enableLocalLlm: toggleInputAi.checked });
-		};
-
-		// Card 4: 로컬 엔드포인트 URL + 100% Private 배지 + 연결 테스트
-		const cardEndpoint = aiStack.createDiv({ cls: "otr-tool-card" });
-		const endTop = cardEndpoint.createDiv({ cls: "otr-tool-card-top" });
-		const endInfo = endTop.createDiv();
-		endInfo.createDiv({ text: "로컬 엔드포인트 URL", cls: "otr-tool-card-title" });
-		endInfo.createDiv({
-			text: "오직 localhost 및 127.0.0.1만 허용됩니다 (Ollama / OpenAI 규격 자동 감지).",
-			cls: "otr-tool-card-hint",
-		});
-		endTop.createSpan({ text: "100% Private", cls: "otr-status-badge is-ready font-mono-tabular" });
-
-		const endInputRow = cardEndpoint.createDiv({ cls: "otr-tool-card-input-row" });
-		const endInput = endInputRow.createEl("input", {
-			type: "text",
-			cls: "otr-tool-card-input font-mono-tabular",
-			value: vaultSettings.localLlmEndpoint,
-			placeholder: "http://localhost:11434",
-		});
-		endInput.onchange = () => {
-			void this.updateVaultSettings({ localLlmEndpoint: endInput.value.trim() });
-		};
-
-		const testConnBtn = endInputRow.createEl("button", {
-			text: "연결 테스트",
-			cls: "otr-tool-browse-btn",
-		});
-		testConnBtn.onclick = async () => {
-			testConnBtn.disabled = true;
-			new Notice("연결 확인 중...");
-			const res = await testLocalLlmConnection(vaultSettings.localLlmEndpoint);
-			testConnBtn.disabled = false;
-			if (res.ok) {
-				new Notice(`연결 성공 (${res.serverType}, 감지된 모델 ${res.models.length}개)`);
-			} else {
-				new Notice(`연결 실패: ${res.error ?? "알 수 없는 오류"}`, 6000);
-			}
-		};
-
-		// Card 5: 2-Col Grid (모델명 + 자동 요약 토글)
-		const gridAi = aiStack.createDiv({ cls: "otr-setting-2col-grid" });
-
-		const colModel = gridAi.createDiv({ cls: "otr-setting-col-box" });
-		colModel.createDiv({ text: "요약 모델 이름", cls: "otr-setting-card-title" });
-		colModel.createDiv({ text: "PC에 설치된 모델명 (예: qwen2.5:7b, llama3.1:8b)", cls: "otr-setting-card-desc" });
-		const inputModel = colModel.createEl("input", {
-			type: "text",
-			cls: "otr-setting-input font-mono-tabular",
-			value: vaultSettings.localLlmModel,
-			placeholder: "qwen2.5:7b",
-		});
-		inputModel.onchange = () => {
-			void this.updateVaultSettings({ localLlmModel: inputModel.value.trim() });
-		};
-
-		const colAutoAi = gridAi.createDiv({ cls: "otr-setting-card" });
-		const infoAutoAi = colAutoAi.createDiv({ cls: "otr-setting-card-info" });
-		infoAutoAi.createDiv({ text: "전사 완료 시 자동 요약", cls: "otr-setting-card-title" });
-		infoAutoAi.createDiv({ text: "노트 본문 삽입 후 자동 실행", cls: "otr-setting-card-desc" });
-		const toggleLabelAuto = colAutoAi.createEl("label", { cls: "otr-custom-toggle" });
-		const toggleInputAuto = toggleLabelAuto.createEl("input", { type: "checkbox" });
-		toggleInputAuto.checked = vaultSettings.localLlmAutoSummarize;
-		toggleLabelAuto.createDiv({ cls: "otr-toggle-slider" });
-		toggleInputAuto.onchange = () => {
-			void this.updateVaultSettings({ localLlmAutoSummarize: toggleInputAuto.checked });
 		};
 	}
 }

@@ -1,6 +1,6 @@
 import { formatTimestamp } from "./resultPreview.ts";
 
-export type FloatingIndicatorState = "idle" | "starting" | "recording" | "paused";
+export type FloatingIndicatorState = "idle" | "starting" | "recording" | "paused" | "transcribing" | "completed";
 
 export interface FloatingIndicatorCallbacks {
 	onPause: () => Promise<void> | void;
@@ -28,6 +28,7 @@ export class FloatingRecordingIndicator {
 	private startedAt: number | null = null;
 	private accumulatedSeconds = 0;
 	private timerHandle: number | null = null;
+	private completionTimerHandle: number | null = null;
 
 	private rootEl: HTMLElement | null = null;
 	private dotEl: HTMLElement | null = null;
@@ -86,11 +87,65 @@ export class FloatingRecordingIndicator {
 			this.state = "paused";
 			this.stopTimer();
 			this.renderState();
+			return;
+		}
+
+		if (nextState === "transcribing") {
+			this.state = "transcribing";
+			this.stopTimer();
+			this.renderState();
+			return;
+		}
+
+		if (nextState === "completed") {
+			this.state = "completed";
+			this.stopTimer();
+			this.renderState();
+		}
+	}
+
+	setTranscribing(percent?: number): void {
+		this.ensureMounted();
+		this.clearCompletionTimer();
+		this.stopTimer();
+		this.state = "transcribing";
+		if (this.rootEl && this.textEl && this.actionsEl) {
+			this.rootEl.removeClass("is-hidden", "is-starting", "is-recording", "is-paused", "is-completed");
+			this.rootEl.addClass("is-transcribing");
+			this.actionsEl.addClass("is-hidden");
+			const pctText = percent !== undefined && percent > 0 ? ` ${Math.round(percent)}%` : "...";
+			this.textEl.setText(`전사 중${pctText}`);
+		}
+	}
+
+	setCompleted(message = "전사 완료!"): void {
+		this.ensureMounted();
+		this.stopTimer();
+		this.clearCompletionTimer();
+		this.state = "completed";
+		if (this.rootEl && this.textEl && this.actionsEl) {
+			this.rootEl.removeClass("is-hidden", "is-starting", "is-recording", "is-paused", "is-transcribing");
+			this.rootEl.addClass("is-completed");
+			this.actionsEl.addClass("is-hidden");
+			this.textEl.setText(`✓ ${message}`);
+		}
+		if (typeof window !== "undefined") {
+			this.completionTimerHandle = window.setTimeout(() => {
+				this.resetToIdle();
+			}, 2200);
+		}
+	}
+
+	private clearCompletionTimer(): void {
+		if (this.completionTimerHandle !== null && typeof window !== "undefined") {
+			window.clearTimeout(this.completionTimerHandle);
+			this.completionTimerHandle = null;
 		}
 	}
 
 	destroy(): void {
 		this.stopTimer();
+		this.clearCompletionTimer();
 		this.state = "idle";
 		this.startedAt = null;
 		this.accumulatedSeconds = 0;
@@ -107,12 +162,13 @@ export class FloatingRecordingIndicator {
 
 	private resetToIdle(): void {
 		this.stopTimer();
+		this.clearCompletionTimer();
 		this.state = "idle";
 		this.startedAt = null;
 		this.accumulatedSeconds = 0;
 		if (this.rootEl) {
 			this.rootEl.addClass("is-hidden");
-			this.rootEl.removeClass("is-starting", "is-recording", "is-paused");
+			this.rootEl.removeClass("is-starting", "is-recording", "is-paused", "is-transcribing", "is-completed");
 		}
 	}
 

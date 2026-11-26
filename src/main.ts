@@ -699,11 +699,16 @@ export default class OnTheRecordPlugin extends Plugin {
 					this.statusBarItem?.removeAttribute("title");
 				}
 				this.updateSidebarProgress(progress);
+				if (progress) {
+					this.floatingIndicator?.setTranscribing(progress.percent);
+				}
 			},
 			onItemCompleted: async (item, result) => {
+				this.floatingIndicator?.setCompleted("전사 완료!");
 				await this.handleQueueItemCompleted(item, result);
 			},
 			onItemError: (item, error) => {
+				this.floatingIndicator?.setState("idle");
 				this.reportError(`'${item.filePath}' 백그라운드 전사에 실패했습니다.`, error);
 			},
 		});
