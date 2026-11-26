@@ -731,6 +731,28 @@ export default class OnTheRecordPlugin extends Plugin {
 			},
 			{ setIcon },
 		);
+
+		// 코어 Audio recorder 직접 시작/중지 시에도 플로팅 표시기와 사이드바 상태를 자동 동기화
+		let lastCoreRecording = false;
+		this.registerInterval(
+			window.setInterval(() => {
+				const isRec = this.sessionManager.isRecording();
+				if (isRec && !lastCoreRecording) {
+					if (this.floatingIndicator.getState() === "idle") {
+						const activeSession = this.sessionManager.getActiveSession();
+						this.floatingIndicator.setState("recording", activeSession?.startedAt);
+						this.refreshSidebarViews();
+					}
+				} else if (!isRec && lastCoreRecording) {
+					if (this.floatingIndicator.getState() === "recording") {
+						this.floatingIndicator.setState("idle");
+						this.recordingStatusBar.stop();
+						this.refreshSidebarViews();
+					}
+				}
+				lastCoreRecording = isRec;
+			}, 800),
+		);
 	}
 
 	private async startRecordingForNote(note: TFile): Promise<void> {

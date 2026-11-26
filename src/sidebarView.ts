@@ -64,9 +64,11 @@ export class OnTheRecordSidebarView extends ItemView {
 		// 1. 마이크로 브랜딩 헤더 + 새로고침/설정 버튼
 		const headerEl = container.createDiv({ cls: "otr-sidebar-header" });
 		const titleGroup = headerEl.createDiv({ cls: "otr-sidebar-title-group" });
-		const titleIcon = titleGroup.createSpan({ cls: "otr-inline-icon" });
+		const titleIcon = titleGroup.createSpan({ cls: "otr-brand-icon-box" });
 		setIcon(titleIcon, "otr-record-deck");
-		titleGroup.createSpan({ text: "On the Record" });
+		const titleStack = titleGroup.createDiv({ cls: "otr-sidebar-title-stack" });
+		titleStack.createSpan({ text: "On the Record" });
+		titleStack.createSpan({ text: "Local voice companion", cls: "otr-sidebar-subtitle" });
 
 		const headerActions = headerEl.createDiv({ cls: "otr-sidebar-header-actions" });
 		const refreshBtn = headerActions.createEl("button", { cls: "otr-icon-btn", title: "새로고침" });

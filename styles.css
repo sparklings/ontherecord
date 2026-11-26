@@ -1257,3 +1257,128 @@
 	padding: 0.5rem 0;
 	border-bottom: 1px solid var(--background-modifier-border-focus);
 }
+
+/* --------------------------------------------------------------------------
+   11. Stitch Design System Parity Polish (1:1 Visual Refinement)
+   -------------------------------------------------------------------------- */
+@keyframes otr-pulse {
+	0%, 100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.4;
+		transform: scale(0.85);
+	}
+}
+
+.otr-brand-icon-box {
+	width: 28px;
+	height: 28px;
+	border-radius: 7px;
+	background-color: rgba(123, 108, 217, 0.14);
+	border: 1px solid rgba(123, 108, 217, 0.35);
+	color: var(--interactive-accent);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.otr-brand-icon-box svg {
+	width: 15px;
+	height: 15px;
+}
+
+.otr-sidebar-title-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.otr-sidebar-subtitle {
+	font-size: 10px;
+	color: var(--text-muted);
+	font-weight: 400;
+}
+
+.otr-settings-hero {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-bottom: 12px;
+	margin-bottom: 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.otr-settings-hero-left {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.otr-settings-version-pill {
+	font-family: var(--font-monospace);
+	font-size: 10px;
+	padding: 1px 6px;
+	border-radius: 4px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-muted);
+	margin-left: 6px;
+}
+
+.otr-settings-hero-desc {
+	font-size: 11px;
+	color: var(--text-muted);
+	margin-top: 2px;
+}
+
+.otr-settings-tab-nav {
+	background-color: var(--background-secondary-alt);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 3px;
+}
+
+.otr-tab-btn.is-active {
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.otr-tab-btn.is-active svg {
+	color: var(--interactive-accent);
+}
+
+.otr-model-card.is-selected {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 1px rgba(123, 108, 217, 0.35), 0 4px 14px rgba(123, 108, 217, 0.12);
+	background-color: rgba(123, 108, 217, 0.08);
+}
+
+.otr-review-modal .modal-content {
+	padding-top: 8px;
+}
+
+.otr-review-hero {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 12px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.otr-review-hero-title {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.otr-review-hero-sub {
+	font-family: var(--font-monospace);
+	font-size: 11px;
+	color: var(--text-muted);
+	margin-top: 2px;
+}

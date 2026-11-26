@@ -242,8 +242,15 @@ export class ResultPreviewModal extends Modal {
 		contentEl.empty();
 		this.segmentRows = [];
 
-		const headerMeta = contentEl.createDiv({ cls: "otr-review-subtitle" });
-		headerMeta.setText(`대상: ${this.targetName}`);
+		const hero = contentEl.createDiv({ cls: "otr-review-hero" });
+		const heroIcon = hero.createSpan({ cls: "otr-brand-icon-box" });
+		setIcon(heroIcon, "file-audio");
+		const heroText = hero.createDiv();
+		heroText.createDiv({ text: this.audioFile ? this.audioFile.name : "전사 결과 검토", cls: "otr-review-hero-title" });
+		heroText.createDiv({
+			text: `대상: ${this.targetName} · ${this.editableSegments.length}개 세그먼트`,
+			cls: "otr-review-hero-sub",
+		});
 
 		for (const warning of this.result.warnings) {
 			contentEl.createEl("p", { text: `경고: ${warning}`, cls: "otr-review-warning" });

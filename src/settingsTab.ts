@@ -62,7 +62,7 @@ function openLocalFilePicker(accept: string, onSelected: (filePath: string) => v
 
 /* eslint obsidianmd/settings-tab/prefer-setting-definitions: off -- Retain compatibility with minAppVersion 1.7.2. */
 export class OnTheRecordSettingTab extends PluginSettingTab {
-	private activeTab: "workflow" | "transcription" | "acceleration" = "workflow";
+	private activeTab: "workflow" | "transcription" | "acceleration" = "transcription";
 
 	constructor(
 		app: App,
@@ -82,14 +82,21 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		// 1. 설정 도움말 안내 배너
-		const helpBanner = containerEl.createDiv({ cls: "otr-help-banner" });
-		const bannerText = helpBanner.createDiv({ cls: "otr-help-banner-text" });
-		const infoIcon = bannerText.createSpan({ cls: "otr-inline-icon" });
-		setIcon(infoIcon, "help-circle");
-		bannerText.createSpan({ text: "설정 옵션 상세 설명, 모델 권장 사양 및 GPU 튜닝 가이드" });
+		// 1. Stitch 스타일 상단 헤더 + 가이드 버튼
+		const heroEl = containerEl.createDiv({ cls: "otr-settings-hero" });
+		const heroLeft = heroEl.createDiv({ cls: "otr-settings-hero-left" });
+		const heroIcon = heroLeft.createSpan({ cls: "otr-brand-icon-box" });
+		setIcon(heroIcon, "otr-record-deck");
+		const heroText = heroLeft.createDiv();
+		const titleRow = heroText.createDiv();
+		titleRow.createSpan({ text: "On the Record", cls: "otr-model-detail-title" });
+		titleRow.createSpan({ text: "v0.1.0", cls: "otr-settings-version-pill" });
+		heroText.createDiv({
+			text: "Obsidian 로컬 음성 녹음 및 whisper.cpp 회의록 전사",
+			cls: "otr-settings-hero-desc",
+		});
 
-		const guideBtn = helpBanner.createEl("button", { text: "가이드 보기", cls: "otr-action-badge-btn" });
+		const guideBtn = heroEl.createEl("button", { text: "가이드 보기", cls: "otr-action-badge-btn" });
 		guideBtn.onclick = () => {
 			window.open("https://github.com/sparklings/ontherecord/blob/main/docs/SETTINGS_GUIDE.md", "_blank");
 		};
