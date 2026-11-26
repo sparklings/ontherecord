@@ -431,7 +431,6 @@ export function appendRecordingBlockToBody(
 	const sectionIndex = markdown.indexOf(sectionHeading);
 
 	if (sectionIndex === -1) {
-		// 섹션이 없으면 문서 맨 끝에 섹션과 함께 추가
 		const trimmed = markdown.trimEnd();
 		if (trimmed.length === 0) {
 			return `${sectionHeading}\n\n${sessionBlock}\n`;
@@ -439,7 +438,6 @@ export function appendRecordingBlockToBody(
 		return `${trimmed}\n\n${sectionHeading}\n\n${sessionBlock}\n`;
 	}
 
-	// 섹션이 이미 존재하면 해당 섹션 헤딩 바로 아래에 새 블록을 추가하거나 다음 헤딩 직전에 추가
 	const afterHeading = sectionIndex + sectionHeading.length;
 	const rest = markdown.slice(afterHeading);
 	const nextHeadingMatch = /\n##+\s/.exec(rest);
@@ -450,7 +448,6 @@ export function appendRecordingBlockToBody(
 		const after = markdown.slice(insertPos);
 		return `${before}\n\n${sessionBlock}\n\n${after.trimStart()}`;
 	} else {
-		// 뒤에 다른 2레벨 이상 헤딩이 없으면 문서 끝에 덧붙임
 		return `${markdown.trimEnd()}\n\n${sessionBlock}\n`;
 	}
 }

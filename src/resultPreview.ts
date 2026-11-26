@@ -53,6 +53,13 @@ export function formatResultMarkdown(
 	return lines.join("\n");
 }
 
+export function stripCommentMarkersFromNote(content: string): string {
+	// 1. on-the-record 관련 HTML 주석 태그 모두 제거
+	const withoutComments = content.replace(/<!--\s*on-the-record:(?:start|end)[^>]*-->[ \t]*\r?\n?/gi, "");
+	// 2. 주석 제거로 인해 빈 껍데기만 남은 중복 '## 녹음 기록' 섹션 정리
+	return withoutComments.replace(/## 녹음 기록\s*\r?\n(?:\s*\r?\n)?(?=##|\n*$)/g, "");
+}
+
 function beginMarker(audioPath: string): string {
 	return `<!-- on-the-record:begin audio="${encodeURIComponent(audioPath)}" -->`;
 }

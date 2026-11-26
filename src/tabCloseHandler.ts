@@ -142,6 +142,10 @@ export class TabCloseHandler {
 			};
 
 			await this.vault.process(notePath, (content) => {
+				// 본문에 이미 해당 오디오 파일에 대한 임베드가 존재하면 중복 삽입하지 않고 원본 유지
+				if (hasAudioEmbedInMarkdown(content, audioPath)) {
+					return content;
+				}
 				return applyRecordingSessionToMarkdown(content, entry);
 			});
 			return true;

@@ -28,6 +28,11 @@
 
 ## 2026-11-27
 
+### Antigravity 스타일 사이드바 & 본문 클린 전사 파이프라인 개편 (2026-11-27 완료)
+- [x] `CLEAN-UI-01` 우측 사이드바 녹음 목록을 뚱뚱한 카드 박스에서 Google Antigravity 스타일의 날렵한 메시지형 인디케이터 포맷(`otr-ag-row`)으로 전면 개편
+- [x] `CLEAN-UI-02` 노트 본문 내 오디오 플레이어 2중 중복 생성 방어 (`hasAudioEmbedInMarkdown` 연동)
+- [x] `CLEAN-UI-03` 전사 완료 시 본문 내부의 `<!-- on-the-record:... -->` 주석 태그 및 불필요한 헤딩 자동 청소 기능(`stripCommentMarkersFromNote`) 구현
+
 ### 플로팅 인디케이터 본문 영역 배치 및 UI 시인성 강화 (2026-11-27 완료)
 - [x] `FLOAT-UI-01` 플로팅 캡슐 마운트 위치를 `workspace.rootSplit`으로 변경하여 사이드바 하단 버튼(`새 회의록 작성`)과의 겹침 완벽 차단
 - [x] `FLOAT-UI-02` 호버 시 노출되는 일시정지/중지 컨트롤에 명확한 버튼 테두리(`border: 1px solid`) 및 배경/호버 스타일 적용

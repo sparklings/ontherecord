@@ -29,7 +29,7 @@ import type { AudioEmbedPosition } from "./resultPreview.ts";
 
 import { AudioEmbedTargetPickerModal, ExistingResultModal, ResultPreviewModal } from "./resultPreviewModal.ts";
 import type { AudioEmbedTarget } from "./resultPreviewModal.ts";
-import { applyAudioEmbedInsertion, formatResultMarkdown, hasExistingResult, prioritizeAudioEmbeds, wrapResultBlock } from "./resultPreview.ts";
+import { applyAudioEmbedInsertion, formatResultMarkdown, hasExistingResult, prioritizeAudioEmbeds, stripCommentMarkersFromNote, wrapResultBlock } from "./resultPreview.ts";
 import type { ExistingResultChoice } from "./resultPreview.ts";
 import type { TranscriptionResult } from "./provider.ts";
 import type { CpuSmokeTestStage } from "./whisperCppCpu.ts";
@@ -854,7 +854,8 @@ export default class OnTheRecordPlugin extends Plugin {
 				await this.app.vault.process(activeFile, (content) => {
 					const embedTag = `![[${item.filePath}]]`;
 					const block = wrapResultBlock(item.filePath, formattedMarkdown);
-					return `${content.trimEnd()}\n\n${embedTag}\n\n${block}\n`;
+					const combined = `${content.trimEnd()}\n\n${embedTag}\n\n${block}\n`;
+					return stripCommentMarkersFromNote(combined);
 				});
 				new Notice(`[On the Record] '${filename}' 전사 결과가 활성 노트(${activeFile.name})에 삽입되었습니다.`, 6000);
 				return;
@@ -882,14 +883,15 @@ export default class OnTheRecordPlugin extends Plugin {
 				if (hasExistingResult(current, item.filePath)) {
 					choice = "append";
 				}
-				await this.app.vault.process(target.note, (content) =>
-					applyAudioEmbedInsertion(content, {
+				await this.app.vault.process(target.note, (content) => {
+					const inserted = applyAudioEmbedInsertion(content, {
 						audioPath: item.filePath,
 						markdown: formattedMarkdown,
 						embed: this.toAudioEmbedPosition(target.embed),
 						existing: choice,
-					}),
-				);
+					});
+					return stripCommentMarkersFromNote(inserted);
+				});
 				new Notice(`[On the Record] '${filename}' 전사 결과가 노트(${target.note.path})에 자동 삽입되었습니다.`, 6000);
 
 				if (this.vaultSettings.enableLocalLlm && this.vaultSettings.localLlmAutoSummarize) {

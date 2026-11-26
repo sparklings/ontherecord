@@ -158,3 +158,23 @@ test("TabCloseHandler: attachAudioToNote는 대상 노트에 안전하게 오디
 	const content = await vault.read("Notes/Meeting.md");
 	assert.match(content, /!\[\[recordings\/audio\.m4a\]\]/);
 });
+
+test("TabCloseHandler: 이미 오디오 embed가 본문에 있으면 중복 추가하지 않는다", async () => {
+	const storage = createMockStorage();
+	const recorder = createMockRecorder();
+	const sessionManager = new RecordingSessionManager(storage, recorder);
+	const initial = "# 회의록\n\n![[recordings/audio.m4a]]\n";
+	const vault = createMockVault({ "Notes/Meeting.md": initial });
+
+	const handler = new TabCloseHandler({
+		sessionManager,
+		vault,
+		getAction: () => "stop-and-attach",
+	});
+
+	const ok = await handler.attachAudioToNote("Notes/Meeting.md", "recordings/audio.m4a");
+	assert.equal(ok, true);
+
+	const content = await vault.read("Notes/Meeting.md");
+	assert.equal(content, initial);
+});

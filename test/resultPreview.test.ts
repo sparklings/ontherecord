@@ -6,6 +6,7 @@ import {
 	formatResultMarkdown,
 	formatTimestamp,
 	prioritizeAudioEmbeds,
+	stripCommentMarkersFromNote,
 	wrapResultBlock,
 } from "../src/resultPreview.ts";
 import type { TranscriptionResult } from "../src/provider.ts";
@@ -154,4 +155,27 @@ test("전사 대기 중 상단 편집으로 라인이 밀려도 오디오 embed�
 	assert.ok(shifted.includes(embedText));
 	assert.ok(shifted.includes("- dynamic fallback result"));
 	assert.ok(shifted.indexOf(embedText) < shifted.indexOf("- dynamic fallback result"));
+});
+
+test("stripCommentMarkersFromNote: 전사 완료 후 내부 주석 마커 및 빈 헤딩을 깨끗하게 정리한다", () => {
+	const dirty = [
+		"# 2026-11-27 회의록",
+		"",
+		"![[Recording.m4a]]",
+		"",
+		"<!-- on-the-record:start audio=\"Recording.m4a\" seq=\"1\" -->",
+		"### 녹음 1 (소요: 02:26)",
+		"<!-- on-the-record:end audio=\"Recording.m4a\" seq=\"1\" -->",
+		"",
+		"## 녹음 기록",
+		"",
+	].join("\n");
+
+	const cleaned = stripCommentMarkersFromNote(dirty);
+
+	assert.equal(cleaned.includes("<!-- on-the-record:start"), false);
+	assert.equal(cleaned.includes("<!-- on-the-record:end"), false);
+	assert.equal(cleaned.includes("## 녹음 기록"), false);
+	assert.ok(cleaned.includes("![[Recording.m4a]]"));
+	assert.ok(cleaned.includes("### 녹음 1"));
 });
