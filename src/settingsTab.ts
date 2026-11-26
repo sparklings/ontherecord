@@ -404,78 +404,110 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			return;
 		}
 
-		const runtimeStatus = checkPathExists(localSettings.runtimePath);
-		const runtimeSetting = new Setting(containerEl)
-			.setName("런타임 실행 파일")
-			.setDesc("whisper-cli.exe 경로입니다.")
-			.addText((text) =>
-				text
-					.setValue(localSettings.runtimePath)
-					.setPlaceholder("예: C:\\Tools\\whisper-cli.exe")
-					.onChange((value) => {
-						void this.updateLocalSettings({ runtimePath: value.trim() });
-					}),
-			)
-			.addButton((button) =>
-				button.setButtonText("찾아보기").onClick(() => {
-					openLocalFilePicker(".exe", (selectedPath) => {
-						void this.updateLocalSettings({ runtimePath: selectedPath }).then(() => this.display());
-					});
-				}),
-			);
-		renderStatusBadge(runtimeSetting.nameEl, runtimeStatus, "정상");
+		// Stitch 도구 카드 3종 컨테이너 (Stitch lines 343-406)
+		const toolsStack = containerEl.createDiv({ cls: "otr-tools-stack" });
 
-		const modelStatus = checkPathExists(localSettings.modelPath);
-		const modelPathSetting = new Setting(containerEl)
-			.setName("모델 파일")
-			.setDesc("GGML 모델 파일(.bin) 경로입니다.")
-			.addText((text) =>
-				text
-					.setValue(localSettings.modelPath)
-					.setPlaceholder("예: C:\\Models\\ggml-medium-q5_0.bin")
-					.onChange((value) => {
-						void this.updateLocalSettings({ modelPath: value.trim() });
-					}),
-			)
-			.addButton((button) =>
-				button.setButtonText("찾아보기").onClick(() => {
-					openLocalFilePicker(".bin,.gguf", (selectedPath) => {
-						void this.updateLocalSettings({ modelPath: selectedPath }).then(() => this.display());
-					});
-				}),
-			);
-		renderStatusBadge(modelPathSetting.nameEl, modelStatus, "준비됨");
+		const renderToolCard = (options: {
+			title: string;
+			versionHint: string;
+			filePath: string;
+			accept: string;
+			placeholder: string;
+			onSave: (path: string) => Promise<void>;
+		}) => {
+			const status = checkPathExists(options.filePath);
+			const card = toolsStack.createDiv({ cls: "otr-tool-card" });
 
-		const ffmpegStatus = checkPathExists(localSettings.ffmpegPath);
-		const ffmpegSetting = new Setting(containerEl)
-			.setName("FFmpeg 실행 파일")
-			.setDesc("오디오 정규화용 ffmpeg.exe 경로입니다.")
-			.addText((text) =>
-				text
-					.setValue(localSettings.ffmpegPath)
-					.setPlaceholder("예: C:\\Tools\\ffmpeg.exe")
-					.onChange((value) => {
-						void this.updateLocalSettings({ ffmpegPath: value.trim() });
-					}),
-			)
-			.addButton((button) =>
-				button.setButtonText("찾아보기").onClick(() => {
-					openLocalFilePicker(".exe", (selectedPath) => {
-						void this.updateLocalSettings({ ffmpegPath: selectedPath }).then(() => this.display());
-					});
-				}),
-			);
-		renderStatusBadge(ffmpegSetting.nameEl, ffmpegStatus, "준비됨");
+			const topRow = card.createDiv({ cls: "otr-tool-card-top" });
+			const leftGroup = topRow.createDiv({ cls: "otr-tool-card-left" });
+			leftGroup.createSpan({ text: options.title, cls: "otr-tool-card-title" });
 
-		new Setting(containerEl)
-			.setName("도구 진단 및 시험")
-			.setDesc("알려진 위치에서 도구를 검색하거나 변환 및 시험 전사를 수행합니다.")
-			.addButton((button) =>
-				button.setButtonText("도구 검색").onClick(() => this.discoverCpuSetup()),
-			)
-			.addButton((button) =>
-				button.setButtonText("시험 시작").onClick(() => this.testCpuSetup()),
-			);
+			const pill = leftGroup.createSpan({
+				cls: `otr-status-badge ${status.exists ? "is-ready" : "is-missing"}`,
+			});
+			pill.createSpan({ cls: "otr-status-badge-dot" });
+			pill.createSpan({ text: status.exists ? "Ready" : "Missing" });
+
+			topRow.createSpan({ text: options.versionHint, cls: "otr-tool-card-hint font-mono-tabular" });
+
+			const inputRow = card.createDiv({ cls: "otr-tool-card-input-row" });
+			const inputEl = inputRow.createEl("input", {
+				type: "text",
+				cls: "otr-tool-card-input font-mono-tabular",
+			});
+			inputEl.value = options.filePath;
+			inputEl.placeholder = options.placeholder;
+			inputEl.onchange = () => {
+				void options.onSave(inputEl.value.trim());
+			};
+
+			const browseBtn = inputRow.createEl("button", {
+				text: "Browse...",
+				cls: "otr-tool-browse-btn",
+			});
+			browseBtn.onclick = () => {
+				openLocalFilePicker(options.accept, (selectedPath) => {
+					void options.onSave(selectedPath).then(() => this.display());
+				});
+			};
+		};
+
+		// 1. Whisper runtime executable
+		renderToolCard({
+			title: "Whisper runtime executable",
+			versionHint: "whisper.cpp v1.5.4+",
+			filePath: localSettings.runtimePath,
+			accept: ".exe",
+			placeholder: "예: C:\\Tools\\whisper-cli.exe",
+			onSave: (val) => this.updateLocalSettings({ runtimePath: val }),
+		});
+
+		// 2. GGML model file
+		renderToolCard({
+			title: "GGML model file",
+			versionHint: "ggml-medium-q5_0.bin",
+			filePath: localSettings.modelPath,
+			accept: ".bin,.gguf",
+			placeholder: "예: C:\\Models\\ggml-medium-q5_0.bin",
+			onSave: (val) => this.updateLocalSettings({ modelPath: val }),
+		});
+
+		// 3. FFmpeg executable
+		renderToolCard({
+			title: "FFmpeg executable",
+			versionHint: "ffmpeg 6.0+",
+			filePath: localSettings.ffmpegPath,
+			accept: ".exe",
+			placeholder: "예: C:\\Tools\\ffmpeg.exe",
+			onSave: (val) => this.updateLocalSettings({ ffmpegPath: val }),
+		});
+
+		// Stitch 도구 하단 액션 바 (Stitch lines 408-428)
+		const actionRow = containerEl.createDiv({ cls: "otr-tool-actions-row" });
+		actionRow.createSpan({
+			text: "경로는 Obsidian 시작 시 자동으로 유효성을 검사합니다.",
+			cls: "otr-tool-actions-desc",
+		});
+
+		const actionBtnGroup = actionRow.createDiv({ cls: "otr-tool-actions-group" });
+
+		const discoverBtn = actionBtnGroup.createEl("button", {
+			cls: "otr-tool-action-btn",
+			text: "도구 자동 검색",
+		});
+		const searchIcon = discoverBtn.createSpan({ cls: "otr-inline-icon" });
+		setIcon(searchIcon, "search");
+		discoverBtn.prepend(searchIcon);
+		discoverBtn.onclick = () => this.discoverCpuSetup();
+
+		const testBtn = actionBtnGroup.createEl("button", {
+			cls: "otr-tool-action-btn mod-primary",
+			text: "시험 전사 실행",
+		});
+		const playIcon = testBtn.createSpan({ cls: "otr-inline-icon" });
+		setIcon(playIcon, "play");
+		testBtn.prepend(playIcon);
+		testBtn.onclick = () => this.testCpuSetup();
 	}
 
 	/**
