@@ -7,18 +7,22 @@
 ## 2026-11-26
 
 ### 추가
-- **Wave 1 (`FEAT-02`, `UI-02`) Ambient Floating Recording Indicator 구현**:
-  - `src/floatingIndicator.ts`: 녹음 시작(`starting`, 소프트 퍼플 링) 및 녹음 중(`recording`, 소프트 레드 도트 + 모노스페이스 타이머), 일시정지(`paused`) 상태만 표시하고, `idle` 및 Obsidian 종료(`onunload`) 시 DOM에서 완전히 숨김/제거되는 글래스모피즘 플로팅 필 구현 (호버 시 `Pause` / `Stop` 미니 버튼 노출)
-  - 단위 테스트: `test/floatingIndicator.test.ts` 추가 및 통과 (총 113개 테스트 전건 통과)
+- **Wave 2 (`FEAT-03`, `UI-04` 설정부, `3-QUAL-01`) 환경설정 및 어휘 프롬프트 연동**:
+  - `src/settings.ts`, `src/whisperCppCpu.ts`, `src/transcriptionQueueWorker.ts`, `src/main.ts`: `DEFAULT_VAULT_SETTINGS.defaultModelSize` 기본값을 `base`에서 `medium`으로 변경하고 `vocabularyPrompt` 설정을 추가해 `whisper-cli` 실행 시 `--prompt` 인자로 전달하도록 연결
+  - `src/settingsTab.ts`, `styles.css`: `전사 & 모델` 탭 상단에 `FFmpeg`·`whisper-cli`·`Model` 준비 상태 배너와 `1-클릭 셋업` 복사 버튼 추가, 섹션별 `Vault 동기화` / `이 PC 전용` 범위 배지 표시, 로컬 파일 선택기(`찾아보기` 버튼) 및 어휘 힌트 입력란 추가
+  - 단위 테스트: `test/settings.test.ts`, `test/whisperCppCpu.test.ts`에 기본값(`medium`) 및 `--prompt` 인자 생성 검증 추가 (총 114개 테스트 통과)
+- **Wave 1 (`FEAT-02`, `UI-02`) 플로팅 녹음 상태 표시기 구현**:
+  - `src/floatingIndicator.ts`: 녹음 시작(`starting`), 녹음 중(`recording`), 일시정지(`paused`) 상태에서 표시되고, `idle` 상태 및 플러그인 종료(`onunload`) 시 숨김 및 DOM 제거 처리되는 플로팅 표시기 구현
+  - 단위 테스트: `test/floatingIndicator.test.ts` 추가 및 통과
 
 ### 변경
-- **Wave 1 (`UI-03`) 우측 사이드바 제어 패널 경량화(Unobtrusive) 개편**:
-  - `src/sidebarView.ts`: 대형 스튜디오 데크와 9-bar 파형 비주얼라이저를 제거하고 1줄 컴팩트 녹음 바, Empty State 가드, 도구 미설정 복구 배너, 실시간 백그라운드 전사 큐 진행률 위젯, 오디오 상태(`전사됨`/`대기`) 뱃지로 정돈
-- **리본 아이콘 충돌 해소 및 순수 CSS 디자인 시스템 복구 (`FEAT-01`, `UI-01`)**:
-  - `src/main.ts`, `src/sidebarView.ts`: 코어 Audio recorder(`microphone`)·Search(`search`)와 겹치던 리본 아이콘을 제거하고 전용 SVG 아이콘(`otr-record-deck`) 1개로 단일화
-  - `src/settingsTab.ts`, `src/sidebarView.ts`, `src/audioPlaybackSync.ts`, `styles.css`: 미정의 Tailwind 유틸리티 클래스 및 인라인 `element.style.*` 할당을 제거하고 순수 `.otr-*` CSS 클래스 체계로 통합
-- **TypeScript 컴파일 에러 및 스키마 타입 정합성 복구 (`FEAT-01`)**:
-  - `src/settingsTab.ts`, `src/main.ts`, `src/localLlmClient.ts`, `src/orphanAudioHandler.ts`, `src/meetingNoteCreator.ts` 타입 불일치 해소 (`tsc --noEmit` 에러 0건 달성)
+- **Wave 1 (`UI-03`) 우측 사이드바 제어 패널 구조 변경**:
+  - `src/sidebarView.ts`: 기존 대형 타이머 및 파형 영역을 제거하고 1줄 녹음 컨트롤 바, 활성 노트 부재 시 버튼 비활성화, 도구 미설정 안내 배너, 전사 대기열 진행률 위젯, 오디오 상태(`전사됨`/`대기`) 배지로 재구성
+- **리본 아이콘 변경 및 CSS 클래스 정리 (`FEAT-01`, `UI-01`)**:
+  - `src/main.ts`, `src/sidebarView.ts`: 기존 `microphone`·`search` 리본 아이콘을 제거하고 SVG 아이콘(`otr-record-deck`) 1개로 통합
+  - `src/settingsTab.ts`, `src/sidebarView.ts`, `src/audioPlaybackSync.ts`, `styles.css`: 미정의 Tailwind 클래스와 인라인 `element.style.*` 할당을 제거하고 `.otr-*` CSS 클래스로 대체
+- **TypeScript 타입 오류 수정 (`FEAT-01`)**:
+  - `src/settingsTab.ts`, `src/main.ts`, `src/localLlmClient.ts`, `src/orphanAudioHandler.ts`, `src/meetingNoteCreator.ts` 내 인터페이스 및 반환 타입 불일치 수정 (`tsc --noEmit` 오류 0건)
 
 ## 2026-11-20
 

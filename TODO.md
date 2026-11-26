@@ -264,9 +264,7 @@
 - [ ] `3-BASE-10` 시간대별(1분, 5분, 10분, 30분, 60분) 외부 공개 한국어 표준 음성 표본 수집 및 벤치마크 샘플링 체계 구축
   - 사내 회의록 등 민감한 개인 음원 보호를 위해, 필요 시 외부 공개 데이터셋(AI Hub 공개 데이터, CC 라이선스 표준 회의 음원, 공공 자유 라이선스 한국어 발화)에서 구간별 표준 표본(1분, 5분, 10분, 30분, 60분)을 확보하여 `samples/standard/`로 체계화.
   - 구간별 오디오 샘플을 바탕으로 `scripts/measure-whisper.ps1`을 실행하여 모델별(base, small, medium, large 등) 처리율, 메모리 사용량, 장시간 환각 발생 지점을 정량적으로 계측·비교.
-- [ ] `3-QUAL-01` 한국어-영어 전문용어 및 고유명사 혼용(Code-switching) 환경 대응을 위한 whisper 어휘 프롬프팅(Vocabulary Prompting) 설계
-  - 한국어 대화 환경에서 빈출되는 IT/비즈니스 전문용어(API, PR, Obsidian, Whisper, Docker, Sprint, Backend, Refactoring, Issue, Jira 등)와 고유명사의 발음 왜곡(예: "오비시디언", "에이피아이" 등 한글 음차 표기 오류) 방지.
-  - whisper.cpp 초기 프롬프트 파라미터(`--prompt` 및 `--carry-initial-prompt`)를 연계하여, 기본 IT/업무 추천 단어 프리셋 제공 및 사용자가 자주 쓰는 맞춤형 고유명사/전문용어 힌트를 설정 화면에서 등록할 수 있는 어휘 프롬프팅 기능 기획.
+- [x] `3-QUAL-01` 한국어-영어 전문용어 및 고유명사 혼용(Code-switching) 환경 대응을 위한 whisper 어휘 프롬프팅(Vocabulary Prompting) 설계 → Wave 2(`FEAT-03`)에서 `VaultSettings.vocabularyPrompt` 설정 추가, 설정 탭 입력 UI 제공 및 `whisper-cli --prompt` 인자 전달 연동 완료(2026-11-26). 프리셋 프로필 관리 GUI는 `3-UX-14`에서 후속 검토.
 
 #### 9. 상용급 완성도 및 회의 가치 극대화를 위한 기능 요구사항 (FR)
 > 실제 엔터프라이즈 및 전문직 실무 회의에서 요구되는 다자간 화자 구분, 단어 수준 동기화, 어휘 사전 관리, 무음 트리밍, 오디오 압축, 맞춤형 템플릿 등 핵심 사용자 기능을 체계화한다.
