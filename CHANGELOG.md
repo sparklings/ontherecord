@@ -4,6 +4,26 @@
 
 분류: 추가 / 변경 / 삭제 / 결정 / 이슈
 
+## 2026-11-27
+
+### 추가
+- **Stitch MCP 공식 연동 누락 시안 3종 정식 생성 및 에셋 추출 (`DESIGN-01`, Issue #15)**:
+  - Google Stitch MCP (`projects/15695117177036898361`, 디자인 시스템 `assets/17724542724472707759`)에 3개 화면(`Workflow Tab`, `Acceleration & AI Tab`, `Review Modal`)을 생성 등록
+  - 생성된 원본 HTML 및 고해상도 PNG 스크린샷 3종을 `docs/design/`(`stitch-workflow-tab.*`, `stitch-acceleration-tab.*`, `stitch-review-modal.*`)에 저장 완료
+- **신규 확정 Stitch 시안 플러그인 소스 1:1 정밀 구현 (`UI-07`, Issue #16)**:
+  - `src/settingsTab.ts`: 회의록 및 녹음 워크플로 탭 및 하드웨어 가속/로컬 AI 탭을 Stitch 카드 스택 및 2열 그리드 구조로 개편
+  - `src/resultPreviewModal.ts`: Stitch 시안과 1:1로 일치하는 전사 검토 모달(원형 보라색 플레이어, 오디오 싱크 바, 세그먼트 인라인 에디터, 기존 결과 교체/추가 알약 선택기) 구현
+  - `styles.css`: Stitch 전용 다크 테마 컴포넌트(`.otr-setting-card`, `.otr-custom-toggle`, `.otr-setting-2col-grid`, `.otr-review-modal` 등) 추가 및 UI 정밀 보정
+  - 로컬 테스트 볼트(`PlugVaults`) 배포 및 무결성 검증 통과 (`tsc`, `eslint`, `npm test` 114건 통과)
+- **Stitch 사이드바 및 전사 탭 1:1 정밀 이식 완료 (`UI-05`, `UI-06`, Issue #13, #14)**:
+  - `src/sidebarView.ts`: Target note 박스, 알약 레코드 버튼, Jump/Transcribe 양끝 정렬 반영
+  - `src/settingsTab.ts`: 2단 계층형 로컬 도구 카드, 진단 바, 5대 모델 카드 및 `--prompt` 어휘 보관 카드 반영
+
+### 변경
+- **문서 무결성 복구 및 최신화**:
+  - `TODO.md`: UTF-8 인코딩 깨짐 현상 완전 복구 및 최신 작업 완료(`[x]`) 상태 동기화
+  - `docs/design/README.md`: Stitch 5대 전체 시안 카탈로그 및 컴포넌트 매핑 명세 문서 신규 작성
+
 ## 2026-11-26
 
 ### 점검
