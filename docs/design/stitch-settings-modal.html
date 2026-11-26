@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>On the Record Settings - Obsidian Community Plugin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #121212;
+      color: #dcddde;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom scrollbar matching Obsidian */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #353535;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4a4a4a;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 bg-[#0f0f10]">
+
+  <!-- Obsidian Modal Backdrop -->
+  <div class="fixed inset-0 bg-black/70 backdrop-blur-[2px] z-0"></div>
+
+  <!-- Obsidian Window/Modal Container (780px outer, 720px inner content) -->
+  <div class="relative z-10 w-full max-w-[820px] bg-[#1e1e1e] rounded-xl border border-[#353535] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    
+    <!-- Modal Title Bar / Header (Obsidian style) -->
+    <div class="px-6 py-4 border-b border-[#313131] flex items-center justify-between bg-[#1a1a1a] select-none">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[#272535] border border-[#3c365c] flex items-center justify-center text-[#7b6cd9]">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm font-semibold text-white tracking-wide">On the Record</h1>
+            <span class="text-[11px] font-mono text-[#8a8a8a] bg-[#252525] px-1.5 py-0.5 rounded border border-[#333333]">v1.4.2</span>
+          </div>
+          <p class="text-xs text-[#8c8c8e]">Obsidian voice companion & offline speech-to-text</p>
+        </div>
+      </div>
+      
+      <!-- Close & Hotkey indicator -->
+      <div class="flex items-center gap-3">
+        <span class="text-[11px] text-[#6e6e6e] font-mono hidden sm:inline">ESC to close</span>
+        <button class="w-7 h-7 rounded-md hover:bg-[#2b2b2b] text-[#999999] hover:text-white flex items-center justify-center transition-colors">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Segmented 3-Tab Navigation Bar -->
+    <div class="px-6 pt-3 pb-2 bg-[#1a1a1a] border-b border-[#2d2d2d]">
+      <div class="flex items-center p-1 bg-[#141414] rounded-lg border border-[#2b2b2b] text-xs font-medium text-[#8f8f92]">
+        
+        <!-- Tab 1: Workflow -->
+        <button class="flex-1 py-1.5 px-3 rounded-md flex items-center justify-center gap-2 hover:text-[#d0d0d0] transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <line x1="10" y1="9" x2="8" y2="9"/>
+          </svg>
+          <span>Workflow</span>
+        </button>
+
+        <!-- Tab 2: Transcription & models (ACTIVE) -->
+        <button class="flex-1 py-1.5 px-3 rounded-md bg-[#252525] text-white shadow-sm border border-[#3b3b3b] flex items-center justify-center gap-2 text-[#7b6cd9] font-medium transition-all">
+          <svg class="w-3.5 h-3.5 text-[#7b6cd9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+          <span class="text-white">Transcription & models</span>
+        </button>
+
+        <!-- Tab 3: Acceleration & AI -->
+        <button class="flex-1 py-1.5 px-3 rounded-md flex items-center justify-center gap-2 hover:text-[#d0d0d0] transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <span>Acceleration & AI</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable Modal Content (720px max content width container) -->
+    <div class="overflow-y-auto px-6 py-5 space-y-6 flex-1">
+      <div class="max-w-[720px] mx-auto space-y-6">
+
+        <!-- Tool Readiness Checklist Banner -->
+        <div class="p-3 bg-[#222224] rounded-lg border border-[#353535] flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center flex-wrap gap-2 text-xs">
+            <span class="text-[#a0a0a5] font-medium mr-1 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              Runtime readiness:
+            </span>
+
+            <!-- FFmpeg Ready Pill -->
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1b261f] border border-[#2b4c33] text-emerald-300">
+              <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span class="font-mono text-[11px] text-[#e2e8f0]">FFmpeg</span>
+              <span class="text-[10px] text-emerald-400 uppercase tracking-wider font-semibold">Ready</span>
+            </div>
+
+            <!-- whisper-cli Ready Pill -->
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1b261f] border border-[#2b4c33] text-emerald-300">
+              <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span class="font-mono text-[11px] text-[#e2e8f0]">whisper-cli</span>
+              <span class="text-[10px] text-emerald-400 uppercase tracking-wider font-semibold">Ready</span>
+            </div>
+
+            <!-- Model Ready Pill -->
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1b261f] border border-[#2b4c33] text-emerald-300">
+              <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span class="font-mono text-[11px] text-[#e2e8f0]">Model</span>
+              <span class="text-[10px] text-emerald-400 uppercase tracking-wider font-semibold">Ready</span>
+            </div>
+          </div>
+
+          <!-- Right 1-click setup button -->
+          <button class="px-2.5 py-1 rounded text-xs bg-[#2c2b38] hover:bg-[#343245] border border-[#48426d] text-[#c7beff] hover:text-white transition-colors flex items-center gap-1.5 font-medium ml-auto sm:ml-0">
+            <svg class="w-3.5 h-3.5 text-[#7b6cd9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+            1-click setup
+          </button>
+        </div>
+
+        <!-- SECTION 1: Speech-to-text models -->
+        <section class="space-y-4">
+          <!-- Section Header with Vault sync pill -->
+          <div class="flex items-center justify-between pb-2 border-b border-[#2d2d2d]">
+            <div>
+              <h2 class="text-sm font-semibold text-white">Speech-to-text models</h2>
+              <p class="text-xs text-[#8c8c90] mt-0.5">Configure offline Whisper speech recognition models and language options</p>
+            </div>
+            <!-- Vault sync badge -->
+            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#1e2029] border border-[#32374d] text-[#93a2d8] text-[11px]" title="Synced with Obsidian vault settings across devices">
+              <svg class="w-3 h-3 text-[#7b6cd9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+              </svg>
+              <span>Vault sync</span>
+            </div>
+          </div>
+
+          <!-- Language Dropdown Setting -->
+          <div class="flex items-center justify-between p-3 bg-[#252525] rounded-lg border border-[#353535]">
+            <div>
+              <div class="text-xs font-medium text-white">Primary recognition language</div>
+              <div class="text-[11px] text-[#8c8c90]">Forces token decoder to prioritize target language syntax</div>
+            </div>
+            <div class="relative">
+              <select class="appearance-none bg-[#1e1e1e] border border-[#3a3a3a] hover:border-[#4d4d4d] focus:border-[#7b6cd9] text-xs text-[#e1e1e6] rounded-md px-3 py-1.5 pr-8 focus:outline-none cursor-pointer transition-colors font-sans">
+                <option selected>Korean (recommended)</option>
+                <option>English</option>
+                <option>Japanese</option>
+                <option>Auto-detect</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#7f7f85]">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2-Column Grid of 5 Model Cards -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-medium text-[#b0b0b5]">Select offline GGML model</span>
+              <span class="text-[11px] text-[#7a7a80]">Supports CoreML Metal acceleration on Apple Silicon</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+
+              <!-- Model 1: Base -->
+              <div class="p-3 bg-[#252525] hover:bg-[#282828] rounded-lg border border-[#353535] transition-all cursor-pointer flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-white">Base</span>
+                    <span class="text-[10px] font-mono text-emerald-400 bg-[#19241b] border border-[#2b4c33] px-1.5 py-0.5 rounded">Installed</span>
+                  </div>
+                  <div class="text-[11px] text-[#8c8c90] mt-1">Lightweight model for quick voice drafts</div>
+                </div>
+                <div class="mt-3 pt-2 border-t border-[#313131] flex items-center justify-between text-[11px] font-mono text-[#78787f]">
+                  <span>148 MB</span>
+                  <span class="text-[10px] bg-[#1d1d1f] px-1 rounded border border-[#2c2c2e]">q5_1</span>
+                </div>
+              </div>
+
+              <!-- Model 2: Small -->
+              <div class="p-3 bg-[#252525] hover:bg-[#282828] rounded-lg border border-[#353535] transition-all cursor-pointer flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-white">Small</span>
+                    <span class="text-[10px] font-mono text-emerald-400 bg-[#19241b] border border-[#2b4c33] px-1.5 py-0.5 rounded">Installed</span>
+                  </div>
+                  <div class="text-[11px] text-[#8c8c90] mt-1">Good balance of resource use and accuracy</div>
+                </div>
+                <div class="mt-3 pt-2 border-t border-[#313131] flex items-center justify-between text-[11px] font-mono text-[#78787f]">
+                  <span>466 MB</span>
+                  <span class="text-[10px] bg-[#1d1d1f] px-1 rounded border border-[#2c2c2e]">q5_1</span>
+                </div>
+              </div>
+
+              <!-- Model 3: Medium (SELECTED / RECOMMENDED) -->
+              <div class="p-3 bg-[#22212d] rounded-lg border-2 border-[#7b6cd9] shadow-md shadow-[#7b6cd9]/5 transition-all cursor-pointer flex flex-col justify-between relative">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-xs font-semibold text-white">Medium</span>
+                      <span class="text-[9px] font-semibold text-[#c7beff] bg-[#342e54] border border-[#524687] px-1.5 py-0.5 rounded tracking-wide">Recommended</span>
+                    </div>
+                    <span class="text-[10px] font-mono text-emerald-400 bg-[#19241b] border border-[#2b4c33] px-1.5 py-0.5 rounded">Installed</span>
+                  </div>
+                  <div class="text-[11px] text-[#b0adc4] mt-1">High fidelity for technical terms and mixed vocabulary</div>
+                </div>
+                <div class="mt-3 pt-2 border-t border-[#353247] flex items-center justify-between text-[11px] font-mono text-[#9894b5]">
+                  <span>514 MB</span>
+                  <span class="text-[10px] bg-[#1a1924] px-1 rounded border border-[#3e395c]">q5_0</span>
+                </div>
+              </div>
+
+              <!-- Model 4: Large-v3-Turbo -->
+              <div class="p-3 bg-[#252525] hover:bg-[#282828] rounded-lg border border-[#353535] transition-all cursor-pointer flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-white">Large-v3-Turbo</span>
+                    <span class="text-[10px] font-mono text-emerald-400 bg-[#19241b] border border-[#2b4c33] px-1.5 py-0.5 rounded">Installed</span>
+                  </div>
+                  <div class="text-[11px] text-[#8c8c90] mt-1">Turbo architecture optimized for M-series GPUs</div>
+                </div>
+                <div class="mt-3 pt-2 border-t border-[#313131] flex items-center justify-between text-[11px] font-mono text-[#78787f]">
+                  <span>547 MB</span>
+                  <span class="text-[10px] bg-[#1d1d1f] px-1 rounded border border-[#2c2c2e]">q5_0</span>
+                </div>
+              </div>
+
+              <!-- Model 5: Large-v3 (Not installed, spans nicely or positioned) -->
+              <div class="p-3 bg-[#232323] hover:bg-[#262626] rounded-lg border border-[#313131] transition-all cursor-pointer flex flex-col justify-between opacity-80 hover:opacity-100 sm:col-span-2">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-semibold text-[#d0d0d5]">Large-v3</span>
+                      <span class="text-[10px] font-mono text-[#8a8a8e] bg-[#2a2a2a] border border-[#3a3a3a] px-1.5 py-0.2 rounded">Not installed</span>
+                    </div>
+                    <div class="text-[11px] text-[#7a7a80] mt-0.5">Maximum transcription precision for noisy lecture recordings</div>
+                  </div>
+                  <button class="px-2.5 py-1 text-xs rounded bg-[#2e2e2e] hover:bg-[#383838] border border-[#404040] text-[#e0e0e0] flex items-center gap-1.5 transition-colors">
+                    <svg class="w-3 h-3 text-[#7b6cd9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download (1,031 MB)
+                  </button>
+                </div>
+                <div class="mt-2.5 pt-2 border-t border-[#2e2e2e] flex items-center justify-between text-[11px] font-mono text-[#6c6c72]">
+                  <span>1,031 MB</span>
+                  <span class="text-[10px] bg-[#1c1c1c] px-1 rounded border border-[#2b2b2b]">q5_0</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Vocabulary Prompting Input Field -->
+          <div class="p-3 bg-[#252525] rounded-lg border border-[#353535] space-y-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-xs font-medium text-white block">Custom vocabulary hints</label>
+                <p class="text-[11px] text-[#8c8c90]">Comma-separated initial prompt tokens to bias Whisper recognition for specialized terms</p>
+              </div>
+              <span class="text-[10px] font-mono text-[#7b6cd9] bg-[#272535] px-1.5 py-0.5 rounded border border-[#3c365c]">--prompt</span>
+            </div>
+            <div class="relative">
+              <input type="text" 
+                     value="API, Obsidian, Whisper, Docker, CoreML, TypeScript, Markdown" 
+                     class="w-full bg-[#1b1b1b] border border-[#363636] focus:border-[#7b6cd9] rounded-md px-3 py-1.5 text-xs text-[#e5e5eb] font-mono focus:outline-none transition-colors"
+                     placeholder="e.g. Kubernetes, React, GraphQL, PyTorch">
+            </div>
+            <div class="text-[10px] text-[#717178] flex items-center gap-1">
+              <svg class="w-3 h-3 text-[#7b6cd9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              <span>Helps prevent phonetic misinterpretation of technical jargon in mixed-language notes</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: Local device tool paths -->
+        <section class="space-y-4">
+          <!-- Section Header with This PC only badge -->
+          <div class="flex items-center justify-between pb-2 border-b border-[#2d2d2d]">
+            <div>
+              <h2 class="text-sm font-semibold text-white">Local device tool paths</h2>
+              <p class="text-xs text-[#8c8c90] mt-0.5">Executables and binaries stored locally on this machine</p>
+            </div>
+            <!-- This PC only badge -->
+            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#202020] border border-[#383838] text-[#a5a5ab] text-[11px]" title="Saved locally in data.json, excluded from Obsidian sync">
+              <svg class="w-3 h-3 text-[#9d9da5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="14" x="2" y="3" rx="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+              <span>This PC only</span>
+            </div>
+          </div>
+
+          <!-- Tool Rows Container -->
+          <div class="space-y-2.5">
+
+            <!-- Row 1: Whisper runtime executable -->
+            <div class="p-3 bg-[#252525] rounded-lg border border-[#353535] space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-white">Whisper runtime executable</span>
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#19241b] border border-[#2b4c33] text-emerald-400">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    Ready
+                  </span>
+                </div>
+                <span class="text-[11px] text-[#717178] font-mono">whisper.cpp v1.5.4</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="text" readonly value="/opt/homebrew/bin/whisper-cli" class="flex-1 bg-[#1c1c1c] border border-[#363636] rounded-md px-3 py-1.5 text-xs text-[#bfbfc8] font-mono focus:outline-none">
+                <button class="px-3 py-1.5 bg-[#2d2d2d] hover:bg-[#373737] border border-[#3f3f3f] text-xs text-[#e1e1e6] rounded-md transition-colors whitespace-nowrap">
+                  Browse...
+                </button>
+              </div>
+            </div>
+
+            <!-- Row 2: GGML model file -->
+            <div class="p-3 bg-[#252525] rounded-lg border border-[#353535] space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-white">GGML model file</span>
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#19241b] border border-[#2b4c33] text-emerald-400">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    Ready
+                  </span>
+                </div>
+                <span class="text-[11px] text-[#717178] font-mono">ggml-medium-q5_0.bin</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="text" readonly value="/Users/obsidian/.config/on-the-record/models/ggml-medium-q5_0.bin" class="flex-1 bg-[#1c1c1c] border border-[#363636] rounded-md px-3 py-1.5 text-xs text-[#bfbfc8] font-mono focus:outline-none truncate">
+                <button class="px-3 py-1.5 bg-[#2d2d2d] hover:bg-[#373737] border border-[#3f3f3f] text-xs text-[#e1e1e6] rounded-md transition-colors whitespace-nowrap">
+                  Browse...
+                </button>
+              </div>
+            </div>
+
+            <!-- Row 3: FFmpeg executable -->
+            <div class="p-3 bg-[#252525] rounded-lg border border-[#353535] space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-white">FFmpeg executable</span>
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#19241b] border border-[#2b4c33] text-emerald-400">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    Ready
+                  </span>
+                </div>
+                <span class="text-[11px] text-[#717178] font-mono">ffmpeg 6.1.1</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="text" readonly value="/opt/homebrew/bin/ffmpeg" class="flex-1 bg-[#1c1c1c] border border-[#363636] rounded-md px-3 py-1.5 text-xs text-[#bfbfc8] font-mono focus:outline-none">
+                <button class="px-3 py-1.5 bg-[#2d2d2d] hover:bg-[#373737] border border-[#3f3f3f] text-xs text-[#e1e1e6] rounded-md transition-colors whitespace-nowrap">
+                  Browse...
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Action Row -->
+          <div class="pt-2 flex items-center justify-between gap-3">
+            <div class="text-[11px] text-[#76767c]">
+              Paths are checked automatically on Obsidian vault startup.
+            </div>
+            <div class="flex items-center gap-2.5">
+              <button class="px-3 py-1.5 bg-[#262626] hover:bg-[#303030] border border-[#3b3b3b] text-xs text-[#e1e1e6] rounded-md font-medium transition-colors flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-[#9e9ea6]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                Auto-discover tools
+              </button>
+              <button class="px-3.5 py-1.5 bg-[#7b6cd9] hover:bg-[#6f5ecf] text-white text-xs font-medium rounded-md shadow-sm transition-colors flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Run test transcription
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- Modal Footer (Obsidian style) -->
+    <div class="px-6 py-3 bg-[#181818] border-t border-[#2d2d2d] flex items-center justify-between text-xs text-[#7b7b80]">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="text-[#9999a0]">Offline engine status: Operational (CoreML active)</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="#" class="text-[#7b6cd9] hover:underline">Documentation</a>
+        <span>??u003c/span>
+        <a href="#" class="text-[#8e8e94] hover:text-white transition-colors">Reset to defaults</a>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

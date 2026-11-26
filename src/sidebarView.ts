@@ -28,6 +28,9 @@ export class OnTheRecordSidebarView extends ItemView {
 	private activeNote: TFile | null = null;
 	private audioItems: AudioEmbedItem[] = [];
 	private playerState: "idle" | "recording" | "paused" = "idle";
+	private recordingStartedAt: number | null = null;
+	private accumulatedSeconds = 0;
+	private timerHandle: number | null = null;
 	private currentProgress: WorkerProgress | null = null;
 	private currentQueueCount = 0;
 
@@ -35,6 +38,8 @@ export class OnTheRecordSidebarView extends ItemView {
 	private activeNoteNameEl!: HTMLElement;
 	private noteActionBarEl!: HTMLElement;
 	private setupAlertEl!: HTMLElement;
+	private recordingDeckEl!: HTMLElement;
+	private recTimerEl: HTMLElement | null = null;
 	private queueWidgetEl!: HTMLElement;
 	private audioListContainerEl!: HTMLElement;
 	private audioCountBadgeEl!: HTMLElement;
@@ -68,7 +73,7 @@ export class OnTheRecordSidebarView extends ItemView {
 		setIcon(titleIcon, "otr-record-deck");
 		const titleStack = titleGroup.createDiv({ cls: "otr-sidebar-title-stack" });
 		titleStack.createSpan({ text: "On the Record" });
-		titleStack.createSpan({ text: "Local voice companion", cls: "otr-sidebar-subtitle" });
+		titleStack.createSpan({ text: "Obsidian voice companion", cls: "otr-sidebar-subtitle" });
 
 		const headerActions = headerEl.createDiv({ cls: "otr-sidebar-header-actions" });
 		const refreshBtn = headerActions.createEl("button", { cls: "otr-icon-btn", title: "새로고침" });
@@ -104,6 +109,9 @@ export class OnTheRecordSidebarView extends ItemView {
 		const noteBodyRow = contextCard.createDiv({ cls: "otr-compact-note-row" });
 		this.activeNoteNameEl = noteBodyRow.createDiv({ text: "열린 회의록 없음", cls: "otr-context-filename" });
 		this.noteActionBarEl = noteBodyRow.createDiv({ cls: "otr-compact-record-actions" });
+
+		// 3-1. 녹음 중 전용 덱 카드 (타이머 + 파형 + 일시정지/중지/재개)
+		this.recordingDeckEl = container.createDiv({ cls: "otr-rec-deck-card is-hidden" });
 
 		// 4. 실시간 백그라운드 전사 큐 진행률 위젯 (진행 중일 때만 노출)
 		this.queueWidgetEl = container.createDiv({ cls: "otr-queue-widget is-hidden" });
@@ -145,12 +153,63 @@ export class OnTheRecordSidebarView extends ItemView {
 	}
 
 	async onClose(): Promise<void> {
-		// 사이드바는 자체 타이머를 두지 않으므로 별도 타이머 정리 불필요
+		this.stopRecTimer();
 	}
 
 	setRecordingState(state: "idle" | "recording" | "paused"): void {
+		const prevState = this.playerState;
 		this.playerState = state;
+
+		if (state === "idle") {
+			this.stopRecTimer();
+			this.recordingStartedAt = null;
+			this.accumulatedSeconds = 0;
+		} else if (state === "recording") {
+			if (prevState !== "recording") {
+				this.recordingStartedAt = Date.now();
+			}
+			this.startRecTimer();
+		} else if (state === "paused") {
+			if (prevState === "recording" && this.recordingStartedAt !== null) {
+				this.accumulatedSeconds += Math.max(0, Math.floor((Date.now() - this.recordingStartedAt) / 1000));
+				this.recordingStartedAt = null;
+			}
+			this.stopRecTimer();
+		}
+
 		this.renderCompactControls();
+		this.renderRecordingDeck();
+	}
+
+	private getElapsedSeconds(): number {
+		let total = this.accumulatedSeconds;
+		if (this.playerState === "recording" && this.recordingStartedAt !== null) {
+			total += Math.max(0, Math.floor((Date.now() - this.recordingStartedAt) / 1000));
+		}
+		return total;
+	}
+
+	private formatClock(totalSeconds: number): string {
+		const hrs = Math.floor(totalSeconds / 3600);
+		const mins = Math.floor((totalSeconds % 3600) / 60);
+		const secs = totalSeconds % 60;
+		return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+	}
+
+	private startRecTimer(): void {
+		this.stopRecTimer();
+		this.timerHandle = window.setInterval(() => {
+			if (this.recTimerEl) {
+				this.recTimerEl.setText(this.formatClock(this.getElapsedSeconds()));
+			}
+		}, 1000);
+	}
+
+	private stopRecTimer(): void {
+		if (this.timerHandle !== null) {
+			window.clearInterval(this.timerHandle);
+			this.timerHandle = null;
+		}
 	}
 
 	setTranscriptionProgress(progress: WorkerProgress | null, queueCount: number): void {
@@ -213,18 +272,79 @@ export class OnTheRecordSidebarView extends ItemView {
 				await this.callbacks.startRecording(this.activeNote);
 			};
 		} else {
-			const stopBtn = this.noteActionBarEl.createEl("button", {
-				cls: "otr-compact-rec-btn is-active",
-				title: "녹음 중지 및 노트에 연결",
+			const pill = this.noteActionBarEl.createSpan({
+				cls: `otr-active-note-pill ${this.playerState === "paused" ? "is-paused" : "is-recording"}`,
+				text: this.playerState === "paused" ? "일시정지" : "녹음 중",
 			});
-			const icon = stopBtn.createSpan({ cls: "otr-inline-icon" });
-			setIcon(icon, "square");
-			stopBtn.createSpan({ text: this.playerState === "paused" ? "일시정지" : "중지" });
-			stopBtn.onclick = async () => {
-				await this.callbacks.stopRecording();
-				await this.refresh();
-			};
+			pill.title = "아래 녹음 제어 카드에서 제어할 수 있습니다";
 		}
+	}
+
+	private renderRecordingDeck(): void {
+		if (!this.recordingDeckEl) return;
+		if (this.playerState === "idle") {
+			this.recordingDeckEl.addClass("is-hidden");
+			this.recordingDeckEl.empty();
+			this.recTimerEl = null;
+			return;
+		}
+
+		this.recordingDeckEl.removeClass("is-hidden");
+		this.recordingDeckEl.empty();
+
+		const isPaused = this.playerState === "paused";
+		const topRow = this.recordingDeckEl.createDiv({ cls: "otr-rec-deck-top" });
+		const stateGroup = topRow.createDiv({ cls: "otr-rec-deck-state" });
+		stateGroup.createSpan({ cls: `otr-rec-deck-dot ${isPaused ? "is-paused" : "is-recording"}` });
+		stateGroup.createSpan({ text: isPaused ? "Paused" : "Recording", cls: "otr-rec-deck-label" });
+
+		this.recTimerEl = topRow.createSpan({
+			cls: "otr-rec-deck-timer font-mono-tabular",
+			text: this.formatClock(this.getElapsedSeconds()),
+		});
+
+		const waveBox = this.recordingDeckEl.createDiv({
+			cls: `otr-rec-waveform ${isPaused ? "is-paused" : "is-active"}`,
+		});
+		const barHeights = [26, 44, 66, 38, 86, 100, 72, 54, 88, 62, 42, 74, 48, 30];
+		for (const h of barHeights) {
+			const bar = waveBox.createSpan({ cls: "otr-wave-bar" });
+			bar.setCssProps({ height: `${h}%` });
+		}
+
+		const controls = this.recordingDeckEl.createDiv({ cls: "otr-rec-controls-grid" });
+
+		const pauseBtn = controls.createEl("button", {
+			cls: "otr-rec-ctrl-btn",
+			title: "녹음 일시정지",
+		});
+		const pauseIcon = pauseBtn.createSpan({ cls: "otr-inline-icon" });
+		setIcon(pauseIcon, "pause");
+		pauseBtn.createSpan({ text: "일시정지" });
+		pauseBtn.disabled = isPaused;
+		pauseBtn.onclick = () => void this.callbacks.pauseRecording();
+
+		const stopBtn = controls.createEl("button", {
+			cls: "otr-rec-ctrl-btn otr-rec-stop-btn",
+			title: "녹음 중지 및 노트에 연결",
+		});
+		const stopIcon = stopBtn.createSpan({ cls: "otr-inline-icon" });
+		setIcon(stopIcon, "square");
+		stopBtn.createSpan({ text: "중지 및 연결" });
+		stopBtn.onclick = async () => {
+			await this.callbacks.stopRecording();
+			await this.refresh();
+		};
+
+		const resumeBtn = controls.createEl("button", {
+			cls: "otr-rec-ctrl-btn",
+			title: "녹음 재개",
+		});
+		const resumeIcon = resumeBtn.createSpan({ cls: "otr-inline-icon" });
+		setIcon(resumeIcon, "play");
+		resumeBtn.createSpan({ text: "재개" });
+		resumeBtn.disabled = !isPaused;
+		resumeBtn.onclick = () => void this.callbacks.resumeRecording();
 	}
 
 	private renderQueueWidget(): void {
@@ -317,6 +437,7 @@ export class OnTheRecordSidebarView extends ItemView {
 
 		this.renderSetupAlert();
 		this.renderCompactControls();
+		this.renderRecordingDeck();
 		this.renderQueueWidget();
 		this.renderAudioList();
 	}

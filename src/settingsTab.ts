@@ -97,9 +97,9 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			cls: "otr-settings-hero-desc",
 		});
 
-		const guideBtn = heroEl.createEl("button", { text: "가이드 보기", cls: "otr-action-badge-btn" });
+		const guideBtn = heroEl.createEl("button", { text: "가이드 보기", cls: "otr-guide-ghost-btn" });
 		guideBtn.onclick = () => {
-			window.open("https://github.com/sparklings/ontherecord/blob/main/docs/SETTINGS_GUIDE.md", "_blank");
+			window.open("https://github.com/sparklings/ontherecord/wiki", "_blank");
 		};
 
 		// 2. 상단 탭 세그먼트 네비게이션
@@ -135,6 +135,25 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		} else {
 			this.renderAccelerationTab(containerEl, vaultSettings, localSettings);
 		}
+
+		// 4. Stitch 스타일 하단 상태 푸터 바
+		const footerEl = containerEl.createDiv({ cls: "otr-settings-footer" });
+		const allReady =
+			checkPathExists(localSettings?.ffmpegPath ?? "").exists &&
+			checkPathExists(localSettings?.runtimePath ?? "").exists &&
+			checkPathExists(localSettings?.modelPath ?? "").exists;
+		const statusGroup = footerEl.createDiv({ cls: "otr-settings-footer-status" });
+		statusGroup.createSpan({ cls: `otr-status-badge-dot ${allReady ? "is-ready" : "is-warning"}` });
+		statusGroup.createSpan({
+			text: allReady
+				? "오프라인 엔진 상태: 정상 준비됨 (FFmpeg · whisper-cli · Model)"
+				: "오프라인 엔진 상태: 도구 경로 설정 필요",
+		});
+
+		const wikiLink = footerEl.createEl("button", { text: "문서 (Wiki)", cls: "otr-link-btn" });
+		wikiLink.onclick = () => {
+			window.open("https://github.com/sparklings/ontherecord/wiki", "_blank");
+		};
 	}
 
 	/**
@@ -290,70 +309,63 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		// 2열 정밀 모델 셀렉터 그리드
+		// 2열 정밀 모델 셀렉터 그리드 (Stitch 2x2 + Large-v3 풀폭)
 		const modelGrid = containerEl.createDiv({ cls: "otr-model-grid" });
 		const selectedModelId = vaultSettings.defaultModelSize || "medium";
-
-		const detailContainer = containerEl.createDiv({ cls: "otr-model-detail-wrap" });
-
-		const renderDetailBox = (modelId: string) => {
-			detailContainer.empty();
-			const meta = getModelMetadata(modelId);
-			const installStatus = checkModelFileInstalled(modelId, localSettings?.modelPath);
-
-			const box = detailContainer.createDiv({ cls: "otr-model-detail-box" });
-			const top = box.createDiv({ cls: "otr-model-detail-top" });
-			top.createSpan({ text: `${meta.label} 상세 정보`, cls: "otr-model-detail-title" });
-
-			const badge = top.createSpan({
-				cls: `otr-status-badge ${installStatus.installed ? "is-ready" : "is-missing"}`,
-			});
-			badge.createSpan({ cls: "otr-status-badge-dot" });
-			badge.createSpan({ text: installStatus.installed ? "설치됨" : "미설치" });
-
-			box.createDiv({ text: meta.description, cls: "otr-model-detail-desc" });
-			box.createDiv({
-				text: `양자화: ${meta.quantization} · 파일 크기: ${meta.sizeMb} MB${meta.recommended ? " · 공식 권장 모델" : ""}`,
-				cls: "otr-model-detail-meta",
-			});
-
-			if (!installStatus.installed) {
-				const cmd = buildModelDownloadCommand(modelId);
-				const codeRow = box.createDiv({ cls: "otr-code-copy-row" });
-				codeRow.createSpan({ text: cmd, cls: "otr-code-copy-text" });
-				const copyBtn = codeRow.createEl("button", { text: "명령어 복사", cls: "otr-action-badge-btn" });
-				copyBtn.onclick = async () => {
-					await navigator.clipboard.writeText(cmd);
-					new Notice(`[${meta.label}] 다운로드 명령어가 복사되었습니다.\nPowerShell 터미널에 붙여넣어 실행하세요.`);
-				};
-			} else if (localSettings && localSettings.modelPath !== installStatus.resolvedPath) {
-				const applyBtn = box.createEl("button", { text: "현재 전사 모델로 경로 즉시 적용", cls: "mod-cta otr-action-badge-btn" });
-				applyBtn.onclick = async () => {
-					await this.updateLocalSettings({ modelPath: installStatus.resolvedPath });
-					new Notice(`[${meta.label}] 모델 경로가 적용되었습니다.`);
-					this.display();
-				};
-			}
-		};
 
 		for (const m of SUPPORTED_MODELS) {
 			const isSelected = m.id === selectedModelId;
 			const installStatus = checkModelFileInstalled(m.id, localSettings?.modelPath);
+			const isFullWidth = m.id === "large-v3";
+			const shortTitle = m.label.split(" (")[0];
 
 			const card = modelGrid.createDiv({
-				cls: `otr-model-card ${isSelected ? "is-selected" : ""}`,
+				cls: `otr-model-card ${isSelected ? "is-selected" : ""} ${isFullWidth ? "is-full-width" : ""}`,
 			});
 
 			const header = card.createDiv({ cls: "otr-model-card-header" });
-			header.createSpan({ text: m.label, cls: "otr-model-card-title" });
+			const titleWrap = header.createDiv({ cls: "otr-model-card-title-wrap" });
+			titleWrap.createSpan({ text: shortTitle, cls: "otr-model-card-title" });
+			if (m.recommended) {
+				titleWrap.createSpan({ text: "권장", cls: "otr-model-rec-pill" });
+			}
 
 			const badge = header.createSpan({
 				cls: `otr-status-badge ${installStatus.installed ? "is-ready" : "is-missing"}`,
 			});
-			badge.createSpan({ text: installStatus.installed ? "준비됨" : "미설치" });
+			badge.createSpan({ text: installStatus.installed ? "설치됨" : "미설치" });
 
-			card.createDiv({ text: `${m.sizeMb} MB · ${m.quantization}`, cls: "otr-model-card-meta" });
-			card.createDiv({ text: m.recommended ? "공식 권장 표준 모델" : m.description, cls: "otr-model-card-desc" });
+			card.createDiv({ text: m.description, cls: "otr-model-card-desc" });
+
+			const footer = card.createDiv({ cls: "otr-model-card-footer" });
+			footer.createSpan({ text: `${m.sizeMb.toLocaleString()} MB`, cls: "otr-model-card-meta font-mono-tabular" });
+
+			const footerRight = footer.createDiv({ cls: "otr-model-card-footer-right" });
+			if (!installStatus.installed) {
+				const copyBtn = footerRight.createEl("button", {
+					text: "다운로드 명령 복사",
+					cls: "otr-model-dl-btn",
+					title: `${shortTitle} (${m.filename}) PowerShell 다운로드 명령 복사`,
+				});
+				copyBtn.onclick = async (e) => {
+					e.stopPropagation();
+					const cmd = buildModelDownloadCommand(m.id);
+					await navigator.clipboard.writeText(cmd);
+					new Notice(`[${shortTitle}] 다운로드 명령어가 복사되었습니다.\nPowerShell 터미널에 붙여넣어 실행하세요.`);
+				};
+			} else if (localSettings && localSettings.modelPath !== installStatus.resolvedPath) {
+				const applyBtn = footerRight.createEl("button", {
+					text: "경로 적용",
+					cls: "otr-action-badge-btn",
+				});
+				applyBtn.onclick = async (e) => {
+					e.stopPropagation();
+					await this.updateLocalSettings({ modelPath: installStatus.resolvedPath });
+					new Notice(`[${shortTitle}] 모델 경로가 적용되었습니다.`);
+					this.display();
+				};
+			}
+			footerRight.createSpan({ text: m.quantization, cls: "otr-model-quant-pill font-mono-tabular" });
 
 			card.onclick = () => {
 				void this.updateVaultSettings({ defaultModelSize: m.id });
@@ -361,19 +373,26 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			};
 		}
 
-		renderDetailBox(selectedModelId);
+		// Stitch 스타일 풀폭 맞춤형 어휘 힌트 카드
+		const vocabCard = containerEl.createDiv({ cls: "otr-vocab-card" });
+		const vocabTop = vocabCard.createDiv({ cls: "otr-vocab-top" });
+		const vocabInfo = vocabTop.createDiv();
+		vocabInfo.createDiv({ text: "맞춤형 어휘 힌트", cls: "otr-vocab-title" });
+		vocabInfo.createDiv({
+			text: "한영 혼용 IT 전문용어나 고유명사를 쉼표로 구분해 입력하면 오인식을 줄일 수 있습니다.",
+			cls: "otr-vocab-desc",
+		});
+		vocabTop.createSpan({ text: "--prompt", cls: "otr-model-rec-pill font-mono-tabular" });
 
-		new Setting(containerEl)
-			.setName("맞춤형 어휘 힌트 (--prompt)")
-			.setDesc("한영 혼용 IT 전문용어나 고유명사를 쉼표로 구분해 입력하면 오인식을 줄일 수 있습니다.")
-			.addText((text) =>
-				text
-					.setValue(vaultSettings.vocabularyPrompt ?? "")
-					.setPlaceholder("API, Obsidian, Whisper, Docker, TypeScript")
-					.onChange((value) => {
-						void this.updateVaultSettings({ vocabularyPrompt: value.trim() });
-					}),
-			);
+		const vocabInput = vocabCard.createEl("input", {
+			type: "text",
+			cls: "otr-vocab-input font-mono-tabular",
+		});
+		vocabInput.value = vaultSettings.vocabularyPrompt ?? "";
+		vocabInput.placeholder = "API, Obsidian, Whisper, Docker, TypeScript, Markdown";
+		vocabInput.oninput = () => {
+			void this.updateVaultSettings({ vocabularyPrompt: vocabInput.value.trim() });
+		};
 
 		renderScopeHeading(containerEl, "기기 전사 도구 경로", "local");
 

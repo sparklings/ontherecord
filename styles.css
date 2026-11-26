@@ -1448,3 +1448,476 @@
 	background-color: rgba(123, 108, 217, 0.14);
 	color: var(--text-normal);
 }
+
+/* --------------------------------------------------------------------------
+   13. Stitch Exact Visual Parity Overrides & Recording Deck
+   -------------------------------------------------------------------------- */
+
+/* Dark theme surface hierarchy matching Stitch deep-slate palette */
+.theme-dark .otr-sidebar-container {
+	background-color: #131318;
+}
+
+.theme-dark .otr-sidebar-container .otr-context-card,
+.theme-dark .otr-sidebar-container .otr-rec-deck-card,
+.theme-dark .otr-sidebar-container .otr-queue-widget,
+.theme-dark .otr-sidebar-container .otr-audio-item-stacked {
+	background-color: #1b1b22;
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.theme-dark .otr-settings-container .otr-model-card,
+.theme-dark .otr-settings-container .otr-readiness-banner,
+.theme-dark .otr-settings-container .otr-model-detail-box,
+.theme-dark .otr-settings-container .setting-item:not(.setting-item-heading) {
+	background-color: #1a1a21;
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Sidebar full-height layout & pinned footer strip */
+.otr-sidebar-container {
+	padding: 12px;
+	gap: 10px;
+}
+
+.otr-sidebar-container .otr-explorer-section {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.otr-sidebar-container .otr-audio-list {
+	flex: 1;
+	max-height: none;
+	overflow-y: auto;
+}
+
+.otr-sidebar-container .otr-quick-tools-strip {
+	margin-top: auto;
+	padding-top: 10px;
+}
+
+/* Reset Obsidian default button chrome & box-shadow */
+.otr-sidebar-container button.otr-link-btn,
+.otr-settings-container button.otr-link-btn {
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	padding: 0;
+	height: auto;
+	font-size: 11px;
+	font-weight: 500;
+	color: #9c8ef0;
+	cursor: pointer;
+}
+
+.otr-sidebar-container button.otr-link-btn:hover,
+.otr-settings-container button.otr-link-btn:hover {
+	background: transparent;
+	text-decoration: underline;
+	color: #b4a8f8;
+}
+
+.otr-sidebar-container button.otr-icon-btn {
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	padding: 4px;
+	height: auto;
+}
+
+.otr-sidebar-container button.otr-tool-btn {
+	background-color: #1b1b22;
+	border: 1px solid rgba(255, 255, 255, 0.09);
+	box-shadow: none;
+	color: var(--text-normal);
+	padding: 7px 10px;
+	border-radius: 7px;
+	font-size: 11px;
+	font-weight: 500;
+}
+
+.theme-light .otr-sidebar-container button.otr-tool-btn {
+	background-color: var(--background-primary);
+	border-color: var(--background-modifier-border);
+}
+
+.otr-sidebar-container button.otr-tool-btn:hover {
+	border-color: #7b6cd9;
+	background-color: rgba(123, 108, 217, 0.12);
+}
+
+.otr-sidebar-container button.otr-compact-rec-btn {
+	background-color: rgba(224, 82, 82, 0.14);
+	border: 1px solid rgba(224, 82, 82, 0.38);
+	box-shadow: none;
+	color: #f27474;
+	border-radius: 9999px;
+	padding: 3px 10px;
+	height: auto;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.otr-sidebar-container button.otr-compact-rec-btn.is-disabled {
+	background-color: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border);
+	color: var(--text-muted);
+}
+
+.otr-sidebar-container button.otr-action-badge-btn,
+.otr-settings-container button.otr-action-badge-btn {
+	background-color: #7b6cd9;
+	border: 1px solid rgba(164, 150, 245, 0.45);
+	box-shadow: none;
+	color: #ffffff;
+	padding: 4px 10px;
+	height: auto;
+	font-size: 11px;
+	font-weight: 600;
+	border-radius: 6px;
+}
+
+.otr-sidebar-container button.otr-action-badge-btn:hover,
+.otr-settings-container button.otr-action-badge-btn:hover {
+	background-color: #8b7ce6;
+}
+
+.otr-settings-container button.otr-guide-ghost-btn {
+	background-color: transparent;
+	border: 1px solid var(--background-modifier-border);
+	box-shadow: none;
+	color: var(--text-muted);
+	padding: 4px 10px;
+	height: auto;
+	font-size: 11px;
+	font-weight: 500;
+	border-radius: 6px;
+}
+
+.otr-settings-container button.otr-guide-ghost-btn:hover {
+	color: var(--text-normal);
+	border-color: #7b6cd9;
+	background-color: rgba(123, 108, 217, 0.08);
+}
+
+.otr-settings-container button.otr-tab-btn {
+	box-shadow: none;
+	height: auto;
+}
+
+.otr-sidebar-container button.otr-card-btn {
+	box-shadow: none;
+	height: auto;
+}
+
+.otr-active-note-pill {
+	font-size: 10px;
+	font-weight: 600;
+	padding: 2px 7px;
+	border-radius: 9999px;
+	background-color: rgba(224, 82, 82, 0.14);
+	color: #f27474;
+	border: 1px solid rgba(224, 82, 82, 0.35);
+}
+
+.otr-active-note-pill.is-paused {
+	background-color: rgba(209, 123, 57, 0.14);
+	color: #e29556;
+	border-color: rgba(209, 123, 57, 0.35);
+}
+
+/* Sidebar Recording Deck Card (Stitch Panel Parity) */
+.otr-rec-deck-card {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.otr-rec-deck-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.otr-rec-deck-state {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.otr-rec-deck-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background-color: #e05252;
+}
+
+.otr-rec-deck-dot.is-recording {
+	animation: otr-dot-ping 1.4s infinite cubic-bezier(0, 0, 0.2, 1);
+}
+
+.otr-rec-deck-dot.is-paused {
+	background-color: #d17b39;
+}
+
+.otr-rec-deck-label {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.otr-rec-deck-timer {
+	font-size: 12px;
+	font-weight: 600;
+	padding: 2px 7px;
+	border-radius: 5px;
+	background-color: rgba(255, 255, 255, 0.05);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.otr-rec-waveform {
+	height: 30px;
+	border-radius: 6px;
+	background-color: rgba(0, 0, 0, 0.22);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 3px;
+	padding: 4px 10px;
+}
+
+.otr-wave-bar {
+	width: 3px;
+	border-radius: 9999px;
+	background-color: #7b6cd9;
+	opacity: 0.88;
+}
+
+.otr-rec-waveform.is-active .otr-wave-bar:nth-child(odd) {
+	animation: otr-wave-pulse 1.1s ease-in-out infinite alternate;
+}
+
+.otr-rec-waveform.is-active .otr-wave-bar:nth-child(even) {
+	animation: otr-wave-pulse 0.85s ease-in-out infinite alternate-reverse;
+}
+
+.otr-rec-waveform.is-paused .otr-wave-bar {
+	opacity: 0.35;
+}
+
+@keyframes otr-wave-pulse {
+	from { transform: scaleY(0.55); opacity: 0.6; }
+	to { transform: scaleY(1); opacity: 1; }
+}
+
+.otr-rec-controls-grid {
+	display: grid;
+	grid-template-columns: 1fr 1.25fr 1fr;
+	gap: 5px;
+}
+
+.otr-sidebar-container button.otr-rec-ctrl-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	padding: 5px 6px;
+	height: auto;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: rgba(255, 255, 255, 0.03);
+	box-shadow: none;
+	color: var(--text-normal);
+	font-size: 10px;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.otr-sidebar-container button.otr-rec-ctrl-btn:disabled {
+	opacity: 0.38;
+	cursor: not-allowed;
+}
+
+.otr-sidebar-container button.otr-rec-ctrl-btn.otr-rec-stop-btn {
+	background-color: #7b6cd9;
+	border-color: rgba(164, 150, 245, 0.45);
+	color: #ffffff;
+	font-weight: 600;
+}
+
+.otr-sidebar-container button.otr-rec-ctrl-btn.otr-rec-stop-btn:hover {
+	background-color: #8b7ce6;
+}
+
+/* Settings Model Card Full-Width 5th Card & Recommended Pill */
+.otr-model-card.is-full-width {
+	grid-column: 1 / -1;
+}
+
+.otr-model-card-header {
+	gap: 8px;
+}
+
+.otr-model-card-title-wrap {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+}
+
+.otr-model-card-title {
+	white-space: nowrap;
+}
+
+.otr-status-badge,
+.otr-model-rec-pill,
+.otr-model-quant-pill {
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.otr-model-rec-pill {
+	font-size: 9px;
+	font-weight: 600;
+	padding: 1px 6px;
+	border-radius: 4px;
+	background-color: rgba(123, 108, 217, 0.18);
+	color: #b4a8f8;
+	border: 1px solid rgba(123, 108, 217, 0.4);
+}
+
+.otr-model-card-desc {
+	font-size: 11px;
+	color: var(--text-muted);
+	line-height: 1.4;
+	margin: 2px 0 6px;
+}
+
+.otr-model-card-footer {
+	margin-top: auto;
+	padding-top: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.otr-model-card-footer-right {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.otr-model-quant-pill {
+	font-size: 10px;
+	padding: 1px 6px;
+	border-radius: 4px;
+	background-color: rgba(255, 255, 255, 0.05);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-muted);
+}
+
+.otr-settings-container button.otr-model-dl-btn {
+	background-color: rgba(255, 255, 255, 0.05);
+	border: 1px solid var(--background-modifier-border);
+	box-shadow: none;
+	color: var(--text-normal);
+	padding: 2px 8px;
+	height: auto;
+	font-size: 10px;
+	font-weight: 500;
+	border-radius: 5px;
+	white-space: nowrap;
+}
+
+.otr-settings-container button.otr-model-dl-btn:hover {
+	border-color: #7b6cd9;
+	background-color: rgba(123, 108, 217, 0.14);
+}
+
+/* Stitch Full-Width Vocabulary Card */
+.otr-vocab-card {
+	background-color: #1a1a21;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: var(--radius-m, 8px);
+	padding: 12px 14px;
+	margin-bottom: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.theme-light .otr-vocab-card {
+	background-color: var(--background-secondary);
+	border-color: var(--background-modifier-border);
+}
+
+.otr-vocab-top {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.otr-vocab-title {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.otr-vocab-desc {
+	font-size: 11px;
+	color: var(--text-muted);
+	margin-top: 2px;
+}
+
+.otr-settings-container input.otr-vocab-input {
+	width: 100%;
+	box-sizing: border-box;
+	background-color: rgba(0, 0, 0, 0.28);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 8px 10px;
+	font-size: 12px;
+	color: var(--text-normal);
+}
+
+.otr-settings-container input.otr-vocab-input:focus {
+	border-color: #7b6cd9;
+	box-shadow: 0 0 0 1px rgba(123, 108, 217, 0.35);
+}
+
+/* Settings Stitch Footer Bar */
+.otr-settings-footer {
+	margin-top: 20px;
+	padding-top: 12px;
+	border-top: 1px solid var(--background-modifier-border);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.otr-settings-footer-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+}
+
+.otr-status-badge-dot.is-ready {
+	background-color: #48a56a;
+}
+
+.otr-status-badge-dot.is-warning {
+	background-color: #d17b39;
+}
