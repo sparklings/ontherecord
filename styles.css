@@ -1047,6 +1047,8 @@
 }
 
 /* 본문 작업 영역(rootSplit) 기준 상대 위치 지정 */
+.workspace-leaf-content,
+.markdown-source-view,
 .workspace-split.mod-root {
 	position: relative;
 }
@@ -1058,8 +1060,8 @@
 	z-index: 60;
 	display: inline-flex;
 	align-items: center;
-	gap: 8px;
-	padding: 6px 14px;
+	gap: 6px;
+	padding: 5px 12px;
 	border-radius: 9999px;
 	background-color: rgba(24, 24, 27, 0.94);
 	border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1067,13 +1069,14 @@
 	backdrop-filter: blur(12px);
 	color: var(--text-normal);
 	font-size: 12px;
+	user-select: none;
 	transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
 body > .otr-float-indicator {
 	position: fixed;
 	right: 48px;
-	bottom: 40px;
+	bottom: 36px;
 	z-index: 100;
 }
 
@@ -1135,19 +1138,22 @@ body > .otr-float-indicator {
 	font-variant-numeric: tabular-nums;
 	font-size: 12px;
 	font-weight: 500;
+	letter-spacing: 0.5px;
 }
 
 .otr-float-actions {
-	display: none;
+	display: inline-flex;
 	align-items: center;
-	gap: 6px;
-	margin-left: 6px;
-	padding-left: 8px;
-	border-left: 1px solid var(--background-modifier-border);
+	gap: 4px;
+	margin-left: 4px;
+	padding-left: 6px;
+	border-left: 1px solid rgba(255, 255, 255, 0.15);
+	opacity: 0.65;
+	transition: opacity 0.2s ease;
 }
 
 .otr-float-indicator:hover .otr-float-actions {
-	display: inline-flex;
+	opacity: 1;
 }
 
 .otr-float-btn {
@@ -1157,26 +1163,24 @@ body > .otr-float-indicator {
 	width: 22px;
 	height: 22px;
 	padding: 0;
-	border: 1px solid rgba(255, 255, 255, 0.12);
+	border: none;
 	border-radius: 50%;
-	background-color: rgba(255, 255, 255, 0.08);
+	background-color: transparent;
 	color: var(--text-muted);
 	box-shadow: none;
 	cursor: pointer;
-	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+	transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
 
 .otr-float-btn:hover {
-	background-color: rgba(255, 255, 255, 0.2);
-	border-color: rgba(255, 255, 255, 0.35);
-	color: #ffffff;
+	background-color: rgba(255, 255, 255, 0.14);
+	color: var(--text-normal);
 	transform: scale(1.08);
 }
 
 .otr-float-btn.is-stop:hover {
-	border-color: rgba(224, 82, 82, 0.7);
-	background-color: rgba(224, 82, 82, 0.12);
-	color: var(--text-error, #e05252);
+	background-color: rgba(224, 82, 82, 0.22);
+	color: var(--text-error, #ff5c5c);
 }
 
 .otr-float-btn:active {
@@ -1184,8 +1188,8 @@ body > .otr-float-indicator {
 }
 
 .otr-float-btn svg {
-	width: 13px;
-	height: 13px;
+	width: 12px;
+	height: 12px;
 }
 
 /* --------------------------------------------------------------------------
