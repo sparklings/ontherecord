@@ -7,28 +7,26 @@
 
 ## 🚀 빠른 시작 (Quick Start)
 
-1. **외부 도구 원클릭 셋업**:
-   - 플러그인 설정 화면 하단의 **[명령어 복사]** 버튼을 누르거나,
-   - Windows PowerShell 터미널에서 다음 명령어를 실행합니다:
-     ```powershell
-     powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/sparklings/ontherecord/main/scripts/setup-tools.ps1 | iex"
-     ```
+1. **외부 도구 준비 (FFmpeg, whisper.cpp, GGML 모델)**:
+   - [설치 및 외부 도구 셋업 가이드](Installation-and-Setup)를 참고하여 3가지 도구를 준비합니다:
+     - `winget install Gyan.FFmpeg`
+     - [whisper.cpp 바이너리](https://github.com/ggerganov/whisper.cpp/releases) 다운로드 및 `%LOCALAPPDATA%\on-the-record\tools\` 압축 해제
+     - [GGML 모델 파일](https://huggingface.co/ggerganov/whisper.cpp/tree/main) 다운로드 (`ggml-medium-q5_0.bin`)
 2. **회의록 작성 및 녹음 시작**:
-   - 회의록 마크다운 노트를 생성하거나 열면 녹음이 준비됩니다.
-   - 단축키 또는 명령 팔레트(`Ctrl + P`)에서 **`현재 활성 노트에서 음성 녹음 시작`**을 실행합니다.
-3. **회의 종료 및 자동 전사**:
-   - 회의가 끝나면 **`음성 녹음 중지`**를 실행하거나, 실수로 노트 탭을 닫아도 자동으로 안전하게 오디오가 연결됩니다.
-   - 백그라운드 큐가 작동하여 Obsidian 작업을 방해하지 않고 조용히 전사를 완료하고 본문에 반영합니다.
+   - 우측 사이드바에서 `+ 새 회의록`을 클릭하거나, 단축키(`Ctrl + P` → `새 회의록 작성 및 음성 녹음 시작`)로 즉시 회의록 템플릿 생성과 녹음을 시작합니다.
+3. **회의 종료 및 음성 전사**:
+   - 회의가 끝나면 사이드바 또는 플로팅 인디케이터에서 **`녹음 중지`**를 클릭합니다.
+   - 녹음 파일이 회의록 본문에 즉시 연결되며, 사이드바 목록의 **`대기`** 버튼을 눌러 원하는 파일만 1건씩 안전하게 음성 전사를 진행합니다.
 
 ---
 
 ## 📚 위키 목차 (Table of Contents)
 
-- [[Installation-and-Setup|1. 설치 및 외부 도구 셋업]]
-- [[Workflow-Guide|2. 회의록 녹음 및 전사 워크플로 가이드]]
-- [[Settings-Reference|3. 환경 설정 종합 레퍼런스]]
-- [[Hardware-and-GPU|4. 하드웨어 가속 및 GPU 튜닝 (CUDA / Vulkan)]]
-- [[Architecture-and-Privacy|5. 프라이버시 원칙 및 아키텍처]]
+- [1. 설치 및 외부 도구 셋업](Installation-and-Setup)
+- [2. 회의록 녹음 및 전사 워크플로 가이드](Workflow-Guide)
+- [3. 환경 설정 종합 레퍼런스](Settings-Reference)
+- [4. 하드웨어 가속 및 GPU 튜닝 (CUDA / Vulkan)](Hardware-and-GPU)
+- [5. 프라이버시 원칙 및 아키텍처](Architecture-and-Privacy)
 
 ---
 
