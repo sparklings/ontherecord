@@ -287,6 +287,8 @@ export default class OnTheRecordPlugin extends Plugin {
 							queuedAt: Date.now(),
 							status: "queued",
 						});
+						this.updateSidebarProgress(null);
+						this.refreshSidebarViews();
 						void this.queueWorker.trigger();
 					},
 					openAudioPicker: () => {
@@ -318,6 +320,9 @@ export default class OnTheRecordPlugin extends Plugin {
 					},
 					getPendingQueueCount: () => {
 						return this.recordingQueue.list().filter((j) => j.status === "queued" || j.status === "processing").length;
+					},
+					getQueueItems: () => {
+						return this.recordingQueue.list();
 					},
 				}),
 		);
@@ -1124,8 +1129,8 @@ export default class OnTheRecordPlugin extends Plugin {
 
 	updateFloatingIndicatorVisibility(): void {
 		if (!this.floatingIndicator) return;
-		const sidebarVisible = this.isSidebarViewVisible();
-		this.floatingIndicator.setSuppressed(sidebarVisible);
+		// 오른쪽 사이드바가 열려 있어도 플로팅 인디케이터를 숨기지 않음
+		this.floatingIndicator.setSuppressed(false);
 	}
 
 	refreshSidebarViews(): void {
@@ -1163,10 +1168,6 @@ export default class OnTheRecordPlugin extends Plugin {
 
 	private async handleStableRecording(file: TFile, size: number | null, signal: AbortSignal): Promise<void> {
 		if (!this.vaultSettings.autoDetectRecording) return;
-		if (!this.vaultSettings.autoTranscribe) {
-			new Notice("녹음 파일이 준비됐습니다. 자동 전사는 설정에서 꺼져 있습니다.");
-			return;
-		}
 
 		const result = await waitForLinkedNotes(
 			file.path,
@@ -1218,6 +1219,11 @@ export default class OnTheRecordPlugin extends Plugin {
 		}
 
 		if (result.status !== "linked" && resolvedNotePaths.length === 0) return;
+
+		if (!this.vaultSettings.autoTranscribe) {
+			new Notice("녹음 파일이 노트에 연결되었습니다. 사이드바에서 수동으로 전사를 시작할 수 있습니다.");
+			return;
+		}
 
 		const added = this.recordingQueue.enqueue({
 			filePath: file.path,

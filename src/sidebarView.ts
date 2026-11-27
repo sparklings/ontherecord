@@ -4,6 +4,7 @@ import { OTR_SIDEBAR_VIEW_TYPE } from "./sidebarTypes.ts";
 import { parseAudioEmbedsFromMarkdown, jumpToLineInActiveEditor } from "./noteAudioExplorer.ts";
 import type { AudioEmbedItem } from "./noteAudioExplorer.ts";
 import type { WorkerProgress } from "./transcriptionQueueWorker.ts";
+import type { QueuedRecording } from "./recordingQueue.ts";
 import { isSupportedAudioExtension } from "./audioFiles.ts";
 
 export { OTR_SIDEBAR_VIEW_TYPE };
@@ -17,13 +18,14 @@ export interface SidebarControllerCallbacks {
 	stopRecording: () => Promise<void>;
 	createNewMeetingNote: () => Promise<TFile | null>;
 	enqueueAudioTranscription: (audioPath: string) => Promise<void>;
-	openAudioPicker: () => void;
+	openAudioPicker?: () => void;
 	generateSummary: (note: TFile) => Promise<void>;
 	openNoteInMainArea?: (note: TFile) => Promise<void>;
 	openSettings?: () => void;
 	isToolsConfigured?: () => boolean;
 	cancelTranscription?: () => void;
 	getPendingQueueCount?: () => number;
+	getQueueItems?: () => QueuedRecording[];
 }
 
 export class OnTheRecordSidebarView extends ItemView {
@@ -82,12 +84,6 @@ export class OnTheRecordSidebarView extends ItemView {
 		setIcon(refreshBtn, "refresh-cw");
 		refreshBtn.onclick = () => void this.refresh();
 
-		if (this.callbacks.openSettings) {
-			const settingsBtn = headerActions.createEl("button", { cls: "otr-icon-btn", title: "플러그인 설정 열기" });
-			setIcon(settingsBtn, "settings");
-			settingsBtn.onclick = () => this.callbacks.openSettings?.();
-		}
-
 		// 2. 도구 미설정 복구 배너 (필요 시에만 노출)
 		this.setupAlertEl = container.createDiv({ cls: "otr-setup-alert is-hidden" });
 
@@ -130,27 +126,6 @@ export class OnTheRecordSidebarView extends ItemView {
 		explorerHeader.createSpan({ text: "녹음 목록", cls: "otr-explorer-subtext" });
 
 		this.audioListContainerEl = explorerSection.createDiv({ cls: "otr-audio-list" });
-
-		// 6. 하단 퀵 액션 스트립 (복잡한 AI 요약 제거, 핵심 기능 집중)
-		const quickStrip = container.createDiv({ cls: "otr-quick-tools-strip" });
-
-		const pickAudioBtn = quickStrip.createEl("button", { cls: "otr-tool-btn" });
-		const folderIcon = pickAudioBtn.createSpan({ cls: "otr-inline-icon" });
-		setIcon(folderIcon, "folder-open");
-		pickAudioBtn.createSpan({ text: "오디오 파일 전사" });
-		pickAudioBtn.onclick = () => this.callbacks.openAudioPicker();
-
-		const newNoteBtn = quickStrip.createEl("button", { cls: "otr-tool-btn" });
-		const notePlusIcon = newNoteBtn.createSpan({ cls: "otr-inline-icon" });
-		setIcon(notePlusIcon, "file-plus");
-		newNoteBtn.createSpan({ text: "새 회의록 작성" });
-		newNoteBtn.onclick = async () => {
-			const newFile = await this.callbacks.createNewMeetingNote();
-			if (newFile) {
-				this.activeNote = newFile;
-				await this.refresh();
-			}
-		};
 
 		await this.refresh();
 	}
@@ -262,9 +237,20 @@ export class OnTheRecordSidebarView extends ItemView {
 		this.queueWidgetEl.empty();
 
 		const topRow = this.queueWidgetEl.createDiv({ cls: "otr-queue-top-row" });
-		const statusText = this.currentProgress
-			? `전사 중 (${this.currentQueueCount}건 대기)`
-			: `대기열 ${this.currentQueueCount}건`;
+		let statusText = "음성 전사 진행 중";
+		if (this.currentQueueCount > 1) {
+			statusText = `음성 전사 진행 중 (후속 ${this.currentQueueCount - 1}건 대기)`;
+		} else if (this.currentProgress?.stage) {
+			const stageLabels: Record<string, string> = {
+				starting: "전사 엔진 준비 중...",
+				"checking-audio": "오디오 파일 확인 중...",
+				"normalizing-audio": "오디오 변환 중 (FFmpeg)...",
+				"hashing-runtime": "런타임 확인 중...",
+				"hashing-model": "모델 확인 중...",
+				transcribing: "AI 음성 전사 진행 중...",
+			};
+			statusText = stageLabels[this.currentProgress.stage] ?? "AI 음성 전사 진행 중...";
+		}
 
 		const leftGroup = topRow.createDiv({ cls: "otr-queue-label-group" });
 		leftGroup.createSpan({ cls: "otr-queue-dot" });
@@ -281,15 +267,19 @@ export class OnTheRecordSidebarView extends ItemView {
 
 		if (this.currentProgress) {
 			const fileName = this.currentProgress.item.filePath.split("/").pop() ?? this.currentProgress.item.filePath;
-			const percent = typeof this.currentProgress.percent === "number" ? Math.round(this.currentProgress.percent) : 0;
+			const rawPercent = this.currentProgress.percent;
+			const isDeterminate = typeof rawPercent === "number" && rawPercent > 0;
+			const percent = isDeterminate ? Math.round(rawPercent) : 0;
 
 			const fileRow = this.queueWidgetEl.createDiv({ cls: "otr-queue-file-row" });
 			fileRow.createSpan({ text: fileName, cls: "otr-queue-filename" });
-			fileRow.createSpan({ text: `${percent}%`, cls: "otr-queue-percent" });
+			fileRow.createSpan({ text: isDeterminate ? `${percent}%` : "처리 중...", cls: "otr-queue-percent" });
 
 			const barTrack = this.queueWidgetEl.createDiv({ cls: "otr-queue-progress-track" });
-			const barFill = barTrack.createDiv({ cls: "otr-queue-progress-fill" });
-			barFill.setCssProps({ width: `${Math.min(100, Math.max(0, percent))}%` });
+			const barFill = barTrack.createDiv({
+				cls: `otr-queue-progress-fill ${!isDeterminate ? "is-indeterminate" : ""}`,
+			});
+			barFill.setCssProps({ width: `${isDeterminate ? Math.min(100, Math.max(0, percent)) : 40}%` });
 		}
 	}
 
@@ -383,6 +373,8 @@ export class OnTheRecordSidebarView extends ItemView {
 			return;
 		}
 
+		const queueItems = this.callbacks.getQueueItems ? this.callbacks.getQueueItems() : [];
+
 		for (const item of this.audioItems) {
 			const row = this.audioListContainerEl.createDiv({ cls: "otr-ag-row" });
 			row.title = `${item.audioPath} (${item.lineNumber}행) - 클릭 시 본문 이동`;
@@ -390,9 +382,26 @@ export class OnTheRecordSidebarView extends ItemView {
 				jumpToLineInActiveEditor(this.app, item.lineNumber);
 			};
 
+			const queueItem = queueItems.find(
+				(q) =>
+					q.filePath === item.audioPath ||
+					q.filePath.endsWith("/" + item.filename) ||
+					item.audioPath.endsWith("/" + q.filePath) ||
+					q.filePath === item.filename,
+			);
+			const isProcessing = queueItem?.status === "processing";
+			const isQueued = queueItem?.status === "queued";
+
 			// 1. 좌측 메인 영역: 아이콘 + 파일명 + 메타(용량 및 라인번호)
 			const mainGroup = row.createDiv({ cls: "otr-ag-row-main" });
-			const iconEl = mainGroup.createSpan({ cls: `otr-ag-icon ${item.transcribed ? "is-done" : "is-pending"}` });
+			const iconClass = item.transcribed
+				? "is-done"
+				: isProcessing
+					? "is-processing"
+					: isQueued
+						? "is-queued"
+						: "is-pending";
+			const iconEl = mainGroup.createSpan({ cls: `otr-ag-icon ${iconClass}` });
 			setIcon(iconEl, item.transcribed ? "headphones" : "mic");
 
 			mainGroup.createSpan({ cls: "otr-ag-filename", text: item.filename });
@@ -407,21 +416,47 @@ export class OnTheRecordSidebarView extends ItemView {
 			// 2. 우측 영역: 상태 배지 (클릭 시 전사/재전사 동작)
 			const rightGroup = row.createDiv({ cls: "otr-ag-row-right" });
 
+			let badgeText = "대기";
+			let badgeClass = "is-pending";
+			let badgeTitle = `'${item.filename}' 음성 전사 시작 (클릭)`;
+
+			if (item.transcribed) {
+				badgeText = "전사 완료";
+				badgeClass = "is-done";
+				badgeTitle = `'${item.filename}' 다시 전사하기 (클릭)`;
+			} else if (isProcessing) {
+				badgeText = "● 전사 중...";
+				badgeClass = "is-processing";
+				badgeTitle = `'${item.filename}' 전사 진행 중`;
+			} else if (isQueued) {
+				badgeText = "대기 중 (큐)";
+				badgeClass = "is-queued";
+				badgeTitle = `'${item.filename}' 대기열에서 대기 중`;
+			}
+
 			const badgeEl = rightGroup.createSpan({
-				cls: `otr-ag-status-badge ${item.transcribed ? "is-done" : "is-pending"}`,
-				text: item.transcribed ? "전사 완료" : "대기",
+				cls: `otr-ag-status-badge ${badgeClass}`,
+				text: badgeText,
 			});
-			badgeEl.title = item.transcribed
-				? `'${item.filename}' 다시 전사하기 (클릭)`
-				: `'${item.filename}' 음성 전사 시작 (클릭)`;
+			badgeEl.title = badgeTitle;
 			badgeEl.onclick = async (e) => {
 				e.stopPropagation();
+				if (isProcessing) {
+					new Notice(`[${item.filename}] 이미 전사가 진행 중입니다.`);
+					return;
+				}
+				if (isQueued) {
+					new Notice(`[${item.filename}] 이미 대기열에 등록되어 있습니다.`);
+					return;
+				}
+				badgeEl.setText("등록 중...");
 				await this.callbacks.enqueueAudioTranscription(item.audioPath);
 				new Notice(
 					item.transcribed
 						? `[${item.filename}] 대기열에 다시 추가되었습니다.`
 						: `[${item.filename}] 백그라운드 전사 대기열에 추가되었습니다.`,
 				);
+				await this.refresh();
 			};
 		}
 	}
