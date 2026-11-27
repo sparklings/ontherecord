@@ -28,6 +28,11 @@
 
 ## 2026-11-27
 
+### GitHub Wiki 링크 표준화 및 원격 배포 (2026-11-27 완료)
+- [x] `WIKI-FIX-01` GitHub Wiki(Gollum) 링크 구문 역전으로 인한 404/페이지 누락 결함 해결 및 표준 마크다운 링크(`[표시명](파일명)`) 전환
+- [x] `WIKI-FIX-02` 빠른 시작 가이드를 표준 수동 설정(FFmpeg winget, whisper.cpp v1.9.5+, GGML 모델, 도구 자동 검색) 4단계로 일원화
+- [x] `WIKI-FIX-03` GitHub Wiki 원격 저장소(`sparklings/ontherecord.wiki.git`)와 메인 코드 저장소 동기화 및 푸시
+
 ### 사이드바 UI 단순화, 수동 순차 전사 UX 개편 및 플로팅 인디케이터 상시 노출 (2026-11-27 완료)
 - [x] `SIDEBAR-SIMPLIFY-01` 사이드바 상단 불필요한 설정 기어 아이콘 삭제
 - [x] `SIDEBAR-SIMPLIFY-02` 사이드바 하단 퀵 액션 스트립("오디오 파일 전사", "새 회의록 작성") 삭제로 회의록 컨텍스트 집중도 제고

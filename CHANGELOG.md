@@ -6,6 +6,14 @@
 
 ## 2026-11-27
 
+### GitHub Wiki 링크 표준화 및 원격 동기화
+- **GitHub Wiki(Gollum) 링크 구문 호환성 결함 해결 (`docs/wiki/_Sidebar.md`, `docs/wiki/Home.md`)**:
+  - Obsidian 링크 문법(`[[파일명|표시명]]`)과 GitHub Wiki Gollum 엔진의 문법(`[[표시명|파일명]]`) 역전 현상으로 인해 위키 사이드바 및 대문의 모든 링크가 '존재하지 않는 페이지(`class="internal absent"` / 404)'로 누락되던 결함 원천 해결.
+  - 모든 위키 내부 링크를 표준 마크다운 문법(`[표시명](파일명)`)으로 전면 전환하여 웹 및 모바일 브라우저 전반에서 100% 정상 작동하도록 조치.
+- **빠른 시작 절차 일원화 및 원격 배포 (`sparklings/ontherecord.wiki.git`)**:
+  - 레거시 자동 스크립트 안내를 제거하고, 표준 수동 설치 4단계(FFmpeg `winget`, whisper.cpp v1.9.5+, GGML 모델 다운로드, `[도구 검색]`)로 정비.
+  - 원격 GitHub Wiki 저장소(`sparklings/ontherecord.wiki.git`) 및 메인 저장소(`sparklings/ontherecord.git`)에 최신 문서 푸시 완료.
+
 ### 사이드바 UI 단순화, 수동 순차 전사 UX 개편 및 플로팅 인디케이터 상시 노출
 - **우측 상단 기어(설정) 아이콘 삭제**:
   - 사이드바 헤더에서 불필요한 설정 기어 아이콘을 삭제하여 미니멀 브랜딩과 새로고침 버튼만 깔끔하게 유지.
