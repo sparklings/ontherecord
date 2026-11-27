@@ -351,17 +351,21 @@
 }
 
 /* ==========================================================================
-   Google Antigravity Style Minimal Message Indicator List
+   Google Antigravity Style Minimal Audio Embed List Item
    ========================================================================== */
 .otr-ag-row {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 8px;
-	padding: 5px 8px;
+	padding: 0 8px;
+	height: 28px;
+	min-height: 28px;
+	max-height: 28px;
+	box-sizing: border-box;
 	border-radius: var(--radius-s, 4px);
 	background: transparent;
-	transition: background-color 0.15s ease;
+	transition: background-color 0.12s ease;
 	position: relative;
 	cursor: pointer;
 }
@@ -370,20 +374,28 @@
 	background-color: var(--background-modifier-hover);
 }
 
+.otr-ag-row:hover .otr-ag-filename {
+	color: var(--interactive-accent);
+}
+
 .otr-ag-row-main {
 	display: flex;
 	align-items: center;
 	gap: 6px;
 	min-width: 0;
 	flex: 1;
+	height: 100%;
 }
 
 .otr-ag-icon {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	width: 14px;
+	height: 14px;
 	color: var(--text-muted);
 	flex-shrink: 0;
+	line-height: 1;
 }
 
 .otr-ag-icon.is-done {
@@ -397,26 +409,31 @@
 .otr-ag-icon svg {
 	width: 13px;
 	height: 13px;
+	display: block;
+	flex-shrink: 0;
 }
 
 .otr-ag-filename {
 	font-family: var(--font-monospace);
 	font-size: 11.5px;
+	line-height: 1.2;
 	color: var(--text-normal);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	letter-spacing: -0.01em;
+	transition: color 0.12s ease;
 }
 
 .otr-ag-filename:hover {
 	color: var(--interactive-accent);
-	text-decoration: underline;
+	text-decoration: none !important;
 }
 
 .otr-ag-meta {
 	font-family: var(--font-monospace);
 	font-size: 10px;
+	line-height: 1.2;
 	color: var(--text-muted);
 	flex-shrink: 0;
 	opacity: 0.85;
@@ -427,14 +444,22 @@
 	align-items: center;
 	gap: 6px;
 	flex-shrink: 0;
+	height: 100%;
 }
 
 .otr-ag-status-badge {
 	font-size: 10.5px;
 	font-weight: 500;
-	padding: 1px 5px;
+	line-height: 16px;
+	height: 18px;
+	box-sizing: border-box;
+	display: inline-flex;
+	align-items: center;
+	padding: 0 6px;
 	border-radius: 3px;
-	transition: opacity 0.15s ease;
+	cursor: pointer;
+	user-select: none;
+	transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .otr-ag-status-badge.is-done {
@@ -442,60 +467,17 @@
 	background: rgba(52, 199, 89, 0.12);
 }
 
+.otr-ag-status-badge.is-done:hover {
+	background: rgba(52, 199, 89, 0.22);
+}
+
 .otr-ag-status-badge.is-pending {
 	color: #a78bfa;
 	background: rgba(167, 139, 250, 0.12);
 }
 
-.otr-ag-actions {
-	display: none;
-	align-items: center;
-	gap: 4px;
-}
-
-.otr-ag-row:hover .otr-ag-actions {
-	display: inline-flex;
-}
-
-.otr-ag-row:hover .otr-ag-status-badge {
-	display: none;
-}
-
-.otr-ag-btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 22px;
-	height: 22px;
-	padding: 0;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 3px;
-	background: var(--background-primary);
-	color: var(--text-muted);
-	cursor: pointer;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-	transition: all 0.12s ease;
-}
-
-.otr-ag-btn:hover {
-	color: var(--text-normal);
-	background: var(--background-modifier-hover);
-	border-color: var(--text-muted);
-}
-
-.otr-ag-btn.is-action {
-	color: var(--interactive-accent);
-	border-color: rgba(123, 108, 217, 0.4);
-}
-
-.otr-ag-btn.is-action:hover {
-	background: rgba(123, 108, 217, 0.15);
-	color: #ffffff;
-}
-
-.otr-ag-btn svg {
-	width: 11px;
-	height: 11px;
+.otr-ag-status-badge.is-pending:hover {
+	background: rgba(167, 139, 250, 0.22);
 }
 
 /* Stacked Audio Card (Legacy Fallback) */

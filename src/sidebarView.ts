@@ -385,17 +385,17 @@ export class OnTheRecordSidebarView extends ItemView {
 
 		for (const item of this.audioItems) {
 			const row = this.audioListContainerEl.createDiv({ cls: "otr-ag-row" });
+			row.title = `${item.audioPath} (${item.lineNumber}행) - 클릭 시 본문 이동`;
+			row.onclick = () => {
+				jumpToLineInActiveEditor(this.app, item.lineNumber);
+			};
 
 			// 1. 좌측 메인 영역: 아이콘 + 파일명 + 메타(용량 및 라인번호)
 			const mainGroup = row.createDiv({ cls: "otr-ag-row-main" });
 			const iconEl = mainGroup.createSpan({ cls: `otr-ag-icon ${item.transcribed ? "is-done" : "is-pending"}` });
 			setIcon(iconEl, item.transcribed ? "headphones" : "mic");
 
-			const titleEl = mainGroup.createSpan({ cls: "otr-ag-filename", text: item.filename });
-			titleEl.title = `${item.audioPath} (${item.lineNumber}행) - 클릭 시 본문 이동`;
-			titleEl.onclick = () => {
-				jumpToLineInActiveEditor(this.app, item.lineNumber);
-			};
+			mainGroup.createSpan({ cls: "otr-ag-filename", text: item.filename });
 
 			const linkedFile = this.activeNote
 				? this.app.metadataCache.getFirstLinkpathDest(item.audioPath, this.activeNote.path)
@@ -404,51 +404,25 @@ export class OnTheRecordSidebarView extends ItemView {
 			const metaText = sizeMb !== "0.0" ? `${sizeMb} MB · #${item.lineNumber}` : `#${item.lineNumber}`;
 			mainGroup.createSpan({ cls: "otr-ag-meta", text: metaText });
 
-			// 2. 우측 영역: Antigravity 상태 배지 및 호버 인라인 액션
+			// 2. 우측 영역: 상태 배지 (클릭 시 전사/재전사 동작)
 			const rightGroup = row.createDiv({ cls: "otr-ag-row-right" });
 
-			rightGroup.createSpan({
+			const badgeEl = rightGroup.createSpan({
 				cls: `otr-ag-status-badge ${item.transcribed ? "is-done" : "is-pending"}`,
 				text: item.transcribed ? "전사 완료" : "대기",
 			});
-
-			const actionsEl = rightGroup.createDiv({ cls: "otr-ag-actions" });
-
-			const jumpBtn = actionsEl.createEl("button", {
-				cls: "otr-ag-btn",
-				title: `${item.lineNumber}행 위치로 본문 스크롤`,
-			});
-			setIcon(jumpBtn, "external-link");
-			jumpBtn.onclick = (e) => {
+			badgeEl.title = item.transcribed
+				? `'${item.filename}' 다시 전사하기 (클릭)`
+				: `'${item.filename}' 음성 전사 시작 (클릭)`;
+			badgeEl.onclick = async (e) => {
 				e.stopPropagation();
-				jumpToLineInActiveEditor(this.app, item.lineNumber);
+				await this.callbacks.enqueueAudioTranscription(item.audioPath);
+				new Notice(
+					item.transcribed
+						? `[${item.filename}] 대기열에 다시 추가되었습니다.`
+						: `[${item.filename}] 백그라운드 전사 대기열에 추가되었습니다.`,
+				);
 			};
-
-			if (item.transcribed) {
-				const retranscribeBtn = actionsEl.createEl("button", {
-					cls: "otr-ag-btn",
-					title: `'${item.filename}' 다시 전사하기`,
-				});
-				setIcon(retranscribeBtn, "refresh-cw");
-				retranscribeBtn.onclick = async (e) => {
-					e.stopPropagation();
-					retranscribeBtn.disabled = true;
-					await this.callbacks.enqueueAudioTranscription(item.audioPath);
-					new Notice(`[${item.filename}] 대기열에 다시 추가되었습니다.`);
-				};
-			} else {
-				const transcribeBtn = actionsEl.createEl("button", {
-					cls: "otr-ag-btn is-action",
-					title: `'${item.filename}' 음성 전사 시작`,
-				});
-				setIcon(transcribeBtn, "play");
-				transcribeBtn.onclick = async (e) => {
-					e.stopPropagation();
-					transcribeBtn.disabled = true;
-					await this.callbacks.enqueueAudioTranscription(item.audioPath);
-					new Notice(`[${item.filename}] 백그라운드 전사 대기열에 추가되었습니다.`);
-				};
-			}
 		}
 	}
 }
