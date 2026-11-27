@@ -94,7 +94,7 @@ const SAMPLE_RESULT: TranscriptionResult = {
 	warnings: ["시험용 샘플입니다. 실제 녹음을 전사한 결과가 아닙니다."],
 };
 
-const LINK_WAIT_TIMEOUT_MS = 30_000;
+const LINK_WAIT_TIMEOUT_MS = 5_000;
 const MANUAL_FILE_STABILITY_TIMEOUT_MS = 15_000;
 
 class CpuRuntimeTestProgressModal extends Modal {
@@ -279,11 +279,16 @@ export default class OnTheRecordPlugin extends Plugin {
 					},
 					enqueueAudioTranscription: async (audioPath: string) => {
 						const activeFile = this.app.workspace.getActiveFile();
-						const audioFile = this.app.vault.getAbstractFileByPath(audioPath);
+						const resolvedFile =
+							(activeFile ? this.app.metadataCache.getFirstLinkpathDest(audioPath, activeFile.path) : null) ??
+							this.app.vault.getAbstractFileByPath(audioPath) ??
+							this.app.metadataCache.getFirstLinkpathDest(audioPath, "");
+						const actualPath = resolvedFile instanceof TFile ? resolvedFile.path : audioPath;
+						const actualSize = resolvedFile instanceof TFile ? resolvedFile.stat.size : 0;
 						this.recordingQueue.enqueue({
-							filePath: audioPath,
+							filePath: actualPath,
 							notePaths: activeFile ? [activeFile.path] : [],
-							size: audioFile instanceof TFile ? audioFile.stat.size : 0,
+							size: actualSize,
 							queuedAt: Date.now(),
 							status: "queued",
 						});
@@ -740,6 +745,14 @@ export default class OnTheRecordPlugin extends Plugin {
 				resolveFullPath: (filePath) => {
 					const adapter = this.app.vault.adapter;
 					if (adapter instanceof FileSystemAdapter) {
+						const directFile = this.app.vault.getAbstractFileByPath(filePath);
+						if (directFile instanceof TFile) {
+							return adapter.getFullPath(directFile.path);
+						}
+						const resolved = this.app.metadataCache.getFirstLinkpathDest(filePath, "");
+						if (resolved instanceof TFile) {
+							return adapter.getFullPath(resolved.path);
+						}
 						return adapter.getFullPath(filePath);
 					}
 					return null;
@@ -1169,56 +1182,61 @@ export default class OnTheRecordPlugin extends Plugin {
 	private async handleStableRecording(file: TFile, size: number | null, signal: AbortSignal): Promise<void> {
 		if (!this.vaultSettings.autoDetectRecording) return;
 
-		const result = await waitForLinkedNotes(
-			file.path,
-			{
-				findLinkedNotes: (filePath) => this.findLinkedNotes(filePath),
-				onChange: (callback) => {
-					const event = this.app.metadataCache.on("changed", callback);
-					return () => this.app.metadataCache.offref(event);
-				},
-				setTimeout: (callback, ms) => window.setTimeout(callback, ms),
-				clearTimeout: (handle) => window.clearTimeout(handle),
-			},
-			LINK_WAIT_TIMEOUT_MS,
-			signal,
-		);
-
-		if (signal.aborted) return;
-
-		const resolvedNotePaths: string[] = result.status === "linked" ? [...result.notePaths] : [];
+		const resolvedNotePaths: string[] = [];
 		const recentSession = this.sessionManager.getActiveSession() ?? this.tabCloseHandler.getRecentlyStoppedSession();
+
 		if (recentSession && recentSession.notePath) {
+			// 플러그인 녹음 세션이 존재하는 경우 30초 대기 없이 즉시 대상 회의록에 오디오 연결
 			await this.tabCloseHandler.attachAudioToNote(recentSession.notePath, file.path, {
 				seq: recentSession.seq,
 				startedAt: recentSession.startedAt,
 				endedAt: Date.now(),
 				sizeBytes: size ?? file.stat.size,
 			});
-			if (!resolvedNotePaths.includes(recentSession.notePath)) {
-				resolvedNotePaths.push(recentSession.notePath);
-			}
+			resolvedNotePaths.push(recentSession.notePath);
 			const noteFile = this.app.vault.getAbstractFileByPath(recentSession.notePath);
 			if (noteFile instanceof TFile) {
 				await this.openNoteInMainArea(noteFile);
 			}
 			this.refreshSidebarViews();
-		} else if (resolvedNotePaths.length === 0) {
-			// 연결된 대상 노트가 없으면 새 회의록을 생성하여 연결하고 에디터에 열어줌
-			const created = await this.createNewMeetingNoteAndOpen();
-			if (created) {
-				await this.tabCloseHandler.attachAudioToNote(created.path, file.path, {
-					seq: 1,
-					startedAt: Date.now() - (size ? size * 50 : 10000),
-					endedAt: Date.now(),
-					sizeBytes: size ?? file.stat.size,
-				});
-				resolvedNotePaths.push(created.path);
+		} else {
+			// 외부/옵시디언 기본 녹음기인 경우 링크 연결 감지 대기
+			const result = await waitForLinkedNotes(
+				file.path,
+				{
+					findLinkedNotes: (filePath) => this.findLinkedNotes(filePath),
+					onChange: (callback) => {
+						const event = this.app.metadataCache.on("changed", callback);
+						return () => this.app.metadataCache.offref(event);
+					},
+					setTimeout: (callback, ms) => window.setTimeout(callback, ms),
+					clearTimeout: (handle) => window.clearTimeout(handle),
+				},
+				LINK_WAIT_TIMEOUT_MS,
+				signal,
+			);
+
+			if (signal.aborted) return;
+
+			if (result.status === "linked") {
+				resolvedNotePaths.push(...result.notePaths);
+			} else {
+				// 연결된 대상 노트가 없으면 새 회의록을 생성하여 연결하고 에디터에 열어줌
+				const created = await this.createNewMeetingNoteAndOpen();
+				if (created) {
+					await this.tabCloseHandler.attachAudioToNote(created.path, file.path, {
+						seq: 1,
+						startedAt: Date.now() - (size ? size * 50 : 10000),
+						endedAt: Date.now(),
+						sizeBytes: size ?? file.stat.size,
+					});
+					resolvedNotePaths.push(created.path);
+				}
+				this.refreshSidebarViews();
 			}
-			this.refreshSidebarViews();
 		}
 
-		if (result.status !== "linked" && resolvedNotePaths.length === 0) return;
+		if (resolvedNotePaths.length === 0) return;
 
 		if (!this.vaultSettings.autoTranscribe) {
 			new Notice("녹음 파일이 노트에 연결되었습니다. 사이드바에서 수동으로 전사를 시작할 수 있습니다.");
@@ -1675,6 +1693,7 @@ export default class OnTheRecordPlugin extends Plugin {
 
 	private findAudioEmbedTargets(filePath: string): AudioEmbedTarget[] {
 		const targets: AudioEmbedTarget[] = [];
+		const fileName = filePath.split("/").pop() ?? filePath;
 		for (const note of this.app.vault.getMarkdownFiles()) {
 			const embeds = this.app.metadataCache.getFileCache(note)?.embeds ?? [];
 			for (const embed of embeds) {
@@ -1682,7 +1701,14 @@ export default class OnTheRecordPlugin extends Plugin {
 					getLinkpath(embed.link),
 					note.path,
 				);
-				if (destination instanceof TFile && destination.path === filePath) {
+				if (
+					destination instanceof TFile &&
+					(destination.path === filePath ||
+						destination.name === fileName ||
+						destination.path.endsWith("/" + filePath) ||
+						filePath.endsWith("/" + destination.path) ||
+						destination.name === filePath)
+				) {
 					targets.push({ note, embed, audioFile: destination });
 				}
 			}

@@ -143,6 +143,7 @@ export class OnTheRecordSidebarView extends ItemView {
 		this.currentProgress = progress;
 		this.currentQueueCount = queueCount;
 		this.renderQueueWidget();
+		this.renderAudioList();
 	}
 
 	private renderSetupAlert(): void {
@@ -382,9 +383,15 @@ export class OnTheRecordSidebarView extends ItemView {
 				jumpToLineInActiveEditor(this.app, item.lineNumber);
 			};
 
+			const linkedFile = this.activeNote
+				? this.app.metadataCache.getFirstLinkpathDest(item.audioPath, this.activeNote.path)
+				: this.app.vault.getAbstractFileByPath(item.audioPath);
+			const resolvedPath = linkedFile instanceof TFile ? linkedFile.path : item.audioPath;
+
 			const queueItem = queueItems.find(
 				(q) =>
 					q.filePath === item.audioPath ||
+					q.filePath === resolvedPath ||
 					q.filePath.endsWith("/" + item.filename) ||
 					item.audioPath.endsWith("/" + q.filePath) ||
 					q.filePath === item.filename,
@@ -406,9 +413,6 @@ export class OnTheRecordSidebarView extends ItemView {
 
 			mainGroup.createSpan({ cls: "otr-ag-filename", text: item.filename });
 
-			const linkedFile = this.activeNote
-				? this.app.metadataCache.getFirstLinkpathDest(item.audioPath, this.activeNote.path)
-				: this.app.vault.getAbstractFileByPath(item.audioPath);
 			const sizeMb = linkedFile instanceof TFile ? (linkedFile.stat.size / (1024 * 1024)).toFixed(1) : "0.0";
 			const metaText = sizeMb !== "0.0" ? `${sizeMb} MB · #${item.lineNumber}` : `#${item.lineNumber}`;
 			mainGroup.createSpan({ cls: "otr-ag-meta", text: metaText });
@@ -450,7 +454,7 @@ export class OnTheRecordSidebarView extends ItemView {
 					return;
 				}
 				badgeEl.setText("등록 중...");
-				await this.callbacks.enqueueAudioTranscription(item.audioPath);
+				await this.callbacks.enqueueAudioTranscription(resolvedPath);
 				new Notice(
 					item.transcribed
 						? `[${item.filename}] 대기열에 다시 추가되었습니다.`
