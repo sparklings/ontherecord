@@ -1,4 +1,4 @@
-import { ItemView, Notice, TFile, setIcon } from "obsidian";
+import { ItemView, MarkdownView, Notice, TFile, setIcon } from "obsidian";
 import type { WorkspaceLeaf } from "obsidian";
 import { OTR_SIDEBAR_VIEW_TYPE } from "./sidebarTypes.ts";
 import { parseAudioEmbedsFromMarkdown, jumpToLineInActiveEditor } from "./noteAudioExplorer.ts";
@@ -303,7 +303,13 @@ export class OnTheRecordSidebarView extends ItemView {
 			}
 
 			try {
-				const content = await this.app.vault.read(activeFile);
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				let content: string;
+				if (activeView && activeView.file?.path === activeFile.path) {
+					content = activeView.editor.getValue();
+				} else {
+					content = await this.app.vault.read(activeFile);
+				}
 				this.audioItems = parseAudioEmbedsFromMarkdown(content);
 			} catch {
 				this.audioItems = [];

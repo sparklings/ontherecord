@@ -195,6 +195,7 @@ export default class OnTheRecordPlugin extends Plugin {
 	private recordingStatusBar!: RecordingStatusBar;
 	private recordingStatusBarItem: HTMLElement | null = null;
 	private floatingIndicator!: FloatingRecordingIndicator;
+	private sidebarRefreshDebounceTimer: number | null = null;
 
 	async onload(): Promise<void> {
 		this.setupSessionManager();
@@ -476,6 +477,16 @@ export default class OnTheRecordPlugin extends Plugin {
 				this.updateFloatingIndicatorVisibility();
 			}),
 		);
+		this.registerEvent(
+			this.app.metadataCache.on("changed", (file) => {
+				this.scheduleSidebarRefresh(file);
+			}),
+		);
+		this.registerEvent(
+			this.app.vault.on("modify", (file) => {
+				this.scheduleSidebarRefresh(file);
+			}),
+		);
 
 		// 3-PIPE-03: 타임스탬프 오디오 동기화 포스트 프로세서 및 클릭 이벤트 등록
 		this.registerMarkdownPostProcessor((el) => {
@@ -593,6 +604,10 @@ export default class OnTheRecordPlugin extends Plugin {
 	}
 
 	onunload(): void {
+		if (this.sidebarRefreshDebounceTimer !== null) {
+			window.clearTimeout(this.sidebarRefreshDebounceTimer);
+			this.sidebarRefreshDebounceTimer = null;
+		}
 		this.floatingIndicator?.destroy();
 		this.recordingStatusBar?.stop();
 		this.queueWorker?.stop();
@@ -907,6 +922,7 @@ export default class OnTheRecordPlugin extends Plugin {
 					const combined = `${content.trimEnd()}\n\n${embedTag}\n\n${block}\n`;
 					return stripCommentMarkersFromNote(combined);
 				});
+				this.refreshSidebarViews();
 				new Notice(`[On the Record] '${filename}' 전사 결과가 활성 노트(${activeFile.name})에 삽입되었습니다.`, 6000);
 				return;
 			}
@@ -917,6 +933,7 @@ export default class OnTheRecordPlugin extends Plugin {
 				const created = await this.app.vault.create(newNotePath, noteContent);
 				const leaf = this.app.workspace.getLeaf(false);
 				await leaf.openFile(created);
+				this.refreshSidebarViews();
 				new Notice(`[On the Record] '${filename}' 전사 완료: 새 노트(${newNotePath})에 저장되었습니다.`, 7000);
 			} catch (error) {
 				this.reportError(`전사 결과 저장 실패: ${newNotePath}`, error);
@@ -942,6 +959,7 @@ export default class OnTheRecordPlugin extends Plugin {
 					});
 					return stripCommentMarkersFromNote(inserted);
 				});
+				this.refreshSidebarViews();
 				new Notice(`[On the Record] '${filename}' 전사 결과가 노트(${target.note.path})에 자동 삽입되었습니다.`, 6000);
 				await this.openNoteInMainArea(target.note);
 
@@ -1119,6 +1137,19 @@ export default class OnTheRecordPlugin extends Plugin {
 		}
 	}
 
+	scheduleSidebarRefresh(file?: { path: string }): void {
+		const activeFile = this.app.workspace.getActiveFile();
+		if (!activeFile) return;
+		if (file && file.path !== activeFile.path) return;
+		if (this.sidebarRefreshDebounceTimer !== null) {
+			window.clearTimeout(this.sidebarRefreshDebounceTimer);
+		}
+		this.sidebarRefreshDebounceTimer = window.setTimeout(() => {
+			this.sidebarRefreshDebounceTimer = null;
+			this.refreshSidebarViews();
+		}, 250);
+	}
+
 	private async updateVaultSettings(patch: Partial<VaultSettings>): Promise<void> {
 		this.vaultSettings = { ...this.vaultSettings, ...patch };
 		if (patch.autoDetectRecording === false) this.watcher?.cancelPending();
@@ -1170,6 +1201,7 @@ export default class OnTheRecordPlugin extends Plugin {
 			if (noteFile instanceof TFile) {
 				await this.openNoteInMainArea(noteFile);
 			}
+			this.refreshSidebarViews();
 		} else if (resolvedNotePaths.length === 0) {
 			// 연결된 대상 노트가 없으면 새 회의록을 생성하여 연결하고 에디터에 열어줌
 			const created = await this.createNewMeetingNoteAndOpen();
@@ -1182,6 +1214,7 @@ export default class OnTheRecordPlugin extends Plugin {
 				});
 				resolvedNotePaths.push(created.path);
 			}
+			this.refreshSidebarViews();
 		}
 
 		if (result.status !== "linked" && resolvedNotePaths.length === 0) return;
@@ -1229,6 +1262,7 @@ export default class OnTheRecordPlugin extends Plugin {
 					existing: selectedChoice,
 				}),
 			);
+			this.refreshSidebarViews();
 			new Notice("전사 결과를 노트에 반영했습니다.");
 		} catch (error) {
 			this.reportError("전사 결과를 노트에 반영하지 못했습니다.", error);
