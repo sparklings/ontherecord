@@ -192,30 +192,38 @@ export class OnTheRecordSidebarView extends ItemView {
 		if (!this.noteActionBarEl) return;
 		this.noteActionBarEl.empty();
 
-		if (!this.activeNote && this.playerState === "idle") {
-			// Empty State: 노트가 없으면 녹음 버튼을 비활성화
-			const disabledBtn = this.noteActionBarEl.createEl("button", {
-				cls: "otr-compact-rec-btn is-disabled",
-				title: "먼저 노트를 열거나 작성하세요",
-			});
-			disabledBtn.disabled = true;
-			const dot = disabledBtn.createSpan({ cls: "otr-compact-rec-dot" });
-			dot.setAttribute("aria-hidden", "true");
-			disabledBtn.createSpan({ text: "녹음 시작" });
-			return;
-		}
-
 		if (this.playerState === "idle") {
 			const recBtn = this.noteActionBarEl.createEl("button", {
 				cls: "otr-compact-rec-btn",
-				title: "현재 활성 노트에서 녹음 시작",
+				title: this.activeNote ? "현재 노트에서 녹음 시작" : "새 회의록을 열고 녹음 시작",
 			});
 			const dot = recBtn.createSpan({ cls: "otr-compact-rec-dot" });
 			dot.setAttribute("aria-hidden", "true");
 			recBtn.createSpan({ text: "녹음 시작" });
 			recBtn.onclick = async () => {
-				if (!this.activeNote) return;
-				await this.callbacks.startRecording(this.activeNote);
+				let noteToRecord = this.activeNote;
+				if (!noteToRecord) {
+					// 활성 대상 노트가 없으면 새 회의록을 템플릿과 함께 생성하여 에디터에 열고 녹음 시작
+					noteToRecord = await this.callbacks.createNewMeetingNote();
+					if (noteToRecord) {
+						this.activeNote = noteToRecord;
+						await this.refresh();
+					}
+				} else {
+					// 기존 활성 노트가 에디터에 열려있지 않은 경우 에디터에서 열고 포커스
+					const activeEditorFile = this.app.workspace.getActiveFile();
+					if (activeEditorFile?.path !== noteToRecord.path) {
+						let leaf = this.app.workspace.getLeaf(false);
+						if (leaf.getRoot() !== this.app.workspace.rootSplit) {
+							leaf = this.app.workspace.getLeaf(true);
+						}
+						await leaf.openFile(noteToRecord);
+						this.app.workspace.setActiveLeaf(leaf, { focus: true });
+					}
+				}
+				if (noteToRecord) {
+					await this.callbacks.startRecording(noteToRecord);
+				}
 			};
 		} else {
 			const activeBtn = this.noteActionBarEl.createEl("button", {

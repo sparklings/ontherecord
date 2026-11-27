@@ -24,8 +24,10 @@ export interface VaultSettings {
 	localLlmEndpoint: string;
 	localLlmModel: string;
 	localLlmAutoSummarize: boolean;
-	// 템플릿 기반 회의록 생성 및 조건부 자동 시작 (3-REC-09)
-	autoRecordTemplatePath: string;
+	// 새 회의록 기본 템플릿 (3-REC-08)
+	meetingNoteTemplatePath: string;
+	/** @deprecated meetingNoteTemplatePath 이전 호환용 필드 */
+	autoRecordTemplatePath?: string;
 	// 어휘 프롬프팅 (3-QUAL-01)
 	vocabularyPrompt: string;
 }
@@ -58,7 +60,7 @@ export const DEFAULT_VAULT_SETTINGS: VaultSettings = {
 	localLlmEndpoint: "http://localhost:11434",
 	localLlmModel: "qwen2.5:7b",
 	localLlmAutoSummarize: false,
-	autoRecordTemplatePath: "",
+	meetingNoteTemplatePath: "",
 	vocabularyPrompt: "",
 };
 
@@ -197,11 +199,16 @@ export function normalizeVaultSettings(value: unknown): VaultSettings {
 		}
 		result.localLlmAutoSummarize = value.localLlmAutoSummarize;
 	}
-	if (value.autoRecordTemplatePath !== undefined) {
+	if (value.meetingNoteTemplatePath !== undefined) {
+		if (typeof value.meetingNoteTemplatePath !== "string") {
+			throw new Error("meetingNoteTemplatePath 설정이 올바르지 않습니다.");
+		}
+		result.meetingNoteTemplatePath = value.meetingNoteTemplatePath.trim();
+	} else if (value.autoRecordTemplatePath !== undefined) {
 		if (typeof value.autoRecordTemplatePath !== "string") {
 			throw new Error("autoRecordTemplatePath 설정이 올바르지 않습니다.");
 		}
-		result.autoRecordTemplatePath = value.autoRecordTemplatePath.trim();
+		result.meetingNoteTemplatePath = value.autoRecordTemplatePath.trim();
 	}
 	if (value.vocabularyPrompt !== undefined) {
 		if (typeof value.vocabularyPrompt !== "string") {

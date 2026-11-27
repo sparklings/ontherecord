@@ -62,7 +62,7 @@ import {
 import { generateMeetingSummary } from "./localLlmClient.ts";
 import { extractTranscriptFromMarkdown, formatMeetingSummaryBlock } from "./summaryPrompt.ts";
 import { OnTheRecordSidebarView, OTR_SIDEBAR_VIEW_TYPE } from "./sidebarView.ts";
-import { createMeetingNote, isContentMatchingTemplate } from "./meetingNoteCreator.ts";
+import { createMeetingNote } from "./meetingNoteCreator.ts";
 import { parseAudioEmbedsFromMarkdown } from "./noteAudioExplorer.ts";
 import { FloatingRecordingIndicator } from "./floatingIndicator.ts";
 import type { WorkerProgress } from "./transcriptionQueueWorker.ts";
@@ -270,15 +270,7 @@ export default class OnTheRecordPlugin extends Plugin {
 						await this.stopCurrentRecording();
 					},
 					createNewMeetingNote: async () => {
-						const created = await createMeetingNote(this.app, {
-							folder: this.vaultSettings.autoRecordFolder,
-							templatePath: this.vaultSettings.autoRecordTemplatePath,
-						});
-						const targetFile = this.app.vault.getAbstractFileByPath(created.path);
-						if (!(targetFile instanceof TFile)) return null;
-						const leaf = this.app.workspace.getLeaf(false);
-						await leaf.openFile(targetFile);
-						return targetFile;
+						return await this.createNewMeetingNoteAndOpen();
 					},
 					enqueueAudioTranscription: async (audioPath: string) => {
 						const activeFile = this.app.workspace.getActiveFile();
@@ -329,14 +321,8 @@ export default class OnTheRecordPlugin extends Plugin {
 			id: "create-meeting-note-and-record",
 			name: "새 회의록 작성 및 음성 녹음 시작",
 			callback: async () => {
-				const created = await createMeetingNote(this.app, {
-					folder: this.vaultSettings.autoRecordFolder,
-					templatePath: this.vaultSettings.autoRecordTemplatePath,
-				});
-				const targetFile = this.app.vault.getAbstractFileByPath(created.path);
-				if (!(targetFile instanceof TFile)) return;
-				const leaf = this.app.workspace.getLeaf(false);
-				await leaf.openFile(targetFile);
+				const targetFile = await this.createNewMeetingNoteAndOpen();
+				if (!targetFile) return;
 				await this.startRecordingForNote(targetFile);
 				await this.activateSidebarView();
 			},
@@ -945,30 +931,29 @@ export default class OnTheRecordPlugin extends Plugin {
 		}
 	}
 
+	private async createNewMeetingNoteAndOpen(): Promise<TFile | null> {
+		const created = await createMeetingNote(this.app, {
+			folder: this.vaultSettings.autoRecordFolder,
+			templatePath: this.vaultSettings.meetingNoteTemplatePath,
+		});
+		const targetFile = this.app.vault.getAbstractFileByPath(created.path);
+		if (!(targetFile instanceof TFile)) return null;
+
+		let leaf = this.app.workspace.getLeaf(false);
+		if (leaf.getRoot() !== this.app.workspace.rootSplit) {
+			leaf = this.app.workspace.getLeaf(true);
+		}
+		await leaf.openFile(targetFile);
+		this.app.workspace.setActiveLeaf(leaf, { focus: true });
+		return targetFile;
+	}
+
 	private async handleMarkdownNoteCreated(file: TFile): Promise<void> {
 		if (file.extension.toLowerCase() !== "md") return;
 
 		if (this.vaultSettings.autoRecordFolder) {
 			const folder = this.vaultSettings.autoRecordFolder.replace(/^\/+|\/+$/g, "");
 			if (folder && !file.path.startsWith(`${folder}/`)) return;
-		}
-
-		if (this.vaultSettings.autoRecordTemplatePath && this.vaultSettings.autoRecordTemplatePath.trim().length > 0) {
-			const templatePath = this.vaultSettings.autoRecordTemplatePath.trim();
-			const templateFile = this.app.vault.getAbstractFileByPath(templatePath);
-			if (templateFile instanceof TFile) {
-				try {
-					const [templateContent, noteContent] = await Promise.all([
-						this.app.vault.read(templateFile),
-						this.app.vault.read(file),
-					]);
-					if (!isContentMatchingTemplate(noteContent, templateContent)) {
-						return;
-					}
-				} catch {
-					// 읽기 실패 시 통과
-				}
-			}
 		}
 
 		let frontmatterRecorder: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter?.recorder;

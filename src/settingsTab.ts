@@ -188,19 +188,22 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			void this.updateVaultSettings({ autoRecordFolder: input3.value.trim() });
 		};
 
-		// Card 4: 조건부 템플릿 파일
+		// Card 4: 새 회의록 기본 템플릿 파일
 		const card4 = stack.createDiv({ cls: "otr-setting-card" });
 		const info4 = card4.createDiv({ cls: "otr-setting-card-info" });
-		info4.createDiv({ text: "조건부 자동 시작 템플릿 파일", cls: "otr-setting-card-title" });
-		info4.createDiv({ text: "지정한 템플릿과 일치하는 문서가 생성되었을 때만 녹음이 자동 시작됩니다.", cls: "otr-setting-card-desc" });
+		info4.createDiv({ text: "새 회의록 기본 템플릿", cls: "otr-setting-card-title" });
+		info4.createDiv({
+			text: "새 회의록 작성 시 본문에 적용할 템플릿 마크다운 파일의 경로입니다 (예: Templates/Meeting.md). {{date}}, {{time}}, {{title}} 변수를 지원합니다.",
+			cls: "otr-setting-card-desc",
+		});
 		const input4 = card4.createEl("input", {
 			type: "text",
 			cls: "otr-setting-input font-mono-tabular",
-			value: vaultSettings.autoRecordTemplatePath,
+			value: vaultSettings.meetingNoteTemplatePath,
 			placeholder: "예: Templates/회의록 템플릿.md",
 		});
 		input4.onchange = () => {
-			void this.updateVaultSettings({ autoRecordTemplatePath: input4.value.trim() });
+			void this.updateVaultSettings({ meetingNoteTemplatePath: input4.value.trim() });
 		};
 
 		// Card 5: 탭 닫힘 동작

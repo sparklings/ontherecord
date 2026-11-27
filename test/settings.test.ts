@@ -24,6 +24,7 @@ test("vault 설정은 기본값으로 초기화하고 저장된 값은 기본값
 			recordStartMode: "manual",
 			recordStartNotification: false,
 			autoRecordFolder: "Meetings",
+			meetingNoteTemplatePath: "Templates/Meeting.md",
 			vocabularyPrompt: "  Obsidian, Whisper  ",
 		}),
 		{
@@ -32,8 +33,14 @@ test("vault 설정은 기본값으로 초기화하고 저장된 값은 기본값
 			recordStartMode: "manual",
 			recordStartNotification: false,
 			autoRecordFolder: "Meetings",
+			meetingNoteTemplatePath: "Templates/Meeting.md",
 			vocabularyPrompt: "Obsidian, Whisper",
 		},
+	);
+	// 하위 호환: autoRecordTemplatePath 이전 설정 지원
+	assert.equal(
+		normalizeVaultSettings({ autoRecordTemplatePath: "Legacy/Template.md" }).meetingNoteTemplatePath,
+		"Legacy/Template.md",
 	);
 	// 하위 호환: confirm 모드는 auto + notification true로 변환
 	assert.deepEqual(

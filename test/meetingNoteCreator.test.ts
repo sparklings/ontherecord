@@ -67,3 +67,33 @@ test("createMeetingNote: 파일 생성 및 템플릿 적용 모의 검증", asyn
 	assert.equal(file.path, "Meetings/2026-11-20 1000 주간회의.md");
 	assert.ok(createdContent.includes("# 2026-11-20 1000 주간회의"));
 });
+
+test("createMeetingNote: 템플릿 파일이 주어지면 템플릿 변수를 치환하여 회의록 생성", async () => {
+	let createdPath = "";
+	let createdContent = "";
+	const mockTemplate = "# {{title}}\n- 날짜: {{date}}\n- 시간: {{time}}\n## 안건";
+	const mockApp = {
+		vault: {
+			getAbstractFileByPath: (p: string) => (p === "Templates/Meeting.md" ? { path: p } : null),
+			createFolder: async () => {},
+			read: async () => mockTemplate,
+			create: async (path: string, content: string) => {
+				createdPath = path;
+				createdContent = content;
+				return { path };
+			},
+		},
+	};
+
+	const file = await createMeetingNote(mockApp, {
+		folder: "Meetings",
+		templatePath: "Templates/Meeting.md",
+		customDate: new Date("2026-11-20T14:00:00"),
+	});
+
+	assert.equal(file.path, "Meetings/2026-11-20 1400 회의록.md");
+	assert.ok(createdContent.includes("# 2026-11-20 1400 회의록"));
+	assert.ok(createdContent.includes("- 날짜: 2026-11-20"));
+	assert.ok(createdContent.includes("- 시간: 14:00"));
+	assert.ok(createdContent.includes("## 안건"));
+});
