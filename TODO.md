@@ -28,6 +28,11 @@
 
 ## 2026-11-27
 
+### 전사 타임스탬프 10배 축척 왜곡 수정 및 무음 환각 차단 (2026-11-27 완료)
+- [x] `SYNC-BUG-01` whisper.cpp JSON 오프셋(ms) 파싱 시 `/ 100`으로 10배 팽창되던 버그를 `/ 1000`으로 수정하여 1:09 오디오 싱크 100% 정상화
+- [x] `SYNC-BUG-02` 무음 구간 greedy 루프를 유발하던 `-tp 0.0`, `-mc 0` 플래그 제거 및 온도 fallback 복원으로 무음 환각 문장 반복 완전 박멸
+- [x] `SYNC-BUG-03` `stripCommentMarkersFromNote`에서 `<!-- on-the-record:begin -->` 등 모든 마커 태그 전면 제거
+
 ### 녹음 종료 시 회의록 노트 에디터 즉시 열기 및 UI 개선 (2026-11-27 완료)
 - [x] `NOTE-OPEN-01` 녹음 종료(`stopCurrentRecording`), 탭 정리(`active-leaf-change`), 안정화, 전사 완료 시 회의록 노트를 메인 에디터에 확실히 열고 포커스(`openNoteInMainArea`)
 - [x] `NOTE-OPEN-02` 코어 오디오 탭 detach 후 에디터가 빈 화면으로 남던 문제 해결

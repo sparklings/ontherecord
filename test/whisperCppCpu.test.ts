@@ -50,7 +50,7 @@ test("known runtime and model are verified, audio is normalized, and all tempora
 				inferenceOutputBase = outputBase;
 				await fs.writeFile(`${inferenceOutputBase}.json`, JSON.stringify({
 					result: { language: "ko" },
-					transcription: [{ offsets: { from: 0, to: 125 }, text: "비공개 전사문" }],
+					transcription: [{ offsets: { from: 0, to: 1250 }, text: "비공개 전사문" }],
 				}));
 				return { stdout: "", stderr: "" };
 			},
@@ -101,8 +101,8 @@ test("transcription returns whisper.cpp segment offsets as seconds and removes t
 				await fs.writeFile(`${inferenceOutputBase}.json`, JSON.stringify({
 					result: { language: "ko" },
 					transcription: [
-						{ offsets: { from: 0, to: 125 }, text: "첫 문장 " },
-						{ offsets: { from: 125, to: 280 }, text: "두 번째 문장" },
+						{ offsets: { from: 0, to: 1250 }, text: "첫 문장 " },
+						{ offsets: { from: 1250, to: 2800 }, text: "두 번째 문장" },
 					],
 				}));
 				return { stdout: "", stderr: "" };
@@ -239,7 +239,7 @@ test("runtime version mismatch and unsupported audio format fail explicitly", as
 	}
 });
 
-test("buildWhisperInferenceArgs: 장시간 회의 환각 방지 파라미터(-mc 0, -sns, -tp 0.0)를 정확히 구성한다 (3-CPU-01)", () => {
+test("buildWhisperInferenceArgs: 비음성 환각 억제 파라미터(-sns)를 정확히 구성한다 (3-CPU-01)", () => {
 	const args = buildWhisperInferenceArgs({
 		modelPath: "models/base.bin",
 		audioPath: "audio.wav",
@@ -249,11 +249,9 @@ test("buildWhisperInferenceArgs: 장시간 회의 환각 방지 파라미터(-mc
 		suppressHallucinations: true,
 	});
 
-	assert.ok(args.includes("-mc"));
-	assert.equal(args[args.indexOf("-mc") + 1], "0");
 	assert.ok(args.includes("-sns"));
-	assert.ok(args.includes("-tp"));
-	assert.equal(args[args.indexOf("-tp") + 1], "0.0");
+	assert.equal(args.includes("-mc"), false);
+	assert.equal(args.includes("-tp"), false);
 	assert.equal(args[args.indexOf("-t") + 1], "8");
 });
 

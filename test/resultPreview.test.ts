@@ -167,6 +167,10 @@ test("stripCommentMarkersFromNote: 전사 완료 후 내부 주석 마커 및 �
 		"### 녹음 1 (소요: 02:26)",
 		"<!-- on-the-record:end audio=\"Recording.m4a\" seq=\"1\" -->",
 		"",
+		"<!-- on-the-record:begin audio=\"Recording.m4a\" -->",
+		"### 🎙️ 음성 전사",
+		"<!-- on-the-record:end -->",
+		"",
 		"## 녹음 기록",
 		"",
 	].join("\n");
@@ -175,7 +179,9 @@ test("stripCommentMarkersFromNote: 전사 완료 후 내부 주석 마커 및 �
 
 	assert.equal(cleaned.includes("<!-- on-the-record:start"), false);
 	assert.equal(cleaned.includes("<!-- on-the-record:end"), false);
+	assert.equal(cleaned.includes("<!-- on-the-record:begin"), false);
 	assert.equal(cleaned.includes("## 녹음 기록"), false);
 	assert.ok(cleaned.includes("![[Recording.m4a]]"));
 	assert.ok(cleaned.includes("### 녹음 1"));
+	assert.ok(cleaned.includes("### 🎙️ 음성 전사"));
 });

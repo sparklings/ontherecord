@@ -57,7 +57,7 @@ describe("whisper.cpp GPU 오프로딩 및 인수 생성 (3-GPU-01, 3-GPU-02)", 
 		assert.equal(args[devIndex + 1], "0", "'-dev' 다음 인수는 '0'이어야 합니다.");
 	});
 
-	it("환각 방지 최적화(-mc 0, -sns, -tp 0.0)와 GPU 오프로딩이 함께 공존해야 한다", () => {
+	it("비음성 환각 억제 파라미터(-sns)와 GPU 오프로딩이 함께 공존해야 한다", () => {
 		const args = buildWhisperInferenceArgs({
 			...defaultOptions,
 			device: "cuda",
@@ -65,9 +65,7 @@ describe("whisper.cpp GPU 오프로딩 및 인수 생성 (3-GPU-01, 3-GPU-02)", 
 			suppressHallucinations: true,
 		});
 
-		assert.ok(args.includes("-mc") && args[args.indexOf("-mc") + 1] === "0", "'-mc 0'이 포함되어야 합니다.");
 		assert.ok(args.includes("-sns"), "'-sns'가 포함되어야 합니다.");
-		assert.ok(args.includes("-tp") && args[args.indexOf("-tp") + 1] === "0.0", "'-tp 0.0'이 포함되어야 합니다.");
 		assert.ok(args.includes("-ngl") && args[args.indexOf("-ngl") + 1] === "99", "'-ngl 99'가 포함되어야 합니다.");
 	});
 

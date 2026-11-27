@@ -119,7 +119,7 @@ export function parseWhisperCppJsonOutput(json: string, fallbackLanguage: string
 		) {
 			throw new ProviderError(`whisper.cpp JSON segment ${index + 1}의 offsets 또는 text가 올바르지 않습니다.`, "invalid-output", "whisper-cpp-cpu");
 		}
-		return { startSeconds: from / 100, endSeconds: to / 100, text: item.text };
+		return { startSeconds: from / 1000, endSeconds: to / 1000, text: item.text };
 	});
 
 	const result = isRecord(output.result) ? output.result : null;
@@ -226,10 +226,8 @@ export function buildWhisperInferenceArgs(options: WhisperInferenceOptions): str
 	}
 
 	if (options.suppressHallucinations !== false) {
-		// 3-CPU-01: 장시간 회의 전사 시 무음/잡음 구간 무한 루프(환각) 방지 최적화
-		args.push("-mc", "0"); // 이전 세그먼트 컨텍스트 누적 차단
-		args.push("-sns"); // 비음성(non-speech) 토큰 억제
-		args.push("-tp", "0.0"); // 결정론적 온도 고정
+		// 3-CPU-01: 무음 구간 비음성(non-speech) 토큰 억제 (온도 fallback 유지하여 무음 루프 차단)
+		args.push("-sns");
 	}
 
 	return args;
