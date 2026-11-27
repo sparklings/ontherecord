@@ -150,4 +150,19 @@ test("FloatingRecordingIndicator: idle 및 destroy 시 비노출, starting/recor
 	indicator.destroy();
 	assert.equal(indicator.isVisible(), false);
 	assert.equal(root.removed, true);
+
+	// 8. 개선안 A: 사이드바 오픈 시 suppressed 상태로 전환되면 DOM 숨김 및 isVisible false
+	const indicator2 = new FloatingRecordingIndicator(
+		{ onPause: () => undefined, onResume: () => undefined, onStop: () => undefined },
+		{ hostEl: host as unknown as HTMLElement, getNow: () => now },
+	);
+	indicator2.setState("recording", now);
+	assert.equal(indicator2.isVisible(), true);
+	indicator2.setSuppressed(true);
+	assert.equal(indicator2.getSuppressed(), true);
+	assert.equal(indicator2.isVisible(), false);
+	indicator2.setSuppressed(false);
+	assert.equal(indicator2.getSuppressed(), false);
+	assert.equal(indicator2.isVisible(), true);
+	indicator2.destroy();
 });

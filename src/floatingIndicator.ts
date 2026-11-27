@@ -27,6 +27,7 @@ export class FloatingRecordingIndicator {
 	private readonly setIconFn?: (el: HTMLElement, iconId: string) => void;
 
 	private state: FloatingIndicatorState = "idle";
+	private isSuppressed = false;
 	private startedAt: number | null = null;
 	private accumulatedSeconds = 0;
 	private timerHandle: number | null = null;
@@ -51,8 +52,23 @@ export class FloatingRecordingIndicator {
 		return this.state;
 	}
 
+	setSuppressed(suppressed: boolean): void {
+		this.isSuppressed = suppressed;
+		if (this.rootEl) {
+			if (suppressed) {
+				this.rootEl.addClass("is-suppressed");
+			} else {
+				this.rootEl.removeClass("is-suppressed");
+			}
+		}
+	}
+
+	getSuppressed(): boolean {
+		return this.isSuppressed;
+	}
+
 	isVisible(): boolean {
-		return this.state !== "idle" && this.rootEl !== null && !this.rootEl.hasClass("is-hidden");
+		return this.state !== "idle" && this.rootEl !== null && !this.rootEl.hasClass("is-hidden") && !this.isSuppressed;
 	}
 
 	setState(nextState: FloatingIndicatorState, startedAt?: number): void {
@@ -186,7 +202,9 @@ export class FloatingRecordingIndicator {
 			return;
 		}
 
-		const root = parent.createDiv({ cls: "otr-float-indicator is-hidden" });
+		const root = parent.createDiv({
+			cls: `otr-float-indicator is-hidden ${this.isSuppressed ? "is-suppressed" : ""}`.trim(),
+		});
 		root.setAttribute("role", "status");
 		root.setAttribute("aria-live", "polite");
 

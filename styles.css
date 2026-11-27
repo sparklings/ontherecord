@@ -1080,6 +1080,10 @@ body > .otr-float-indicator {
 	z-index: 100;
 }
 
+.otr-float-indicator.is-suppressed {
+	display: none !important;
+}
+
 .otr-float-indicator.is-starting {
 	border-color: var(--interactive-accent);
 	box-shadow: 0 0 0 2px hsla(var(--interactive-accent-rgb), 0.22);

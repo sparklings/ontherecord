@@ -65,6 +65,7 @@ import { OnTheRecordSidebarView, OTR_SIDEBAR_VIEW_TYPE } from "./sidebarView.ts"
 import { createMeetingNote } from "./meetingNoteCreator.ts";
 import { parseAudioEmbedsFromMarkdown } from "./noteAudioExplorer.ts";
 import { FloatingRecordingIndicator } from "./floatingIndicator.ts";
+import { t } from "./i18n.ts";
 import type { WorkerProgress } from "./transcriptionQueueWorker.ts";
 
 interface ObsidianAudioRecorderPlugin {
@@ -322,18 +323,47 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		this.addCommand({
 			id: "create-meeting-note-and-record",
-			name: "새 회의록 작성 및 음성 녹음 시작",
+			name: t("cmd.createMeetingAndRecord"),
 			callback: async () => {
 				const targetFile = await this.createNewMeetingNoteAndOpen();
 				if (!targetFile) return;
 				await this.startRecordingForNote(targetFile);
-				await this.activateSidebarView();
+				this.updateFloatingIndicatorVisibility();
+			},
+		});
+
+		this.addCommand({
+			id: "toggle-recording",
+			name: t("cmd.toggleRecording"),
+			callback: async () => {
+				if (this.sessionManager.isRecording()) {
+					if (this.floatingIndicator.getState() === "paused") {
+						const activeFile = this.app.workspace.getActiveFile();
+						if (activeFile) {
+							await this.startRecordingForNote(activeFile);
+						}
+					} else {
+						await this.pauseCurrentRecording();
+					}
+				} else {
+					const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+					const note = activeView?.file;
+					if (note) {
+						await this.startRecordingForNote(note);
+					} else {
+						const targetFile = await this.createNewMeetingNoteAndOpen();
+						if (targetFile) {
+							await this.startRecordingForNote(targetFile);
+						}
+					}
+				}
+				this.updateFloatingIndicatorVisibility();
 			},
 		});
 
 		this.addCommand({
 			id: "open-sidebar-panel",
-			name: "오른쪽 사이드바 회의록 제어 패널 열기",
+			name: t("cmd.openSidebarPanel"),
 			callback: async () => {
 				await this.activateSidebarView();
 			},
@@ -341,7 +371,7 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		this.addCommand({
 			id: "start-recording",
-			name: "현재 활성 노트에서 음성 녹음 시작",
+			name: t("cmd.startRecording"),
 			callback: () => {
 				const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 				const note = view?.file;
@@ -354,38 +384,38 @@ export default class OnTheRecordPlugin extends Plugin {
 		});
 		this.addCommand({
 			id: "stop-recording",
-			name: "음성 녹음 중지",
+			name: t("cmd.stopRecording"),
 			callback: () => {
 				void this.stopCurrentRecording();
 			},
 		});
 		this.addCommand({
 			id: "select-audio-file",
-			name: "전사할 오디오 파일 선택",
+			name: t("cmd.selectAudioFile"),
 			callback: () => this.openAudioFilePicker(),
 		});
 		this.addCommand({
 			id: "preview-sample-result",
-			name: "샘플 전사 결과 미리보기 시험",
+			name: t("cmd.previewSampleResult"),
 			callback: () => {
 				this.openSamplePreviewPicker();
 			},
 		});
 		this.addCommand({
 			id: "transcribe-audio-insert",
-			name: "오디오 전사 및 결과 삽입",
+			name: t("cmd.transcribeAudioInsert"),
 			callback: () => {
 				this.openCpuTranscriptionPicker();
 			},
 		});
 		this.addCommand({
 			id: "search-transcripts",
-			name: "전사문 검색",
+			name: t("cmd.searchTranscripts"),
 			callback: () => this.openTranscriptSearch(),
 		});
 		this.addCommand({
 			id: "recalculate-note-recordings",
-			name: "이 노트 녹음 정보 재계산",
+			name: t("cmd.recalculateRecordings"),
 			checkCallback: (checking: boolean) => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile && activeFile.extension === "md") {
@@ -399,14 +429,14 @@ export default class OnTheRecordPlugin extends Plugin {
 		});
 		this.addCommand({
 			id: "check-orphan-audio",
-			name: "고아 녹음 파일 점검",
+			name: t("cmd.checkOrphanAudio"),
 			callback: () => {
 				void this.openOrphanAudioModal();
 			},
 		});
 		this.addCommand({
 			id: "summarize-active-note-transcript",
-			name: "현재 활성 노트 전사문 로컬 AI 요약 생성",
+			name: t("cmd.summarizeTranscript"),
 			checkCallback: (checking: boolean) => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile && activeFile.extension === "md") {
@@ -419,18 +449,31 @@ export default class OnTheRecordPlugin extends Plugin {
 			},
 		});
 		addIcon(OTR_DECK_ICON_ID, OTR_DECK_ICON_SVG);
-		this.addRibbonIcon(OTR_DECK_ICON_ID, "On the Record 회의록 제어 패널 열기", () => {
+		this.addRibbonIcon(OTR_DECK_ICON_ID, t("cmd.openSidebarPanel"), () => {
 			void this.activateSidebarView();
 		});
 
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", () => {
 				this.refreshSidebarViews();
+				this.updateFloatingIndicatorVisibility();
 			}),
 		);
 		this.registerEvent(
 			this.app.workspace.on("file-open", () => {
 				this.refreshSidebarViews();
+				this.updateFloatingIndicatorVisibility();
+			}),
+		);
+		this.registerEvent(
+			this.app.workspace.on("layout-change", () => {
+				this.refreshSidebarViews();
+				this.updateFloatingIndicatorVisibility();
+			}),
+		);
+		this.registerEvent(
+			this.app.workspace.on("resize", () => {
+				this.updateFloatingIndicatorVisibility();
 			}),
 		);
 
@@ -795,6 +838,7 @@ export default class OnTheRecordPlugin extends Plugin {
 		if (session) {
 			this.recordingStatusBar.start(session);
 			this.floatingIndicator?.setState("recording", session.startedAt);
+			this.updateFloatingIndicatorVisibility();
 			this.refreshSidebarViews();
 		} else {
 			this.floatingIndicator?.setState("idle");
@@ -809,6 +853,7 @@ export default class OnTheRecordPlugin extends Plugin {
 		}
 		this.recordingStatusBar.stop();
 		this.floatingIndicator?.setState("paused");
+		this.updateFloatingIndicatorVisibility();
 		this.refreshSidebarViews();
 		new Notice("녹음이 일시정지되었습니다. ('계속하기'를 누르면 후속 녹음이 이어집니다)");
 	}
@@ -1035,7 +1080,34 @@ export default class OnTheRecordPlugin extends Plugin {
 		}
 		if (leaf) {
 			void workspace.revealLeaf(leaf);
+			this.updateFloatingIndicatorVisibility();
 		}
+	}
+
+	isSidebarViewVisible(): boolean {
+		const rightSplit = this.app.workspace.rightSplit as { collapsed?: boolean } | undefined;
+		if (rightSplit && typeof rightSplit.collapsed === "boolean" && rightSplit.collapsed) {
+			return false;
+		}
+		const leaves = this.app.workspace.getLeavesOfType(OTR_SIDEBAR_VIEW_TYPE);
+		if (leaves.length === 0) return false;
+		for (const leaf of leaves) {
+			const el = leaf.view?.containerEl;
+			if (el) {
+				if (typeof el.isShown === "function") {
+					if (el.isShown()) return true;
+				} else if (el.offsetParent !== null) {
+					return true;
+				}
+			}
+		}
+		return !rightSplit?.collapsed;
+	}
+
+	updateFloatingIndicatorVisibility(): void {
+		if (!this.floatingIndicator) return;
+		const sidebarVisible = this.isSidebarViewVisible();
+		this.floatingIndicator.setSuppressed(sidebarVisible);
 	}
 
 	refreshSidebarViews(): void {

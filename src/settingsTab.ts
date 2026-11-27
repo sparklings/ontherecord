@@ -140,18 +140,18 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 	 * 탭 1: 회의록 및 녹음 워크플로 설정 (Stitch stitch-workflow-tab.html 1:1 이식)
 	 */
 	private renderWorkflowTab(containerEl: HTMLElement, vaultSettings: VaultSettings): void {
-		renderScopeHeading(containerEl, "회의록 및 녹음 워크플로", "vault");
+		renderScopeHeading(containerEl, t("settings.wf.heading"), "vault");
 
 		const stack = containerEl.createDiv({ cls: "otr-settings-card-stack" });
 
 		// Card 1: 녹음 시작 방식
 		const card1 = stack.createDiv({ cls: "otr-setting-card" });
 		const info1 = card1.createDiv({ cls: "otr-setting-card-info" });
-		info1.createDiv({ text: "회의록 작성 시 녹음 시작 방식", cls: "otr-setting-card-title" });
-		info1.createDiv({ text: "새 회의록 작성 시 자동으로 음성 녹음을 시작할지 선택합니다.", cls: "otr-setting-card-desc" });
+		info1.createDiv({ text: t("settings.wf.startMode.title"), cls: "otr-setting-card-title" });
+		info1.createDiv({ text: t("settings.wf.startMode.desc"), cls: "otr-setting-card-desc" });
 		const select1 = card1.createEl("select", { cls: "otr-setting-select" });
-		const optAuto1 = select1.createEl("option", { text: "새 회의록 작성 시 자동 시작 (권장)", value: "auto" });
-		const optManual1 = select1.createEl("option", { text: "단축키 또는 버튼으로 수동 시작", value: "manual" });
+		const optAuto1 = select1.createEl("option", { text: t("settings.wf.startMode.auto"), value: "auto" });
+		const optManual1 = select1.createEl("option", { text: t("settings.wf.startMode.manual"), value: "manual" });
 		if (vaultSettings.recordStartMode === "manual") optManual1.selected = true;
 		else optAuto1.selected = true;
 		select1.onchange = () => {
@@ -164,8 +164,8 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		// Card 2: 알림 토글
 		const card2 = stack.createDiv({ cls: "otr-setting-card" });
 		const info2 = card2.createDiv({ cls: "otr-setting-card-info" });
-		info2.createDiv({ text: "녹음 시작 안내 알림 표시", cls: "otr-setting-card-title" });
-		info2.createDiv({ text: "녹음이 시작될 때 우측 상단에 팝업 알림을 표시합니다.", cls: "otr-setting-card-desc" });
+		info2.createDiv({ text: t("settings.wf.notif.title"), cls: "otr-setting-card-title" });
+		info2.createDiv({ text: t("settings.wf.notif.desc"), cls: "otr-setting-card-desc" });
 		const toggleLabel2 = card2.createEl("label", { cls: "otr-custom-toggle" });
 		const toggleInput2 = toggleLabel2.createEl("input", { type: "checkbox" });
 		toggleInput2.checked = vaultSettings.recordStartNotification;
@@ -177,13 +177,13 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		// Card 3: 마크다운 보관 폴더
 		const card3 = stack.createDiv({ cls: "otr-setting-card" });
 		const info3 = card3.createDiv({ cls: "otr-setting-card-info" });
-		info3.createDiv({ text: "회의록 마크다운 노트 보관 폴더", cls: "otr-setting-card-title" });
-		info3.createDiv({ text: "이 폴더 하위에 새 마크다운 문서를 생성했을 때만 녹음 시작 규칙을 적용합니다.", cls: "otr-setting-card-desc" });
+		info3.createDiv({ text: t("settings.wf.folder.title"), cls: "otr-setting-card-title" });
+		info3.createDiv({ text: t("settings.wf.folder.desc"), cls: "otr-setting-card-desc" });
 		const input3 = card3.createEl("input", {
 			type: "text",
 			cls: "otr-setting-input font-mono-tabular",
 			value: vaultSettings.autoRecordFolder,
-			placeholder: "예: Meetings 또는 회의록",
+			placeholder: t("settings.wf.folder.placeholder"),
 		});
 		input3.onchange = () => {
 			void this.updateVaultSettings({ autoRecordFolder: input3.value.trim() });
@@ -192,16 +192,16 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		// Card 4: 새 회의록 기본 템플릿 파일
 		const card4 = stack.createDiv({ cls: "otr-setting-card" });
 		const info4 = card4.createDiv({ cls: "otr-setting-card-info" });
-		info4.createDiv({ text: "새 회의록 기본 템플릿", cls: "otr-setting-card-title" });
+		info4.createDiv({ text: t("settings.wf.template.title"), cls: "otr-setting-card-title" });
 		info4.createDiv({
-			text: "새 회의록 작성 시 본문에 적용할 템플릿 마크다운 파일의 경로입니다 (예: Templates/Meeting.md). {{date}}, {{time}}, {{title}} 변수를 지원합니다.",
+			text: t("settings.wf.template.desc"),
 			cls: "otr-setting-card-desc",
 		});
 		const input4 = card4.createEl("input", {
 			type: "text",
 			cls: "otr-setting-input font-mono-tabular",
 			value: vaultSettings.meetingNoteTemplatePath,
-			placeholder: "예: Templates/회의록 템플릿.md",
+			placeholder: t("settings.wf.template.placeholder"),
 		});
 		input4.onchange = () => {
 			void this.updateVaultSettings({ meetingNoteTemplatePath: input4.value.trim() });
@@ -210,11 +210,11 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		// Card 5: 탭 닫힘 동작
 		const card5 = stack.createDiv({ cls: "otr-setting-card" });
 		const info5 = card5.createDiv({ cls: "otr-setting-card-info" });
-		info5.createDiv({ text: "녹음 중 문서 탭 닫힘 시 동작", cls: "otr-setting-card-title" });
-		info5.createDiv({ text: "녹음 중인 탭이 닫혔을 때 녹음 파일 유실을 방지하는 안전 정책입니다.", cls: "otr-setting-card-desc" });
+		info5.createDiv({ text: t("settings.wf.tabClose.title"), cls: "otr-setting-card-title" });
+		info5.createDiv({ text: t("settings.wf.tabClose.desc"), cls: "otr-setting-card-desc" });
 		const select5 = card5.createEl("select", { cls: "otr-setting-select" });
-		const optStop5 = select5.createEl("option", { text: "녹음 안전 중지 후 자동 연결 (권장)", value: "stop-and-attach" });
-		const optIgnore5 = select5.createEl("option", { text: "녹음 계속 진행 (백그라운드)", value: "ignore" });
+		const optStop5 = select5.createEl("option", { text: t("settings.wf.tabClose.stop"), value: "stop-and-attach" });
+		const optIgnore5 = select5.createEl("option", { text: t("settings.wf.tabClose.ignore"), value: "ignore" });
 		if (vaultSettings.onTabCloseAction === "ignore") optIgnore5.selected = true;
 		else optStop5.selected = true;
 		select5.onchange = () => {
@@ -227,8 +227,8 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		// Card 6: 자동 전사 시작
 		const card6 = stack.createDiv({ cls: "otr-setting-card" });
 		const info6 = card6.createDiv({ cls: "otr-setting-card-info" });
-		info6.createDiv({ text: "녹음 종료 후 자동 전사 시작", cls: "otr-setting-card-title" });
-		info6.createDiv({ text: "녹음이 중지되면 백그라운드 큐로 넘겨 자동으로 텍스트 변환을 개시합니다.", cls: "otr-setting-card-desc" });
+		info6.createDiv({ text: t("settings.wf.autoTranscribe.title"), cls: "otr-setting-card-title" });
+		info6.createDiv({ text: t("settings.wf.autoTranscribe.desc"), cls: "otr-setting-card-desc" });
 		const toggleLabel6 = card6.createEl("label", { cls: "otr-custom-toggle" });
 		const toggleInput6 = toggleLabel6.createEl("input", { type: "checkbox" });
 		toggleInput6.checked = vaultSettings.autoTranscribe;
@@ -240,11 +240,11 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		// Card 7: 전사 결과 노트 반영 방식
 		const card7 = stack.createDiv({ cls: "otr-setting-card" });
 		const info7 = card7.createDiv({ cls: "otr-setting-card-info" });
-		info7.createDiv({ text: "전사 결과 노트 반영 방식", cls: "otr-setting-card-title" });
-		info7.createDiv({ text: "전사 완료 시 노트 본문에 반영하는 절차를 지정합니다.", cls: "otr-setting-card-desc" });
+		info7.createDiv({ text: t("settings.wf.insertMode.title"), cls: "otr-setting-card-title" });
+		info7.createDiv({ text: t("settings.wf.insertMode.desc"), cls: "otr-setting-card-desc" });
 		const select7 = card7.createEl("select", { cls: "otr-setting-select" });
-		const optAuto7 = select7.createEl("option", { text: "오디오 임베드 아래 자동 삽입 (권장)", value: "auto" });
-		const optReview7 = select7.createEl("option", { text: "미리보기 모달로 검토 후 승인 삽입", value: "review" });
+		const optAuto7 = select7.createEl("option", { text: t("settings.wf.insertMode.auto"), value: "auto" });
+		const optReview7 = select7.createEl("option", { text: t("settings.wf.insertMode.review"), value: "review" });
 		if (vaultSettings.transcriptionInsertMode === "review") optReview7.selected = true;
 		else optAuto7.selected = true;
 		select7.onchange = () => {
@@ -254,8 +254,8 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		// Card 8: 오디오 저장 안정화 대기 시간
 		const card8 = stack.createDiv({ cls: "otr-setting-card" });
 		const info8 = card8.createDiv({ cls: "otr-setting-card-info" });
-		info8.createDiv({ text: "오디오 저장 완료 대기 시간 (초)", cls: "otr-setting-card-title" });
-		info8.createDiv({ text: "녹음기가 파일 쓰기를 완전히 마칠 때까지 대기하는 시간입니다 (기본값: 5초).", cls: "otr-setting-card-desc" });
+		info8.createDiv({ text: t("settings.wf.stabilization.title"), cls: "otr-setting-card-title" });
+		info8.createDiv({ text: t("settings.wf.stabilization.desc"), cls: "otr-setting-card-desc" });
 		const input8 = card8.createEl("input", {
 			type: "number",
 			cls: "otr-setting-input font-mono-tabular otr-input-narrow",

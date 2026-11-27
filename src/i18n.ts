@@ -6,12 +6,16 @@ export interface TranslationDict {
 	// Commands
 	"cmd.startRecording": string;
 	"cmd.stopRecording": string;
+	"cmd.createMeetingAndRecord": string;
+	"cmd.toggleRecording": string;
+	"cmd.openSidebarPanel": string;
 	"cmd.selectAudioFile": string;
 	"cmd.previewSampleResult": string;
 	"cmd.transcribeAudioInsert": string;
 	"cmd.searchTranscripts": string;
 	"cmd.recalculateRecordings": string;
 	"cmd.checkOrphanAudio": string;
+	"cmd.summarizeTranscript": string;
 
 	// Status Bar
 	"status.recording": string;
@@ -77,18 +81,49 @@ export interface TranslationDict {
 	"settings.vocab.title": string;
 	"settings.vocab.desc": string;
 	"settings.vocab.placeholder": string;
+
+	// Settings UI - Workflow Tab
+	"settings.wf.heading": string;
+	"settings.wf.startMode.title": string;
+	"settings.wf.startMode.desc": string;
+	"settings.wf.startMode.auto": string;
+	"settings.wf.startMode.manual": string;
+	"settings.wf.notif.title": string;
+	"settings.wf.notif.desc": string;
+	"settings.wf.folder.title": string;
+	"settings.wf.folder.desc": string;
+	"settings.wf.folder.placeholder": string;
+	"settings.wf.template.title": string;
+	"settings.wf.template.desc": string;
+	"settings.wf.template.placeholder": string;
+	"settings.wf.tabClose.title": string;
+	"settings.wf.tabClose.desc": string;
+	"settings.wf.tabClose.stop": string;
+	"settings.wf.tabClose.ignore": string;
+	"settings.wf.autoTranscribe.title": string;
+	"settings.wf.autoTranscribe.desc": string;
+	"settings.wf.insertMode.title": string;
+	"settings.wf.insertMode.desc": string;
+	"settings.wf.insertMode.auto": string;
+	"settings.wf.insertMode.review": string;
+	"settings.wf.stabilization.title": string;
+	"settings.wf.stabilization.desc": string;
 }
 
 export const translations: Record<SupportedLocale, TranslationDict> = {
 	en: {
 		"cmd.startRecording": "Start voice recording in active note",
 		"cmd.stopRecording": "Stop voice recording",
+		"cmd.createMeetingAndRecord": "Create new meeting note and start voice recording",
+		"cmd.toggleRecording": "Toggle pause / resume voice recording",
+		"cmd.openSidebarPanel": "Open meeting notes sidebar panel",
 		"cmd.selectAudioFile": "Select audio file to transcribe",
 		"cmd.previewSampleResult": "Preview sample transcription",
 		"cmd.transcribeAudioInsert": "Transcribe audio and insert result",
 		"cmd.searchTranscripts": "Search transcripts",
 		"cmd.recalculateRecordings": "Recalculate recording metadata for this note",
 		"cmd.checkOrphanAudio": "Check orphan audio recordings",
+		"cmd.summarizeTranscript": "Generate local AI summary for active note",
 
 		"status.recording": "🔴 {time} {name}",
 		"status.transcribing": "🎙️ Transcribing [{percent}%]: {file}",
@@ -147,16 +182,46 @@ export const translations: Record<SupportedLocale, TranslationDict> = {
 		"settings.vocab.title": "Custom Vocabulary Prompt",
 		"settings.vocab.desc": "Comma-separated technical terms or proper nouns to improve recognition accuracy.",
 		"settings.vocab.placeholder": "API, Obsidian, Whisper, Docker, TypeScript, Markdown",
+
+		"settings.wf.heading": "Meeting Notes & Recording Workflow",
+		"settings.wf.startMode.title": "Recording Start Trigger",
+		"settings.wf.startMode.desc": "Choose whether to automatically start recording when creating a new meeting note.",
+		"settings.wf.startMode.auto": "Auto-start on new meeting note (Recommended)",
+		"settings.wf.startMode.manual": "Manual start via hotkey or button",
+		"settings.wf.notif.title": "Recording Start Popup Notification",
+		"settings.wf.notif.desc": "Show a brief notification popup at top right when recording starts.",
+		"settings.wf.folder.title": "Meeting Notes Storage Folder",
+		"settings.wf.folder.desc": "The auto-record rule applies only to new Markdown documents created under this folder.",
+		"settings.wf.folder.placeholder": "e.g., Meetings or Notes",
+		"settings.wf.template.title": "Default Meeting Note Template",
+		"settings.wf.template.desc": "Path to the template Markdown file applied to new meeting notes (e.g., Templates/Meeting.md). Supports {{date}}, {{time}}, {{title}} variables.",
+		"settings.wf.template.placeholder": "e.g., Templates/Meeting Note.md",
+		"settings.wf.tabClose.title": "Action on Tab Close While Recording",
+		"settings.wf.tabClose.desc": "Safety policy to prevent audio loss if the note tab is closed during recording.",
+		"settings.wf.tabClose.stop": "Safely stop and attach audio (Recommended)",
+		"settings.wf.tabClose.ignore": "Continue recording in background",
+		"settings.wf.autoTranscribe.title": "Auto-transcribe on Recording Stop",
+		"settings.wf.autoTranscribe.desc": "Automatically enqueue audio for local transcription when recording is stopped.",
+		"settings.wf.insertMode.title": "Transcript Insertion Method",
+		"settings.wf.insertMode.desc": "Choose how completed transcriptions are inserted into your note.",
+		"settings.wf.insertMode.auto": "Auto-insert below audio embed (Recommended)",
+		"settings.wf.insertMode.review": "Review and approve in preview modal",
+		"settings.wf.stabilization.title": "Audio File Write Stabilization Wait (Seconds)",
+		"settings.wf.stabilization.desc": "Seconds to wait after recording stops to ensure the audio writer has completely finished (Default: 5s).",
 	},
 	ko: {
 		"cmd.startRecording": "현재 활성 노트에서 음성 녹음 시작",
 		"cmd.stopRecording": "음성 녹음 중지",
+		"cmd.createMeetingAndRecord": "새 회의록 작성 및 음성 녹음 시작 (원클릭)",
+		"cmd.toggleRecording": "음성 녹음 일시정지 / 계속하기 토글",
+		"cmd.openSidebarPanel": "오른쪽 사이드바 회의록 제어 패널 열기",
 		"cmd.selectAudioFile": "전사할 오디오 파일 선택",
 		"cmd.previewSampleResult": "샘플 전사 결과 미리보기 시험",
 		"cmd.transcribeAudioInsert": "오디오 전사 및 결과 삽입",
 		"cmd.searchTranscripts": "전사문 검색",
 		"cmd.recalculateRecordings": "이 노트 녹음 정보 재계산",
 		"cmd.checkOrphanAudio": "고아 녹음 파일 점검",
+		"cmd.summarizeTranscript": "현재 활성 노트 전사문 로컬 AI 요약 생성",
 
 		"status.recording": "🔴 {time} {name}",
 		"status.transcribing": "🎙️ 전사 중 [{percent}%]: {file}",
@@ -215,6 +280,32 @@ export const translations: Record<SupportedLocale, TranslationDict> = {
 		"settings.vocab.title": "맞춤형 어휘 힌트",
 		"settings.vocab.desc": "한영 혼용 IT 전문용어나 고유명사를 쉼표로 구분해 입력하면 오인식을 줄일 수 있습니다.",
 		"settings.vocab.placeholder": "API, Obsidian, Whisper, Docker, TypeScript, Markdown",
+
+		"settings.wf.heading": "회의록 및 녹음 워크플로",
+		"settings.wf.startMode.title": "회의록 작성 시 녹음 시작 방식",
+		"settings.wf.startMode.desc": "새 회의록 작성 시 자동으로 음성 녹음을 시작할지 선택합니다.",
+		"settings.wf.startMode.auto": "새 회의록 작성 시 자동 시작 (권장)",
+		"settings.wf.startMode.manual": "단축키 또는 버튼으로 수동 시작",
+		"settings.wf.notif.title": "녹음 시작 안내 알림 표시",
+		"settings.wf.notif.desc": "녹음이 시작될 때 우측 상단에 팝업 알림을 표시합니다.",
+		"settings.wf.folder.title": "회의록 Markdown 노트 보관 폴더",
+		"settings.wf.folder.desc": "이 폴더 하위에 새 Markdown 문서를 생성했을 때만 녹음 시작 규칙을 적용합니다.",
+		"settings.wf.folder.placeholder": "예: Meetings 또는 회의록",
+		"settings.wf.template.title": "새 회의록 기본 템플릿",
+		"settings.wf.template.desc": "새 회의록 작성 시 본문에 적용할 템플릿 Markdown 파일의 경로입니다 (예: Templates/Meeting.md). {{date}}, {{time}}, {{title}} 변수를 지원합니다.",
+		"settings.wf.template.placeholder": "예: Templates/회의록 템플릿.md",
+		"settings.wf.tabClose.title": "녹음 중 문서 탭 닫힘 시 동작",
+		"settings.wf.tabClose.desc": "녹음 중인 탭이 닫혔을 때 녹음 파일 유실을 방지하는 안전 정책입니다.",
+		"settings.wf.tabClose.stop": "녹음 안전 중지 후 자동 연결 (권장)",
+		"settings.wf.tabClose.ignore": "녹음 계속 진행 (백그라운드)",
+		"settings.wf.autoTranscribe.title": "녹음 종료 후 자동 전사 시작",
+		"settings.wf.autoTranscribe.desc": "녹음이 중지되면 백그라운드 큐로 넘겨 자동으로 텍스트 변환을 개시합니다.",
+		"settings.wf.insertMode.title": "전사 결과 노트 반영 방식",
+		"settings.wf.insertMode.desc": "전사 완료 시 노트 본문에 반영하는 절차를 지정합니다.",
+		"settings.wf.insertMode.auto": "오디오 임베드 아래 자동 삽입 (권장)",
+		"settings.wf.insertMode.review": "미리보기 모달로 검토 후 승인 삽입",
+		"settings.wf.stabilization.title": "오디오 저장 완료 대기 시간 (초)",
+		"settings.wf.stabilization.desc": "녹음기가 파일 쓰기를 완전히 마칠 때까지 대기하는 시간입니다 (기본값: 5초).",
 	},
 };
 
