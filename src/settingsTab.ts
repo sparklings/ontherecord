@@ -2,6 +2,7 @@ import { Notice, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type { App, Plugin } from "obsidian";
 import type { LocalSettings, VaultSettings } from "./settings.ts";
 import { SUPPORTED_MODELS, checkModelFileInstalled, buildModelDownloadCommand } from "./modelCatalog.ts";
+import { t } from "./i18n.ts";
 import * as fs from "fs";
 
 function checkPathExists(filePath: string): { exists: boolean; sizeBytes?: number } {
@@ -22,7 +23,7 @@ function renderScopeHeading(containerEl: HTMLElement, title: string, scope: "vau
 	const badge = setting.nameEl.createSpan({ cls: `otr-scope-badge ${scope === "vault" ? "is-vault" : "is-local"}` });
 	const iconSpan = badge.createSpan({ cls: "otr-inline-icon" });
 	setIcon(iconSpan, scope === "vault" ? "cloud" : "monitor");
-	badge.createSpan({ text: scope === "vault" ? "Vault 동기화" : "이 PC 전용" });
+	badge.createSpan({ text: scope === "vault" ? t("settings.scope.vault") : t("settings.scope.local") });
 }
 
 function openLocalFilePicker(accept: string, onSelected: (filePath: string) => void): void {
@@ -75,11 +76,11 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		titleRow.createSpan({ text: "On the Record", cls: "otr-model-detail-title" });
 		titleRow.createSpan({ text: "v0.1.0", cls: "otr-settings-version-pill" });
 		heroText.createDiv({
-			text: "Obsidian 로컬 음성 녹음 및 whisper.cpp 회의록 전사",
+			text: t("settings.hero.desc"),
 			cls: "otr-settings-hero-desc",
 		});
 
-		const guideBtn = heroEl.createEl("button", { text: "가이드 보기", cls: "otr-guide-ghost-btn" });
+		const guideBtn = heroEl.createEl("button", { text: t("settings.hero.guide"), cls: "otr-guide-ghost-btn" });
 		guideBtn.onclick = () => {
 			window.open("https://github.com/sparklings/ontherecord/wiki", "_blank");
 		};
@@ -88,8 +89,8 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		const tabNav = containerEl.createDiv({ cls: "otr-settings-tab-nav" });
 
 		const tabs: Array<{ id: "transcription" | "workflow"; label: string; icon: string }> = [
-			{ id: "transcription", label: "전사 & 도구 설정", icon: "mic" },
-			{ id: "workflow", label: "녹음 & 워크플로", icon: "file-text" },
+			{ id: "transcription", label: t("settings.tab.transcription"), icon: "mic" },
+			{ id: "workflow", label: t("settings.tab.workflow"), icon: "file-text" },
 		];
 
 		for (const t of tabs) {
@@ -125,11 +126,11 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		statusGroup.createSpan({ cls: `otr-status-badge-dot ${allReady ? "is-ready" : "is-warning"}` });
 		statusGroup.createSpan({
 			text: allReady
-				? "오프라인 엔진 상태: 정상 준비됨 (FFmpeg · whisper-cli · Model)"
-				: "오프라인 엔진 상태: 도구 경로 설정 필요",
+				? t("settings.footer.ready")
+				: t("settings.footer.needsConfig"),
 		});
 
-		const wikiLink = footerEl.createEl("button", { text: "문서 (Wiki)", cls: "otr-link-btn" });
+		const wikiLink = footerEl.createEl("button", { text: t("settings.footer.wiki"), cls: "otr-link-btn" });
 		wikiLink.onclick = () => {
 			window.open("https://github.com/sparklings/ontherecord/wiki", "_blank");
 		};
@@ -276,16 +277,17 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 	private renderTranscriptionTab(containerEl: HTMLElement, vaultSettings: VaultSettings, localSettings: LocalSettings | null): void {
 		// 1. 도구 준비 상태 배너 + 즉시 진단/자동 검색 버튼 (최상단)
 		const readinessBanner = containerEl.createDiv({ cls: "otr-readiness-banner" });
-		const readinessLeft = readinessBanner.createDiv({ cls: "otr-readiness-items" });
-		readinessLeft.createSpan({ text: "도구 준비 상태", cls: "otr-readiness-title" });
+		const readinessInfo = readinessBanner.createDiv({ cls: "otr-readiness-info" });
+		readinessInfo.createDiv({ text: t("settings.readiness.title"), cls: "otr-readiness-title" });
 
+		const pillsContainer = readinessInfo.createDiv({ cls: "otr-readiness-pills" });
 		const tools: Array<{ label: string; ok: boolean }> = [
 			{ label: "FFmpeg", ok: checkPathExists(localSettings?.ffmpegPath ?? "").exists },
 			{ label: "whisper-cli", ok: checkPathExists(localSettings?.runtimePath ?? "").exists },
 			{ label: "Model", ok: checkPathExists(localSettings?.modelPath ?? "").exists },
 		];
 		for (const item of tools) {
-			const pill = readinessLeft.createSpan({ cls: `otr-readiness-pill ${item.ok ? "is-ready" : "is-missing"}` });
+			const pill = pillsContainer.createSpan({ cls: `otr-readiness-pill ${item.ok ? "is-ready" : "is-missing"}` });
 			const icon = pill.createSpan({ cls: "otr-inline-icon" });
 			setIcon(icon, item.ok ? "check" : "alert-circle");
 			pill.createSpan({ text: item.label });
@@ -295,7 +297,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 
 		const discoverBtn = actionBtnGroupTop.createEl("button", {
 			cls: "otr-tool-action-btn",
-			text: "도구 자동 검색",
+			text: t("settings.readiness.autoDetect"),
 		});
 		const searchIcon = discoverBtn.createSpan({ cls: "otr-inline-icon" });
 		setIcon(searchIcon, "search");
@@ -304,7 +306,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 
 		const testBtn = actionBtnGroupTop.createEl("button", {
 			cls: "otr-tool-action-btn mod-primary",
-			text: "시험 전사 실행",
+			text: t("settings.readiness.testRun"),
 		});
 		const playIcon = testBtn.createSpan({ cls: "otr-inline-icon" });
 		setIcon(playIcon, "play");
@@ -312,7 +314,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		testBtn.onclick = () => this.testCpuSetup();
 
 		// 2. 기기 전사 도구 경로 3종 (최상단 배치하여 스크롤 없이 즉시 설정 가능)
-		renderScopeHeading(containerEl, "기기 전사 도구 경로", "local");
+		renderScopeHeading(containerEl, t("settings.tools.heading"), "local");
 
 		if (!localSettings) {
 			containerEl.createEl("p", {
@@ -343,7 +345,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 				cls: `otr-status-badge ${status.exists ? "is-ready" : "is-missing"}`,
 			});
 			pill.createSpan({ cls: "otr-status-badge-dot" });
-			pill.createSpan({ text: status.exists ? "준비 완료" : "미설치" });
+			pill.createSpan({ text: status.exists ? t("settings.tools.ready") : t("settings.tools.missing") });
 
 			topRow.createSpan({ text: options.versionHint, cls: "otr-tool-card-hint font-mono-tabular" });
 
@@ -359,7 +361,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			};
 
 			const browseBtn = inputRow.createEl("button", {
-				text: "찾아보기...",
+				text: t("settings.tools.browse"),
 				cls: "otr-tool-browse-btn",
 			});
 			browseBtn.onclick = () => {
@@ -371,7 +373,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 
 		// 1. Whisper runtime executable
 		renderToolCard({
-			title: "Whisper 런타임 실행 파일",
+			title: t("settings.tools.runtimeTitle"),
 			versionHint: "whisper.cpp v1.5.4+",
 			filePath: localSettings.runtimePath,
 			accept: ".exe",
@@ -381,7 +383,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 
 		// 2. GGML model file
 		renderToolCard({
-			title: "음성인식 모델 파일 (GGML)",
+			title: t("settings.tools.modelTitle"),
 			versionHint: "ggml-medium-q5_0.bin",
 			filePath: localSettings.modelPath,
 			accept: ".bin,.gguf",
@@ -391,7 +393,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 
 		// 3. FFmpeg executable
 		renderToolCard({
-			title: "FFmpeg 실행 파일",
+			title: t("settings.tools.ffmpegTitle"),
 			versionHint: "ffmpeg 6.0+",
 			filePath: localSettings.ffmpegPath,
 			accept: ".exe",
@@ -400,16 +402,16 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		});
 
 		// 3. 기본 전사 언어 및 모델 선택
-		renderScopeHeading(containerEl, "전사 언어 및 모델 설정", "vault");
+		renderScopeHeading(containerEl, t("settings.lang.heading"), "vault");
 
 		new Setting(containerEl)
-			.setName("기본 전사 언어")
-			.setDesc("한국어 회의의 경우 '한국어'로 고정하면 잡음 구간에서의 외국어 환각을 차단합니다.")
+			.setName(t("settings.lang.title"))
+			.setDesc(t("settings.lang.desc"))
 			.addDropdown((dropdown) =>
 				dropdown
-					.addOption("ko", "한국어 (권장)")
-					.addOption("auto", "다국어 자동 감지")
-					.addOption("en", "영어")
+					.addOption("ko", t("settings.lang.optKo"))
+					.addOption("auto", t("settings.lang.optAuto"))
+					.addOption("en", t("settings.lang.optEn"))
 					.setValue(vaultSettings.language)
 					.onChange((value) => {
 						void this.updateVaultSettings({ language: value });
@@ -484,9 +486,9 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 		const vocabCard = containerEl.createDiv({ cls: "otr-vocab-card" });
 		const vocabTop = vocabCard.createDiv({ cls: "otr-vocab-top" });
 		const vocabInfo = vocabTop.createDiv();
-		vocabInfo.createDiv({ text: "맞춤형 어휘 힌트", cls: "otr-vocab-title" });
+		vocabInfo.createDiv({ text: t("settings.vocab.title"), cls: "otr-vocab-title" });
 		vocabInfo.createDiv({
-			text: "한영 혼용 IT 전문용어나 고유명사를 쉼표로 구분해 입력하면 오인식을 줄일 수 있습니다.",
+			text: t("settings.vocab.desc"),
 			cls: "otr-vocab-desc",
 		});
 		vocabTop.createSpan({ text: "--prompt", cls: "otr-model-rec-pill font-mono-tabular" });
@@ -496,7 +498,7 @@ export class OnTheRecordSettingTab extends PluginSettingTab {
 			cls: "otr-vocab-input font-mono-tabular",
 		});
 		vocabInput.value = vaultSettings.vocabularyPrompt ?? "";
-		vocabInput.placeholder = "API, Obsidian, Whisper, Docker, TypeScript, Markdown";
+		vocabInput.placeholder = t("settings.vocab.placeholder");
 		vocabInput.oninput = () => {
 			void this.updateVaultSettings({ vocabularyPrompt: vocabInput.value.trim() });
 		};

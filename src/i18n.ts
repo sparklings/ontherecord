@@ -41,6 +41,42 @@ export interface TranslationDict {
 	"settings.gpuLayers.desc": string;
 	"settings.gpuDeviceId.name": string;
 	"settings.gpuDeviceId.desc": string;
+
+	// Settings UI - Readiness & Scope
+	"settings.readiness.title": string;
+	"settings.readiness.autoDetect": string;
+	"settings.readiness.testRun": string;
+	"settings.scope.local": string;
+	"settings.scope.vault": string;
+
+	// Settings UI - Hero & Tabs & Footer
+	"settings.hero.desc": string;
+	"settings.hero.guide": string;
+	"settings.tab.transcription": string;
+	"settings.tab.workflow": string;
+	"settings.footer.ready": string;
+	"settings.footer.needsConfig": string;
+	"settings.footer.wiki": string;
+
+	// Settings UI - Tools & Status
+	"settings.tools.heading": string;
+	"settings.tools.runtimeTitle": string;
+	"settings.tools.modelTitle": string;
+	"settings.tools.ffmpegTitle": string;
+	"settings.tools.ready": string;
+	"settings.tools.missing": string;
+	"settings.tools.browse": string;
+
+	// Settings UI - Language & Vocabulary
+	"settings.lang.heading": string;
+	"settings.lang.title": string;
+	"settings.lang.desc": string;
+	"settings.lang.optKo": string;
+	"settings.lang.optAuto": string;
+	"settings.lang.optEn": string;
+	"settings.vocab.title": string;
+	"settings.vocab.desc": string;
+	"settings.vocab.placeholder": string;
 }
 
 export const translations: Record<SupportedLocale, TranslationDict> = {
@@ -79,6 +115,38 @@ export const translations: Record<SupportedLocale, TranslationDict> = {
 		"settings.gpuLayers.desc": "Number of model layers to offload to GPU VRAM (0: CPU only, 99: full model offload).",
 		"settings.gpuDeviceId.name": "GPU Device Index (-dev)",
 		"settings.gpuDeviceId.desc": "Target GPU device ID when multiple GPUs are installed (default: 0).",
+
+		"settings.readiness.title": "Tool Readiness",
+		"settings.readiness.autoDetect": "Auto-detect Tools",
+		"settings.readiness.testRun": "Test Run",
+		"settings.scope.local": "This PC only",
+		"settings.scope.vault": "Vault Synced",
+
+		"settings.hero.desc": "Local speech-to-text meeting transcription powered by whisper.cpp",
+		"settings.hero.guide": "View Guide",
+		"settings.tab.transcription": "Transcription & Tools",
+		"settings.tab.workflow": "Recording & Workflow",
+		"settings.footer.ready": "Offline Engine: Ready (FFmpeg · whisper-cli · Model)",
+		"settings.footer.needsConfig": "Offline Engine: Tool path setup required",
+		"settings.footer.wiki": "Docs (Wiki)",
+
+		"settings.tools.heading": "Device Transcription Tools",
+		"settings.tools.runtimeTitle": "Whisper Runtime Executable",
+		"settings.tools.modelTitle": "Speech Model File (GGML)",
+		"settings.tools.ffmpegTitle": "FFmpeg Executable",
+		"settings.tools.ready": "Ready",
+		"settings.tools.missing": "Missing",
+		"settings.tools.browse": "Browse...",
+
+		"settings.lang.heading": "Language & Model Settings",
+		"settings.lang.title": "Default Transcription Language",
+		"settings.lang.desc": "Setting to a specific language prevents multilingual hallucinations during silent intervals.",
+		"settings.lang.optKo": "Korean (ko)",
+		"settings.lang.optAuto": "Auto-detect",
+		"settings.lang.optEn": "English (en)",
+		"settings.vocab.title": "Custom Vocabulary Prompt",
+		"settings.vocab.desc": "Comma-separated technical terms or proper nouns to improve recognition accuracy.",
+		"settings.vocab.placeholder": "API, Obsidian, Whisper, Docker, TypeScript, Markdown",
 	},
 	ko: {
 		"cmd.startRecording": "현재 활성 노트에서 음성 녹음 시작",
@@ -115,6 +183,38 @@ export const translations: Record<SupportedLocale, TranslationDict> = {
 		"settings.gpuLayers.desc": "GPU VRAM에 오프로드할 신경망 레이어 수입니다 (0: CPU 전용, 99: 모델 전체 오프로드).",
 		"settings.gpuDeviceId.name": "GPU 장치 번호 (-dev)",
 		"settings.gpuDeviceId.desc": "여러 GPU가 장착된 경우 연산에 사용할 GPU 인덱스 번호입니다 (기본값: 0).",
+
+		"settings.readiness.title": "도구 준비 상태",
+		"settings.readiness.autoDetect": "도구 자동 검색",
+		"settings.readiness.testRun": "시험 전사 실행",
+		"settings.scope.local": "이 PC 전용",
+		"settings.scope.vault": "Vault 동기화",
+
+		"settings.hero.desc": "Obsidian 로컬 음성 녹음 및 whisper.cpp 회의록 전사",
+		"settings.hero.guide": "가이드 보기",
+		"settings.tab.transcription": "전사 & 도구 설정",
+		"settings.tab.workflow": "녹음 & 워크플로",
+		"settings.footer.ready": "오프라인 엔진 상태: 정상 준비됨 (FFmpeg · whisper-cli · Model)",
+		"settings.footer.needsConfig": "오프라인 엔진 상태: 도구 경로 설정 필요",
+		"settings.footer.wiki": "문서 (Wiki)",
+
+		"settings.tools.heading": "기기 전사 도구 경로",
+		"settings.tools.runtimeTitle": "Whisper 런타임 실행 파일",
+		"settings.tools.modelTitle": "음성인식 모델 파일 (GGML)",
+		"settings.tools.ffmpegTitle": "FFmpeg 실행 파일",
+		"settings.tools.ready": "준비 완료",
+		"settings.tools.missing": "미설치",
+		"settings.tools.browse": "찾아보기...",
+
+		"settings.lang.heading": "전사 언어 및 모델 설정",
+		"settings.lang.title": "기본 전사 언어",
+		"settings.lang.desc": "한국어 회의의 경우 '한국어'로 고정하면 잡음 구간에서의 외국어 환각을 차단합니다.",
+		"settings.lang.optKo": "한국어 (권장)",
+		"settings.lang.optAuto": "다국어 자동 감지",
+		"settings.lang.optEn": "영어",
+		"settings.vocab.title": "맞춤형 어휘 힌트",
+		"settings.vocab.desc": "한영 혼용 IT 전문용어나 고유명사를 쉼표로 구분해 입력하면 오인식을 줄일 수 있습니다.",
+		"settings.vocab.placeholder": "API, Obsidian, Whisper, Docker, TypeScript, Markdown",
 	},
 };
 

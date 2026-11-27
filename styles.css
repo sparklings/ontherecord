@@ -1372,38 +1372,47 @@ body > .otr-float-indicator {
 	align-items: center;
 	justify-content: space-between;
 	flex-wrap: wrap;
-	gap: 10px 14px;
-	padding: 10px 14px;
+	gap: 12px 18px;
+	padding: 12px 16px;
 	margin-bottom: 16px;
 	border-radius: var(--radius-m, 8px);
 	background-color: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);
 }
 
+.otr-readiness-info {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+.otr-readiness-title {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-normal);
+	line-height: 1.2;
+	white-space: nowrap;
+}
+
+.otr-readiness-pills,
 .otr-readiness-items {
 	display: flex;
 	align-items: center;
 	flex-wrap: nowrap;
 	gap: 6px;
-	flex-shrink: 0;
-}
-
-.otr-readiness-title {
-	font-size: 12px;
-	font-weight: 600;
-	color: var(--text-normal);
-	margin-right: 4px;
-	white-space: nowrap;
 }
 
 .otr-readiness-pill {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
-	padding: 2px 7px;
+	padding: 2px 8px;
 	border-radius: 9999px;
 	font-size: 11px;
 	font-weight: 500;
+	line-height: 1.2;
 	white-space: nowrap;
 }
 
