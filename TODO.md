@@ -28,6 +28,33 @@
 
 ## 2026-11-27
 
+### 사이드바 녹음 목록 호버 시 수직 흔들림(Jitter) 박멸 및 텍스트 색상 제한 (2026-11-27 완료)
+- [x] `HOVER-STABILITY-01` 호버 시 상태 배지와 버튼을 `display: none` / `display: inline-flex`로 치환하던 구조 완전 제거로 행 높이 급변 차단
+- [x] `HOVER-STABILITY-02` 파일명 `text-decoration: underline` 제거 및 호버 효과를 텍스트 색상(`color: var(--interactive-accent)`) 변경 수준으로 엄격히 제한
+- [x] `HOVER-STABILITY-03` 행 높이(`height: 28px; box-sizing: border-box;`) 및 좌측 아이콘 규격(`14px x 14px`) 물리적 완전 고정
+- [x] `HOVER-STABILITY-04` 우측 상태 배지(`대기` / `전사 완료`)를 항상 표시하고 클릭 시 전사/재전사가 트리거되도록 원클릭 통합
+
+### 본문 오디오 임베드 사이드바 실시간 동기화 (2026-11-27 완료)
+- [x] `SYNC-REACTIVE-01` 녹음 안정화 후 `attachAudioToNote` 완료 즉시 `refreshSidebarViews()`를 호출하여 사이드바 녹음 파일 0건 고정 현상 해결
+- [x] `SYNC-REACTIVE-02` Obsidian의 `metadataCache.on("changed")` 및 `vault.on("modify")` 실시간 연동 (250ms 디바운스 적용)
+- [x] `SYNC-REACTIVE-03` 사이드바 `refresh()` 시 디스크 쓰기 대기 지연 없이 활성 Markdown 에디터 메모리(`editor.getValue()`) 우선 파싱
+- [x] `SYNC-REACTIVE-04` 백그라운드 전사 완료 시점에도 사이드바를 즉각 갱신하여 "대기" -> "전사 완료" 상태 배지 실시간 동기화
+
+### 개선안 A 사이드바 연동 플로팅 토글 & 원클릭 단축키 커맨드 (2026-11-27 완료)
+- [x] `FLOAT-TOGGLE-01` 우측 사이드바가 열려있을 때 플로팅 인디케이터를 자동 숨김(`setSuppressed`) 처리하는 사이드바 연동 로직 구현
+- [x] `HOTKEY-01` 단축키 원클릭 회의록 작성 및 녹음 시작 커맨드(`create-meeting-note-and-record`) 추가
+- [x] `HOTKEY-02` 녹음 일시정지 / 계속하기 / 즉시 녹음 범용 토글 단축키 커맨드(`toggle-recording`) 추가
+
+### 다국어(i18n) 시스템 구축 및 스킨 확장 (2026-11-27 완료)
+- [x] `I18N-EXPAND-01` Obsidian 언어 감지 기반 i18n 아키텍처(`src/i18n.ts`) 구축 (한국어 환경: 한국어, 그 외: 영어)
+- [x] `I18N-EXPAND-02` 고유명사(`Markdown`, `Vault`, `Whisper`, `FFmpeg`, `PowerShell`, `Obsidian`) 한국어 스킨 원어 표기 보존
+- [x] `I18N-EXPAND-03` 설정 탭, 커맨드, 상태 배너 전체에 사전 기반 `t(...)` 적용 및 100% 번역 키 일치 검증 테스트 통과
+
+### 플로팅 인디케이터 개선안 B 적용 및 배너 정제 (2026-11-27 완료)
+- [x] `FLOAT-SAFE-01` 플로팅 인디케이터 위치를 `right: 48px; bottom: 36px;`로 이동하여 에디터 분할선과의 충돌 방지
+- [x] `FLOAT-SAFE-02` 각진 버튼을 Google Antigravity 스타일의 원형 미니 액션(`border-radius: 50%`)으로 변경하고 호버 시 너비 고정 유지
+- [x] `BANNER-ALIGN-01` 도구 준비 상태 배너 내의 배지 줄바꿈 방지(`white-space: nowrap`) 및 텍스트 수직 정렬 안정화
+
 ### 전사 타임스탬프 10배 축척 왜곡 수정 및 무음 환각 차단 (2026-11-27 완료)
 - [x] `SYNC-BUG-01` whisper.cpp JSON 오프셋(ms) 파싱 시 `/ 100`으로 10배 팽창되던 버그를 `/ 1000`으로 수정하여 1:09 오디오 싱크 100% 정상화
 - [x] `SYNC-BUG-02` 무음 구간 greedy 루프를 유발하던 `-tp 0.0`, `-mc 0` 플래그 제거 및 온도 fallback 복원으로 무음 환각 문장 반복 완전 박멸

@@ -4,16 +4,17 @@ Obsidian 데스크톱용 커뮤니티 플러그인 프로젝트이다. 플러그
 
 ## 현재 상태
 
-로컬 `whisper.cpp` CPU/GPU(CUDA·Vulkan) 전사, 백그라운드 전사 대기열, 플로팅 녹음 상태 표시기, 사이드바 제어 패널, 노트 내 오디오 탐색, 검토 모달 오디오 싱크 재생 및 세그먼트 인라인 편집, 로컬 LLM(`localhost`) 요약, 5종 GGML 모델 카탈로그(기본값 `medium`), 파일 선택기 및 `--prompt` 어휘 힌트 전달 기능을 구현했다. 단계별 구현과 시험 결과는 [CHANGELOG.md](./CHANGELOG.md)와 [TODO.md](./TODO.md)에 기록한다.
+로컬 `whisper.cpp` CPU/GPU(CUDA·Vulkan) 전사, 백그라운드 전사 대기열, 사이드바 연동 플로팅 녹음 상태 표시기, Google Antigravity 스타일의 실시간 반응형 사이드바 패널, 회의록 기본 템플릿 연동, 단축키 기반 원클릭 회의록 작성 및 녹음 토글, 다국어(i18n, 한국어/영어) 스킨, 검증된 CPU 도구 조합 일괄 등록, 검토 모달 오디오 싱크 재생 및 세그먼트 인라인 편집, 로컬 LLM(`localhost`) 요약, 5종 GGML 모델 카탈로그(기본값 `medium`), 파일 선택기 및 `--prompt` 어휘 힌트 전달 기능을 구현했다. 단계별 구현과 시험 결과는 [CHANGELOG.md](./CHANGELOG.md)와 [TODO.md](./TODO.md)에 기록한다.
 
 ## 개요
 
 - Obsidian 코어 Audio recorder가 만든 녹음 파일, 또는 사용자가 선택한 오디오 파일을 전사한다.
 - 전사는 사용자 PC에서 `whisper.cpp`로 실행한다. 오디오와 노트 내용을 외부로 전송하지 않는다.
-- 전사 결과는 사용자가 검토하고 승인한 뒤 노트에 삽입한다.
+- 전사 결과는 사용자가 검토하고 승인하거나 오디오 임베드 아래에 자동 삽입된다.
 - 지원 대상은 Obsidian Desktop(Windows x64)이다. 모바일, macOS, Linux는 지원하지 않는다.
 - 사용자가 별도로 설치한 전사 엔진과 모델은 vault 밖의 사용자별 디렉터리에 둔다. 플러그인은 런타임이나 모델을 다운로드·설치·업데이트·삭제하지 않는다.
-- 설정의 자동 검색은 사용자 폴더 내 알려진 `whisper.cpp`, `Tools`, `Downloads`, `Documents`, `Models` 및 Windows `Program Files`/`ProgramData` 위치만 대상으로 한다. 전체 드라이브를 검색하지 않으며, 검증된 경로도 사용자가 선택해 적용하기 전에는 설정에 저장하지 않는다.
+- 설정의 자동 검색은 사용자 폴더 내 알려진 `whisper.cpp`, `Tools`, `Downloads`, `Documents`, `Models` 및 Windows `Program Files`/`ProgramData` 위치만 대상으로 한다. 다중 선택 체크박스를 통해 검증된 조합을 한 번에 일괄 적용할 수 있으며, 사용자가 적용하기 전에는 설정을 임의로 변경하지 않는다.
+- Obsidian 시스템 언어에 따라 한국어(ko) 및 영어(en) 스킨을 자동 제공하며, 고유명사(`Markdown`, `Vault`, `Whisper`, `FFmpeg`, `PowerShell`, `Obsidian`)는 한국어 스킨에서도 영어 표기를 유지한다.
 
 ## 단계별 개발 기능
 

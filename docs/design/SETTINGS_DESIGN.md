@@ -58,6 +58,7 @@
 | `devicePreference` | `auto` / `cpu` / `accelerator`. 장치 종류에 대한 선호만 저장하고 구체 장치는 저장하지 않음 |
 | `autoDetectRecording`, `autoTranscribe` | 녹음 감지·자동 전사 사용 여부 |
 | `stabilizationSeconds` | 파일 안정화 대기 조건 |
+| `meetingNoteTemplatePath` | 새 회의록 기본 템플릿 경로(vault 상대 경로, `{{date}}`, `{{time}}`, `{{title}}` 지원) |
 | `watchScope` | 감지할 노트·폴더 범위(vault 상대 경로) |
 | `duplicatePolicy` | 중복·동시 작업 정책 |
 | `searchTerms`, `profiles` | 검색어, 전사 프로필 |
