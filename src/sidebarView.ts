@@ -19,6 +19,7 @@ export interface SidebarControllerCallbacks {
 	enqueueAudioTranscription: (audioPath: string) => Promise<void>;
 	openAudioPicker: () => void;
 	generateSummary: (note: TFile) => Promise<void>;
+	openNoteInMainArea?: (note: TFile) => Promise<void>;
 	openSettings?: () => void;
 	isToolsConfigured?: () => boolean;
 	cancelTranscription?: () => void;
@@ -106,6 +107,11 @@ export class OnTheRecordSidebarView extends ItemView {
 
 		const noteBodyRow = contextCard.createDiv({ cls: "otr-compact-note-row" });
 		this.activeNoteContainerEl = noteBodyRow.createDiv({ cls: "otr-context-filebox" });
+		this.activeNoteContainerEl.onclick = async () => {
+			if (this.activeNote && this.callbacks.openNoteInMainArea) {
+				await this.callbacks.openNoteInMainArea(this.activeNote);
+			}
+		};
 		const noteIcon = this.activeNoteContainerEl.createSpan({ cls: "otr-inline-icon" });
 		setIcon(noteIcon, "file-text");
 		this.activeNoteNameEl = this.activeNoteContainerEl.createSpan({ text: "선택된 노트 없음", cls: "otr-context-filename" });
@@ -235,6 +241,9 @@ export class OnTheRecordSidebarView extends ItemView {
 			activeBtn.createSpan({ text: this.playerState === "paused" ? "일시정지" : "녹음 중지" });
 			activeBtn.onclick = async () => {
 				await this.callbacks.stopRecording();
+				if (this.activeNote && this.callbacks.openNoteInMainArea) {
+					await this.callbacks.openNoteInMainArea(this.activeNote);
+				}
 				await this.refresh();
 			};
 		}

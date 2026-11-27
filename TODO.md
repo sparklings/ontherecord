@@ -28,6 +28,11 @@
 
 ## 2026-11-27
 
+### 녹음 종료 시 회의록 노트 에디터 즉시 열기 및 UI 개선 (2026-11-27 완료)
+- [x] `NOTE-OPEN-01` 녹음 종료(`stopCurrentRecording`), 탭 정리(`active-leaf-change`), 안정화, 전사 완료 시 회의록 노트를 메인 에디터에 확실히 열고 포커스(`openNoteInMainArea`)
+- [x] `NOTE-OPEN-02` 코어 오디오 탭 detach 후 에디터가 빈 화면으로 남던 문제 해결
+- [x] `FLOAT-UI-01` 플로팅 인디케이터를 활성 에디터 뷰 안쪽(`right: 48px; bottom: 36px;`)에 마운트하여 수직 분할선 침범 방지 및 원형 버튼 정제
+
 ### 회의록 템플릿 환경설정 연동 및 조건부 자동 시작 템플릿 삭제 (2026-11-27 완료)
 - [x] `TEMPLATE-UX-01` 환경설정(녹음 & 워크플로)에 '새 회의록 기본 템플릿'(`meetingNoteTemplatePath`) 설정 추가 및 `{{date}}`, `{{time}}`, `{{title}}` 변수 지원
 - [x] `TEMPLATE-UX-02` 우측 사이드바 `+ 새 회의록` 및 `녹음 시작` 클릭 시 템플릿을 반영한 새 노트를 생성하여 메인 에디터(`rootSplit`)에 확실히 열고 포커스

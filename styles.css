@@ -1053,18 +1053,18 @@
 
 .otr-float-indicator {
 	position: absolute;
-	right: 24px;
-	bottom: 24px;
+	right: 48px;
+	bottom: 36px;
 	z-index: 60;
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
-	padding: 6px 12px;
+	padding: 6px 14px;
 	border-radius: 9999px;
-	background-color: var(--background-secondary);
-	border: 1px solid var(--background-modifier-border);
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
-	backdrop-filter: blur(8px);
+	background-color: rgba(24, 24, 27, 0.94);
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+	backdrop-filter: blur(12px);
 	color: var(--text-normal);
 	font-size: 12px;
 	transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
@@ -1072,8 +1072,8 @@
 
 body > .otr-float-indicator {
 	position: fixed;
-	right: 24px;
-	bottom: 36px;
+	right: 48px;
+	bottom: 40px;
 	z-index: 100;
 }
 
@@ -1154,23 +1154,23 @@ body > .otr-float-indicator {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 24px;
-	height: 24px;
+	width: 22px;
+	height: 22px;
 	padding: 0;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-s, 5px);
-	background-color: var(--background-primary);
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: 50%;
+	background-color: rgba(255, 255, 255, 0.08);
 	color: var(--text-muted);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+	box-shadow: none;
 	cursor: pointer;
 	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
 
 .otr-float-btn:hover {
-	background-color: var(--background-modifier-hover);
-	border-color: var(--text-muted);
-	color: var(--text-normal);
-	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.22);
+	background-color: rgba(255, 255, 255, 0.2);
+	border-color: rgba(255, 255, 255, 0.35);
+	color: #ffffff;
+	transform: scale(1.08);
 }
 
 .otr-float-btn.is-stop:hover {

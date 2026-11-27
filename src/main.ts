@@ -272,6 +272,9 @@ export default class OnTheRecordPlugin extends Plugin {
 					createNewMeetingNote: async () => {
 						return await this.createNewMeetingNoteAndOpen();
 					},
+					openNoteInMainArea: async (file) => {
+						await this.openNoteInMainArea(file);
+					},
 					enqueueAudioTranscription: async (audioPath: string) => {
 						const activeFile = this.app.workspace.getActiveFile();
 						const audioFile = this.app.vault.getAbstractFileByPath(audioPath);
@@ -485,11 +488,10 @@ export default class OnTheRecordPlugin extends Plugin {
 					if (activeFile && this.tabCloseHandler?.shouldAutoCloseAudioLeaf(activeFile.path)) {
 						const recentSession = this.tabCloseHandler.getRecentlyStoppedSession();
 						leaf.detach();
-						if (recentSession) {
+						if (recentSession && recentSession.notePath) {
 							const targetFile = this.app.vault.getAbstractFileByPath(recentSession.notePath);
 							if (targetFile instanceof TFile) {
-								const targetLeaf = this.app.workspace.getLeaf(false);
-								await targetLeaf.openFile(targetFile);
+								await this.openNoteInMainArea(targetFile);
 							}
 						}
 					}
@@ -746,7 +748,11 @@ export default class OnTheRecordPlugin extends Plugin {
 			},
 			{
 				getHostEl: () => {
-					// 본문 노트 작업 공간(rootSplit)의 우측 하단에 배치하여 사이드바 버튼과 겹침 방지
+					// 활성 마크다운 에디터 뷰 안쪽에 마운트하여 사이드바 경계선 침범 방지
+					const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+					if (activeView && activeView.containerEl) {
+						return activeView.containerEl;
+					}
 					const rootContainer = (this.app.workspace.rootSplit as { containerEl?: HTMLElement } | undefined)?.containerEl;
 					return rootContainer ?? (typeof document !== "undefined" ? document.body : null);
 				},
@@ -830,7 +836,11 @@ export default class OnTheRecordPlugin extends Plugin {
 		this.recordingStatusBar.stop();
 		this.floatingIndicator?.setState("idle");
 		this.refreshSidebarViews();
-		if (session) {
+		if (session && session.notePath) {
+			const noteFile = this.app.vault.getAbstractFileByPath(session.notePath);
+			if (noteFile instanceof TFile) {
+				await this.openNoteInMainArea(noteFile);
+			}
 			new Notice(`${session.notePath}의 음성 녹음을 중지했습니다.`);
 		} else {
 			new Notice("음성 녹음을 중지했습니다.");
@@ -888,6 +898,7 @@ export default class OnTheRecordPlugin extends Plugin {
 					return stripCommentMarkersFromNote(inserted);
 				});
 				new Notice(`[On the Record] '${filename}' 전사 결과가 노트(${target.note.path})에 자동 삽입되었습니다.`, 6000);
+				await this.openNoteInMainArea(target.note);
 
 				if (this.vaultSettings.enableLocalLlm && this.vaultSettings.localLlmAutoSummarize) {
 					void this.generateAndAppendSummary(target.note);
@@ -931,6 +942,25 @@ export default class OnTheRecordPlugin extends Plugin {
 		}
 	}
 
+	public async openNoteInMainArea(file: TFile): Promise<void> {
+		let leaf: WorkspaceLeaf | null = null;
+		const existingLeaves = this.app.workspace.getLeavesOfType("markdown");
+		for (const l of existingLeaves) {
+			if ((l.view as MarkdownView).file?.path === file.path) {
+				leaf = l;
+				break;
+			}
+		}
+		if (!leaf) {
+			leaf = this.app.workspace.getLeaf("tab");
+		}
+		if (leaf.getRoot() !== this.app.workspace.rootSplit) {
+			leaf = this.app.workspace.getLeaf(true);
+		}
+		await leaf.openFile(file);
+		this.app.workspace.setActiveLeaf(leaf, { focus: true });
+	}
+
 	private async createNewMeetingNoteAndOpen(): Promise<TFile | null> {
 		const created = await createMeetingNote(this.app, {
 			folder: this.vaultSettings.autoRecordFolder,
@@ -939,12 +969,7 @@ export default class OnTheRecordPlugin extends Plugin {
 		const targetFile = this.app.vault.getAbstractFileByPath(created.path);
 		if (!(targetFile instanceof TFile)) return null;
 
-		let leaf = this.app.workspace.getLeaf(false);
-		if (leaf.getRoot() !== this.app.workspace.rootSplit) {
-			leaf = this.app.workspace.getLeaf(true);
-		}
-		await leaf.openFile(targetFile);
-		this.app.workspace.setActiveLeaf(leaf, { focus: true });
+		await this.openNoteInMainArea(targetFile);
 		return targetFile;
 	}
 
@@ -1059,7 +1084,7 @@ export default class OnTheRecordPlugin extends Plugin {
 
 		const resolvedNotePaths: string[] = result.status === "linked" ? [...result.notePaths] : [];
 		const recentSession = this.sessionManager.getActiveSession() ?? this.tabCloseHandler.getRecentlyStoppedSession();
-		if (recentSession) {
+		if (recentSession && recentSession.notePath) {
 			await this.tabCloseHandler.attachAudioToNote(recentSession.notePath, file.path, {
 				seq: recentSession.seq,
 				startedAt: recentSession.startedAt,
@@ -1069,9 +1094,22 @@ export default class OnTheRecordPlugin extends Plugin {
 			if (!resolvedNotePaths.includes(recentSession.notePath)) {
 				resolvedNotePaths.push(recentSession.notePath);
 			}
-		} else if (result.status === "timeout") {
-			new Notice("녹음 노트의 오디오 링크를 확인하지 못했습니다. 파일 찾기 기능을 사용하세요.");
-			return;
+			const noteFile = this.app.vault.getAbstractFileByPath(recentSession.notePath);
+			if (noteFile instanceof TFile) {
+				await this.openNoteInMainArea(noteFile);
+			}
+		} else if (resolvedNotePaths.length === 0) {
+			// 연결된 대상 노트가 없으면 새 회의록을 생성하여 연결하고 에디터에 열어줌
+			const created = await this.createNewMeetingNoteAndOpen();
+			if (created) {
+				await this.tabCloseHandler.attachAudioToNote(created.path, file.path, {
+					seq: 1,
+					startedAt: Date.now() - (size ? size * 50 : 10000),
+					endedAt: Date.now(),
+					sizeBytes: size ?? file.stat.size,
+				});
+				resolvedNotePaths.push(created.path);
+			}
 		}
 
 		if (result.status !== "linked" && resolvedNotePaths.length === 0) return;
